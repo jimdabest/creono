@@ -1,0 +1,192 @@
+/* ================= TỔNG QUAN ================= */
+:root {
+    --primary-color: #3498db;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --error-color: #e74c3c;
+    --text-color: #333;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f9f9;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ================= RESPONSIVE (MOBILE & TABLET) ================= */
+@media screen and (max-width: 768px) {
+    /* 1. Xử lý thanh Điều hướng (Navbar) */
+    .navbar .container {
+        flex-direction: column; /* Xếp logo và menu dọc xuống thay vì ngang */
+        text-align: center;
+    }
+
+    .navbar .logo {
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .nav-links {
+        flex-wrap: wrap; /* Nếu nhiều menu quá thì tự động rớt dòng */
+        justify-content: center;
+        gap: 15px; /* Tạo khoảng cách đều giữa các nút */
+    }
+
+    /* 2. Xử lý các Form / Card đăng nhập, đăng ký */
+    .card {
+        padding: 20px; /* Giảm khoảng trống bên trong để tiết kiệm diện tích */
+        margin: 15px; /* Tạo khoảng cách với viền màn hình điện thoại */
+        box-shadow: none; /* Bỏ đổ bóng trên mobile cho nhẹ máy */
+        border: 1px solid #ddd;
+    }
+
+    /* 3. Container tổng */
+    .container {
+        padding: 0 10px;
+    }
+
+    /* 4. Điều chỉnh kích thước chữ nếu cần */
+    body {
+        font-size: 15px;
+    }
+}
+
+/* Dành riêng cho màn hình điện thoại rất nhỏ (iPhone SE, Galaxy cũ...) */
+@media screen and (max-width: 480px) {
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .nav-links li {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .nav-links a {
+        display: block;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.1); /* Tạo nút bấm to hơn cho dễ chạm ngón tay */
+        border-radius: 4px;
+    }
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+    background-color: var(--dark-color);
+    color: #fff;
+    padding: 1rem 0;
+    margin-bottom: 30px;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0 10px;
+}
+
+.navbar .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+}
+
+/* ================= FORMS & CARD ================= */
+.card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 0 auto; /* Căn giữa */
+}
+
+.card h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-group input.is-invalid {
+    border-color: var(--error-color);
+    background-color: #fce4e4;
+}
+
+.error-text {
+    color: var(--error-color);
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: block;
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+    display: inline-block;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 16px;
+    width: 100%; /* Nút kéo dài hết form */
+    text-align: center;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background: #2980b9;
+}
+
+.btn-light {
+    background: var(--light-color);
+    color: var(--text-color);
+}
+.btn-light:hover {
+    background: #bdc3c7;
+}
+
+/* Utils */
+.text-center { text-align: center; }
+.mt-2 { margin-top: 20px; }

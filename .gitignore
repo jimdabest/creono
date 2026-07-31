@@ -1,0 +1,14 @@
+# Bỏ qua file cấu hình thật
+/config/config.php
+
+# Bỏ qua thư mục hệ thống / IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Bỏ qua repomix
+repomix-output.xml
+
+# Bỏ qua thư mục chứa file người dùng upload (nếu sau này có)
+# /public/uploads/*
+# !/public/uploads/index.html
