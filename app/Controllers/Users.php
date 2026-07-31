@@ -7,95 +7,95 @@ class Users extends Controller {
         $this->userModel = $this->model('User');
     }
 
+    // Chức năng UC-01: Đăng ký tài khoản
     public function register() {
-        // Kiểm tra xem người dùng đang Submit form hay chỉ đang load trang
+        // Kiểm tra request là POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            
-            // Lọc dữ liệu đầu vào để chống mã độc (Sanitize POST)
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
-            // Thu thập dữ liệu từ Form
             $data = [
+                'name' => trim($_POST['name']),
                 'email' => trim($_POST['email']),
                 'password' => trim($_POST['password']),
                 'confirm_password' => trim($_POST['confirm_password']),
+                'name_err' => '',
                 'email_err' => '',
                 'password_err' => '',
                 'confirm_password_err' => ''
             ];
 
-            // 1. Xác thực Email
+            // Validate Name
+            if (empty($data['name'])) {
+                $data['name_err'] = 'Vui lòng nhập họ và tên';
+            }
+
+            // Validate Email
             if (empty($data['email'])) {
-                $data['email_err'] = 'Vui lòng nhập địa chỉ email';
-            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $data['email_err'] = 'Định dạng email không hợp lệ';
+                $data['email_err'] = 'Vui lòng nhập email';
             } else {
-                // Kiểm tra trùng Email trong Database
+                // Kiểm tra email đã tồn tại chưa bằng Model
                 if ($this->userModel->findByEmail($data['email'])) {
-                    $data['email_err'] = 'Email này đã được sử dụng. Vui lòng chọn email khác.';
+                    $data['email_err'] = 'Email này đã được sử dụng';
                 }
             }
 
-            // 2. Xác thực Mật khẩu
+            // Validate Password
             if (empty($data['password'])) {
                 $data['password_err'] = 'Vui lòng nhập mật khẩu';
             } elseif (strlen($data['password']) < 6) {
                 $data['password_err'] = 'Mật khẩu phải có ít nhất 6 ký tự';
             }
 
-            // 3. Xác thực Nhập lại mật khẩu
+            // Validate Confirm Password
             if (empty($data['confirm_password'])) {
-                $data['confirm_password_err'] = 'Vui lòng xác nhận lại mật khẩu';
+                $data['confirm_password_err'] = 'Vui lòng xác nhận mật khẩu';
             } else {
                 if ($data['password'] != $data['confirm_password']) {
-                    $data['confirm_password_err'] = 'Mật khẩu xác nhận không khớp';
+                    $data['confirm_password_err'] = 'Mật khẩu không khớp';
                 }
             }
 
-            // ĐẢM BẢO KHÔNG CÓ LỖI NÀO THÌ MỚI CHO LƯU
-            if (empty($data['email_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])) {
+            // Make sure errors are empty
+            if (empty($data['name_err']) && empty($data['email_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])) {
                 
-                // Băm mật khẩu (Hash Password) để bảo mật
-                $password_hash = password_hash($data['password'], PASSWORD_DEFAULT);
+                // Hash Password (Lưu trực tiếp vào $data['password'] theo DB mới)
+                $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
-                // Gom dữ liệu mảng để dùng hàm create() của BaseModel
-                // LƯU Ý: id là BIGINT AUTO_INCREMENT nên hệ thống tự sinh số
-                $insertData = [
-                    'email' => $data['email'],
-                    'password_hash' => $password_hash,
-                    'role_id' => 2, // 2 tương ứng với BUYER trong bảng roles
-                    'status' => 1   // 1 tương ứng với Active
-                ];
-
-                // Thực thi thêm vào database
-                if ($this->userModel->create($insertData)) {
-                    // Thành công: Chuyển hướng về trang đăng nhập
-                    header('location: ' . URLROOT . '/users/login');
+                // Gọi hàm register() của Model
+                if ($this->userModel->register($data)) {
+                    // 1. Lấy thông tin user vừa mới lưu vào Database
+                    $newUser = $this->userModel->getUserByEmail($data['email']);
+                    
+                    // 2. Gọi hàm tạo Session đăng nhập luôn (hàm này sẽ tự động chuyển hướng trang)
+                    $this->createUserSession($newUser);
+                    
                 } else {
-                    die('Đã xảy ra lỗi hệ thống khi lưu vào cơ sở dữ liệu.');
+                    die('Hệ thống đang bận, không thể đăng ký lúc này.');
                 }
-
             } else {
-                // Nếu có lỗi, load lại View kèm theo mảng lỗi để hiển thị
+                // Load view with errors
                 $this->view('users/register', $data);
             }
 
         } else {
-            // Khởi tạo mảng dữ liệu rỗng cho lần đầu tiên truy cập trang (GET)
+            // Khởi tạo data rỗng khi load form lần đầu
             $data = [
+                'name' => '',
                 'email' => '',
                 'password' => '',
                 'confirm_password' => '',
+                'name_err' => '',
                 'email_err' => '',
                 'password_err' => '',
                 'confirm_password_err' => ''
             ];
 
-            // Nạp View form đăng ký
+            // Load view
             $this->view('users/register', $data);
         }
     }
-
+    
     public function login() {
         // Kiểm tra xem submit POST hay truy cập GET
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -149,13 +149,20 @@ class Users extends Controller {
 
     // Hàm hỗ trợ lưu Session sau khi đăng nhập thành công
     public function createUserSession($user) {
-        $_SESSION['user_id'] = $user->id;
-        $_SESSION['user_email'] = $user->email;
-        $_SESSION['user_role'] = $user->role_id; // Đã cập nhật thành role_id theo database mới
-        
-        // Chuyển hướng về trang chủ
-        header('location: ' . URLROOT);
+    $_SESSION['user_id'] = $user->id;
+    $_SESSION['user_name'] = $user->name; // Đổi từ user_email thành user_name cho thân thiện
+    $_SESSION['user_email'] = $user->email;
+    $_SESSION['user_role'] = $user->role; // Cột trong DB giờ là 'role' thay vì 'role_id'
+    
+    // Chuyển hướng dựa trên Role
+    if ($_SESSION['user_role'] == 3) {
+        header('location: ' . URLROOT . '/admin/dashboard'); // Admin
+    } elseif ($_SESSION['user_role'] == 2) {
+        header('location: ' . URLROOT . '/seller/dashboard'); // Seller
+    } else {
+        header('location: ' . URLROOT . '/products/index'); // Buyer
     }
+}
     
     // Đăng xuất (UC-04)
     public function logout() {

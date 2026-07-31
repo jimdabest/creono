@@ -74,6 +74,11 @@ class Database {
         return $this->stmt->fetch();
     }
 
+    // Lấy ID của dòng dữ liệu vừa được Insert
+    public function lastInsertId() {
+        return $this->dbh->lastInsertId();
+    }
+
     // 6. Lấy số lượng dòng bị tác động (Dùng cho INSERT, UPDATE, DELETE)
     public function rowCount() {
         return $this->stmt->rowCount();

@@ -23,9 +23,9 @@
         <li><a href="#">Chào, <?php echo $_SESSION['user_email']; ?></a></li>
         
         <!-- Nút vào Admin (chỉ hiện nếu role_id = 1) -->
-        <?php if($_SESSION['user_role'] == 1) : ?>
-            <li><a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Panel</a></li>
-        <?php endif; ?>
+    <?php if(isset($_SESSION['user_role']) && $_SESSION['user_role'] == 3) : ?>
+        <li><a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Panel</a></li>
+    <?php endif; ?>
         
         <li><a href="<?php echo URLROOT; ?>/users/logout">Đăng xuất</a></li>
     <?php else : ?>

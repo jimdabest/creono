@@ -9,12 +9,24 @@
     <!-- Gửi dữ liệu về lại hàm register trong Controller Users -->
     <form action="<?php echo URLROOT; ?>/users/register" method="POST">
         
+        <!-- Khối nhập Họ và Tên (VỪA ĐƯỢC THÊM VÀO ĐÂY) -->
+        <div class="form-group">
+            <label for="name">Họ và Tên: *</label>
+            <input type="text" name="name" 
+                   class="<?php echo (!empty($data['name_err'])) ? 'is-invalid' : ''; ?>" 
+                   value="<?php echo isset($data['name']) ? $data['name'] : ''; ?>">
+            
+            <?php if(!empty($data['name_err'])) : ?>
+                <span class="error-text"><?php echo $data['name_err']; ?></span>
+            <?php endif; ?>
+        </div>
+
         <!-- Khối nhập Email -->
         <div class="form-group">
             <label for="email">Email: *</label>
             <input type="email" name="email" 
                    class="<?php echo (!empty($data['email_err'])) ? 'is-invalid' : ''; ?>" 
-                   value="<?php echo $data['email']; ?>">
+                   value="<?php echo isset($data['email']) ? $data['email'] : ''; ?>">
             
             <?php if(!empty($data['email_err'])) : ?>
                 <span class="error-text"><?php echo $data['email_err']; ?></span>
@@ -26,7 +38,7 @@
             <label for="password">Mật khẩu: *</label>
             <input type="password" name="password" 
                    class="<?php echo (!empty($data['password_err'])) ? 'is-invalid' : ''; ?>" 
-                   value="<?php echo $data['password']; ?>">
+                   value="<?php echo isset($data['password']) ? $data['password'] : ''; ?>">
             
             <?php if(!empty($data['password_err'])) : ?>
                 <span class="error-text"><?php echo $data['password_err']; ?></span>
@@ -38,7 +50,7 @@
             <label for="confirm_password">Xác nhận mật khẩu: *</label>
             <input type="password" name="confirm_password" 
                    class="<?php echo (!empty($data['confirm_password_err'])) ? 'is-invalid' : ''; ?>" 
-                   value="<?php echo $data['confirm_password']; ?>">
+                   value="<?php echo isset($data['confirm_password']) ? $data['confirm_password'] : ''; ?>">
             
             <?php if(!empty($data['confirm_password_err'])) : ?>
                 <span class="error-text"><?php echo $data['confirm_password_err']; ?></span>

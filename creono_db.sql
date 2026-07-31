@@ -1,202 +1,311 @@
--- 1. CREATE DATABASE
-CREATE DATABASE IF NOT EXISTS creono_db 
-CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ==============================================================================
+-- HỆ THỐNG CREONO - DATABASE FULL SCRIPT (VERSION 3)
+-- Tối ưu hóa Schema, loại bỏ Alter dư thừa, tinh gọn Stored Procedures.
+-- ==============================================================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Tạo database mới
+DROP DATABASE IF EXISTS creono_db;
+CREATE DATABASE creono_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE creono_db;
 
--- 2. CREATE TABLES & CONSTRAINTS
+-- ==========================================
+-- PHẦN 1: TẠO BẢNG (BASE SCHEMA) - Đã gộp toàn bộ cột tối ưu
+-- ==========================================
 
--- System Roles
-CREATE TABLE roles (
-    id TINYINT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL
-);
-
--- Users (IAM)
 CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role_id TINYINT NOT NULL,
-    kyc_status TINYINT DEFAULT 0 COMMENT '0: Unverified, 1: Pending, 2: Verified, 3: Rejected',
-    status TINYINT DEFAULT 1 COMMENT '0: Inactive, 1: Active, 2: Banned',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL,
-    CONSTRAINT fk_users_roles FOREIGN KEY (role_id) REFERENCES roles(id)
+    password VARCHAR(255) NOT NULL,
+    role TINYINT DEFAULT 1 COMMENT '1:Buyer, 2:Seller, 3:Admin, 4:Censor',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE user_profiles (
-    user_id BIGINT PRIMARY KEY,
-    full_name VARCHAR(255),
-    avatar_url VARCHAR(500),
-    bio TEXT,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Wallet & Finance
 CREATE TABLE wallets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL,
     balance DECIMAL(19,4) DEFAULT 0.0000,
-    status TINYINT DEFAULT 1,
-    version INT DEFAULT 0 COMMENT 'Optimistic locking',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_wallets_user FOREIGN KEY (user_id) REFERENCES users(id)
+    frozen_balance DECIMAL(19,4) DEFAULT 0.0000 COMMENT 'Giữ tiền khi đang chờ rút',
+    CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE transactions (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    wallet_id BIGINT NOT NULL,
-    reference_id BIGINT NULL COMMENT 'ID của order/withdrawal',
-    type TINYINT NOT NULL COMMENT '1: Nạp, 2: Rút, 3: Thanh toán, 4: Nhận tiền bán, 5: Hoàn tiền',
-    amount DECIMAL(19,4) NOT NULL,
-    description VARCHAR(255),
-    status TINYINT DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_transactions_wallet FOREIGN KEY (wallet_id) REFERENCES wallets(id)
-);
-
--- Marketplace & Catalog
 CREATE TABLE stores (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    seller_id BIGINT NOT NULL UNIQUE,
+    user_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
     status TINYINT DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL,
-    CONSTRAINT fk_stores_seller FOREIGN KEY (seller_id) REFERENCES users(id)
-);
-
-CREATE TABLE categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    parent_id INT NULL,
-    name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL UNIQUE,
-    status TINYINT DEFAULT 1,
-    CONSTRAINT fk_categories_parent FOREIGN KEY (parent_id) REFERENCES categories(id)
+    CONSTRAINT fk_store_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE products (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     store_id BIGINT NOT NULL,
-    category_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
-    description TEXT,
-    price DECIMAL(19,4) NOT NULL DEFAULT 0.0000,
+    price DECIMAL(19,4) NOT NULL,
     preview_url VARCHAR(500),
-    status TINYINT DEFAULT 0 COMMENT '0: Draft, 1: Pending, 2: Active, 3: Rejected, 4: Hidden',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    rating DECIMAL(3,2) DEFAULT 0.00,
+    review_count INT DEFAULT 0,
+    download_count INT DEFAULT 0,
+    status TINYINT DEFAULT 1 COMMENT '1:Pending, 2:Approved, 3:Rejected',
     deleted_at DATETIME NULL,
-    CONSTRAINT fk_products_store FOREIGN KEY (store_id) REFERENCES stores(id),
-    CONSTRAINT fk_products_category FOREIGN KEY (category_id) REFERENCES categories(id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_product_store FOREIGN KEY (store_id) REFERENCES stores(id)
 );
 
--- AI & Content
+CREATE TABLE transactions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    wallet_id BIGINT NOT NULL,
+    reference_id BIGINT NULL,
+    type TINYINT NOT NULL COMMENT '1:Deposit, 2:Withdraw, 3:Payment, 4:Refund, 5:Earning',
+    amount DECIMAL(19,4) NOT NULL,
+    description VARCHAR(255),
+    gateway_transaction_id VARCHAR(255) NULL,
+    payment_method VARCHAR(50) NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_trans_wallet FOREIGN KEY (wallet_id) REFERENCES wallets(id)
+);
+
+CREATE TABLE orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    total_amount DECIMAL(19,4) NOT NULL,
+    platform_fee DECIMAL(19,4) DEFAULT 0.0000,
+    seller_amount DECIMAL(19,4) DEFAULT 0.0000,
+    status TINYINT DEFAULT 1 COMMENT '1:Pending, 2:Paid, 3:Cancelled',
+    order_expires_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE TABLE ai_labels (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(50) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE documents (
-    product_id BIGINT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
     file_url VARCHAR(500) NOT NULL,
-    watermark_url VARCHAR(500) NULL,
-    ai_label_id INT NULL,
-    ai_score DECIMAL(5,2) NULL,
-    CONSTRAINT fk_documents_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_documents_ailabel FOREIGN KEY (ai_label_id) REFERENCES ai_labels(id)
+    ai_score DECIMAL(5,2) DEFAULT 0.00,
+    ai_label_id BIGINT NULL,
+    CONSTRAINT fk_doc_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_doc_ailabel FOREIGN KEY (ai_label_id) REFERENCES ai_labels(id)
 );
 
--- Orders
-CREATE TABLE orders (
+-- ==========================================
+-- PHẦN 2: TẠO CÁC BẢNG MỞ RỘNG NGHIỆP VỤ (USE CASES)
+-- ==========================================
+
+-- UC03: Quên mật khẩu
+CREATE TABLE password_reset_tokens (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    buyer_id BIGINT NOT NULL,
-    total_amount DECIMAL(19,4) NOT NULL,
-    status TINYINT DEFAULT 0 COMMENT '0: Pending, 1: Completed, 2: Failed, 3: Refunded',
+    user_id BIGINT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pwdreset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE (token)
+);
+
+-- UC07: Xác thực KYC
+CREATE TABLE kyc_documents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    document_type VARCHAR(50) NOT NULL COMMENT 'ID_CARD, PASSPORT, DRIVER_LICENSE',
+    front_image_url VARCHAR(500) NOT NULL,
+    back_image_url VARCHAR(500),
+    status TINYINT DEFAULT 1 COMMENT '1: Pending, 2: Approved, 3: Rejected',
+    rejection_reason TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_orders_buyer FOREIGN KEY (buyer_id) REFERENCES users(id)
+    CONSTRAINT fk_kyc_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE order_items (
+-- UC11, UC12: Rút tiền
+CREATE TABLE withdraw_requests (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    order_id BIGINT NOT NULL,
+    wallet_id BIGINT NOT NULL,
+    amount DECIMAL(19,4) NOT NULL,
+    bank_name VARCHAR(255) NOT NULL,
+    bank_account_number VARCHAR(100) NOT NULL,
+    bank_account_name VARCHAR(255) NOT NULL,
+    status TINYINT DEFAULT 1 COMMENT '1: Pending, 2: Approved, 3: Rejected',
+    admin_note TEXT,
+    processed_by BIGINT NULL COMMENT 'Admin ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_withdraw_wallet FOREIGN KEY (wallet_id) REFERENCES wallets(id),
+    CONSTRAINT fk_withdraw_admin FOREIGN KEY (processed_by) REFERENCES users(id)
+);
+
+-- UC14: Tag & Categorization
+CREATE TABLE tags (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE product_tags (
     product_id BIGINT NOT NULL,
-    price DECIMAL(19,4) NOT NULL,
-    CONSTRAINT fk_orderitems_order FOREIGN KEY (order_id) REFERENCES orders(id),
-    CONSTRAINT fk_orderitems_product FOREIGN KEY (product_id) REFERENCES products(id)
+    tag_id BIGINT NOT NULL,
+    PRIMARY KEY (product_id, tag_id),
+    CONSTRAINT fk_pt_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    CONSTRAINT fk_pt_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
--- System & Config
-CREATE TABLE system_configs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    config_key VARCHAR(100) NOT NULL UNIQUE,
-    config_value VARCHAR(255) NOT NULL,
-    description TEXT
-);
-
-CREATE TABLE audit_logs (
+-- UC15, UC16: Giỏ hàng (Đã loại bỏ ràng buộc UNIQUE ở user_id)
+CREATE TABLE carts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NULL,
-    action VARCHAR(50) NOT NULL,
-    table_name VARCHAR(100) NOT NULL,
-    record_id BIGINT NOT NULL,
-    old_value JSON NULL,
-    new_value JSON NULL,
-    ip_address VARCHAR(45),
-    user_agent VARCHAR(255),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    user_id BIGINT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_carts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 3. INDEXES
-ALTER TABLE products ADD FULLTEXT INDEX ft_idx_products_title_desc (title, description);
-CREATE INDEX idx_products_store_status ON products(store_id, status);
-CREATE INDEX idx_transactions_wallet_time ON transactions(wallet_id, created_at);
+CREATE TABLE cart_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    cart_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cartitems_cart FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cartitems_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
 
--- 4. VIEWS
-DELIMITER $$
-CREATE VIEW vw_SellerDashboard AS
-SELECT 
-    s.id AS store_id,
-    s.name AS store_name,
-    COUNT(p.id) AS total_products,
-    SUM(CASE WHEN o.status = 1 THEN oi.price ELSE 0 END) AS total_revenue
-FROM stores s
-LEFT JOIN products p ON s.id = p.store_id AND p.deleted_at IS NULL
-LEFT JOIN order_items oi ON p.id = oi.product_id
-LEFT JOIN orders o ON oi.order_id = o.id
-GROUP BY s.id;
-$$
-DELIMITER ;
+-- UC17: Yêu thích
+CREATE TABLE favorites (
+    user_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, product_id),
+    CONSTRAINT fk_fav_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_fav_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
 
--- 5. TRIGGERS
+-- UC31: Tải tài liệu
+CREATE TABLE downloads (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    ip_address VARCHAR(45),
+    downloaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dl_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_dl_product FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- UC34, UC35: Đánh giá & Bình luận
+CREATE TABLE reviews (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    parent_id BIGINT NULL COMMENT 'Dành cho tính năng Reply',
+    rating TINYINT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT NOT NULL,
+    status TINYINT DEFAULT 1 COMMENT '1: Visible, 0: Hidden',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reviews_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_reviews_parent FOREIGN KEY (parent_id) REFERENCES reviews(id) ON DELETE CASCADE
+);
+
+-- UC36, UC37, UC38: Báo cáo vi phạm
+CREATE TABLE reports (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reporter_id BIGINT NOT NULL,
+    target_type VARCHAR(50) NOT NULL COMMENT 'PRODUCT, STORE, USER, REVIEW',
+    target_id BIGINT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    details TEXT,
+    status TINYINT DEFAULT 1 COMMENT '1: Pending, 2: Investigating, 3: Resolved, 4: Dismissed',
+    resolved_by BIGINT NULL COMMENT 'Admin ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(id)
+);
+
+-- UC27: Kháng cáo AI
+CREATE TABLE ai_appeals (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
+    seller_id BIGINT NOT NULL,
+    reason TEXT NOT NULL,
+    evidence_url VARCHAR(500),
+    status TINYINT DEFAULT 1 COMMENT '1: Pending, 2: Approved, 3: Rejected',
+    processed_by BIGINT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_appeal_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_appeal_seller FOREIGN KEY (seller_id) REFERENCES users(id),
+    CONSTRAINT fk_appeal_admin FOREIGN KEY (processed_by) REFERENCES users(id)
+);
+
+-- UC43: Duyệt tài liệu
+CREATE TABLE product_approvals (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
+    censor_id BIGINT NOT NULL,
+    action VARCHAR(50) NOT NULL COMMENT 'APPROVE, REJECT',
+    note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_approval_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_approval_censor FOREIGN KEY (censor_id) REFERENCES users(id)
+);
+
+-- ==========================================
+-- PHẦN 3: INDEXES (Tối ưu truy vấn)
+-- ==========================================
+CREATE INDEX idx_pwd_reset_token ON password_reset_tokens(token);
+CREATE INDEX idx_reviews_product_rating ON reviews(product_id, rating);
+CREATE INDEX idx_reports_target ON reports(target_type, target_id);
+CREATE INDEX idx_downloads_user_prod ON downloads(user_id, product_id);
+
+-- ==========================================
+-- PHẦN 4: TRIGGERS (Tự động hóa)
+-- ==========================================
 DELIMITER $$
-CREATE TRIGGER trg_after_user_insert
-AFTER INSERT ON users
+
+CREATE TRIGGER trg_after_download
+AFTER INSERT ON downloads
 FOR EACH ROW
 BEGIN
-    INSERT INTO user_profiles (user_id) VALUES (NEW.id);
-    INSERT INTO wallets (user_id, balance, status) VALUES (NEW.id, 0, 1);
-END;
-$$
+    UPDATE products 
+    SET download_count = download_count + 1 
+    WHERE id = NEW.product_id;
+END$$
+
+CREATE TRIGGER trg_after_review_insert
+AFTER INSERT ON reviews
+FOR EACH ROW
+BEGIN
+    IF NEW.rating IS NOT NULL THEN
+        UPDATE products 
+        SET 
+            rating = ROUND(((rating * review_count) + NEW.rating) / (review_count + 1), 2),
+            review_count = review_count + 1
+        WHERE id = NEW.product_id;
+    END IF;
+END$$
+
 DELIMITER ;
 
--- 6. STORED PROCEDURES (Ví dụ Thanh toán nguyên tử)
+-- ==========================================
+-- PHẦN 5: STORED PROCEDURES (Bảo toàn dòng tiền)
+-- ==========================================
 DELIMITER $$
-CREATE PROCEDURE sp_ProcessPayment(IN p_buyer_id BIGINT, IN p_order_id BIGINT)
+
+CREATE PROCEDURE sp_RequestWithdrawal(
+    IN p_wallet_id BIGINT, 
+    IN p_amount DECIMAL(19,4),
+    IN p_bank_name VARCHAR(255),
+    IN p_bank_acc_num VARCHAR(100),
+    IN p_bank_acc_name VARCHAR(255)
+)
 BEGIN
-    DECLARE v_total DECIMAL(19,4);
-    DECLARE v_buyer_wallet_id BIGINT;
-    DECLARE v_buyer_balance DECIMAL(19,4);
+    DECLARE v_balance DECIMAL(19,4);
     
-    -- Xử lý transaction với ROLLBACK an toàn
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
     BEGIN
         ROLLBACK;
@@ -204,88 +313,153 @@ BEGIN
 
     START TRANSACTION;
     
-    -- Lấy thông tin order và lock ví buyer
-    SELECT total_amount INTO v_total FROM orders WHERE id = p_order_id FOR UPDATE;
-    SELECT id, balance INTO v_buyer_wallet_id, v_buyer_balance 
-    FROM wallets WHERE user_id = p_buyer_id FOR UPDATE;
+    -- Khóa bi quan dòng ví đang thao tác
+    SELECT balance INTO v_balance FROM wallets WHERE id = p_wallet_id FOR UPDATE;
     
-    IF v_buyer_balance >= v_total THEN
-        -- Trừ tiền Buyer
-        UPDATE wallets SET balance = balance - v_total, version = version + 1 WHERE id = v_buyer_wallet_id;
-        INSERT INTO transactions (wallet_id, reference_id, type, amount, description) 
-        VALUES (v_buyer_wallet_id, p_order_id, 3, -v_total, 'Thanh toán đơn hàng');
+    IF v_balance >= p_amount THEN
+        -- Đẩy tiền từ balance sang frozen_balance
+        UPDATE wallets 
+        SET balance = balance - p_amount, 
+            frozen_balance = frozen_balance + p_amount
+        WHERE id = p_wallet_id;
         
-        -- Cập nhật Order status
-        UPDATE orders SET status = 1 WHERE id = p_order_id;
-        
-        -- (Logic cộng tiền Seller sẽ tiếp tục lặp qua order_items ở đây...)
+        INSERT INTO withdraw_requests (wallet_id, amount, bank_name, bank_account_number, bank_account_name, status)
+        VALUES (p_wallet_id, p_amount, p_bank_name, p_bank_acc_num, p_bank_acc_name, 1);
         
         COMMIT;
     ELSE
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Số dư không đủ';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Số dư không đủ để rút tiền';
     END IF;
-END;
-$$
+END$$
+
+CREATE PROCEDURE sp_ApproveWithdrawal(
+    IN p_request_id BIGINT,
+    IN p_admin_id BIGINT
+)
+BEGIN
+    DECLARE v_wallet_id BIGINT;
+    DECLARE v_amount DECIMAL(19,4);
+    DECLARE v_status TINYINT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    
+    -- Khóa dòng request để xử lý
+    SELECT wallet_id, amount, status INTO v_wallet_id, v_amount, v_status 
+    FROM withdraw_requests WHERE id = p_request_id FOR UPDATE;
+    
+    IF v_status = 1 THEN 
+        -- Trừ hẳn tiền đóng băng
+        UPDATE wallets 
+        SET frozen_balance = frozen_balance - v_amount
+        WHERE id = v_wallet_id;
+        
+        UPDATE withdraw_requests 
+        SET status = 2, processed_by = p_admin_id 
+        WHERE id = p_request_id;
+        
+        INSERT INTO transactions (wallet_id, reference_id, type, amount, description) 
+        VALUES (v_wallet_id, p_request_id, 2, -v_amount, 'Rút tiền thành công');
+        
+        COMMIT;
+    ELSE
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Yêu cầu không hợp lệ hoặc đã được xử lý';
+    END IF;
+END$$
+
 DELIMITER ;
 
--- 7. SAMPLE DATA
-INSERT INTO roles (code, name) VALUES ('ADMIN', 'Administrator'), ('BUYER', 'Buyer'), ('SELLER', 'Seller'), ('CENSOR', 'Censor');
-INSERT INTO system_configs (config_key, config_value, description) VALUES ('COMMISSION_RATE', '0.10', 'Phí sàn 10%');
-INSERT INTO ai_labels (code, name) VALUES ('HUMAN', '100% Human Written'), ('AI_ASSISTED', 'AI Assisted'), ('AI_GENERATED', 'AI Generated');
-
--- 8. DỮ LIỆU MẪU DÀNH CHO TEAM PHÁT TRIỂN (SEED DATA)
--- Mật khẩu chung cho tất cả tài khoản dưới đây là: password
+-- ==========================================
+-- PHẦN 6: VIEWS (Hỗ trợ báo cáo Dashboard)
 -- ==========================================
 
--- 8.1. Thêm Danh mục (Categories)
-INSERT INTO categories (id, parent_id, name, slug, status) VALUES
-(1, NULL, 'Công nghệ thông tin', 'cong-nghe-thong-tin', 1),
-(2, 1, 'Lập trình Web', 'lap-trinh-web', 1),
-(3, 1, 'Cơ sở dữ liệu', 'co-so-du-lieu', 1),
-(4, NULL, 'Thiết kế đồ họa', 'thiet-ke-do-hoa', 1),
-(5, 4, 'UI/UX Design', 'ui-ux-design', 1);
+CREATE OR REPLACE VIEW vw_TopProducts AS
+SELECT 
+    p.id, p.title, p.price, p.rating, p.review_count, p.download_count,
+    s.name AS store_name
+FROM products p
+JOIN stores s ON p.store_id = s.id
+WHERE p.status = 2 AND p.deleted_at IS NULL
+ORDER BY p.download_count DESC, p.rating DESC;
 
--- 8.2. Thêm Users mẫu (1 Admin, 2 Seller, 1 Buyer)
--- (Sử dụng INSERT IGNORE để nếu bạn đã tạo tài khoản trùng email thì không báo lỗi)
-INSERT IGNORE INTO users (id, email, password_hash, role_id, kyc_status, status) VALUES
-(100, 'admin@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, 2, 1),
-(101, 'seller_dev@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 2, 1),
-(102, 'seller_design@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 2, 1),
-(103, 'buyer@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 0, 1);
+CREATE OR REPLACE VIEW vw_PendingApprovals AS
+SELECT 
+    p.id AS product_id, p.title, s.name AS store_name, 
+    d.ai_score, al.name AS ai_label_name, p.created_at
+FROM products p
+JOIN stores s ON p.store_id = s.id
+JOIN documents d ON p.id = d.product_id
+LEFT JOIN ai_labels al ON d.ai_label_id = al.id
+WHERE p.status = 1;
 
--- 8.3. Cập nhật Profile & Ví cho Users (Do Trigger đã tạo sẵn dòng)
-UPDATE user_profiles SET full_name = 'Quản trị viên', bio = 'System Admin' WHERE user_id = 100;
-UPDATE user_profiles SET full_name = 'Dev Master', bio = 'Chuyên gia IT' WHERE user_id = 101;
-UPDATE user_profiles SET full_name = 'Design Studio', bio = 'Designer 10 năm kinh nghiệm' WHERE user_id = 102;
-UPDATE user_profiles SET full_name = 'Khách Mua Hàng', bio = 'Học sinh sinh viên' WHERE user_id = 103;
+CREATE OR REPLACE VIEW vw_PendingWithdrawals AS
+SELECT 
+    w.id AS request_id, u.email AS seller_email, w.amount, 
+    w.bank_name, w.bank_account_number, w.created_at
+FROM withdraw_requests w
+JOIN wallets wal ON w.wallet_id = wal.id
+JOIN users u ON wal.user_id = u.id
+WHERE w.status = 1;
 
-UPDATE wallets SET balance = 5000000 WHERE user_id = 101; -- Seller có sẵn 5 triệu
-UPDATE wallets SET balance = 10000000 WHERE user_id = 103; -- Buyer có sẵn 10 triệu để test mua hàng
+-- ==========================================
+-- PHẦN 7: DỮ LIỆU MẪU (SEED DATA)
+-- ==========================================
 
--- 8.4. Thêm Cửa hàng (Stores)
-INSERT INTO stores (id, seller_id, name, description, status) VALUES
-(1, 101, 'IT Master Store', 'Chuyên cung cấp tài liệu lập trình, source code, tài liệu tối ưu hệ thống.', 1),
-(2, 102, 'Art & Design', 'Cung cấp Template UI/UX, Mockup chất lượng cao.', 1);
+-- 1. Insert Users 
+-- Mật khẩu của mọi tài khoản đều là: 123456
+INSERT INTO users (name, email, password, role) VALUES 
+('System Admin', 'admin@creono.com', '$2y$10$vOZ4Me.zt6EDzSWBDF9PMetxjDY8YNBZwXNBTYxomvn9IaQSvNv8S', 3),
+('Seller One', 'seller1@mail.com', '$2y$10$vOZ4Me.zt6EDzSWBDF9PMetxjDY8YNBZwXNBTYxomvn9IaQSvNv8S', 2),
+('Seller Two', 'seller2@mail.com', '$2y$10$vOZ4Me.zt6EDzSWBDF9PMetxjDY8YNBZwXNBTYxomvn9IaQSvNv8S', 2),
+('Buyer John', 'buyer@mail.com', '$2y$10$vOZ4Me.zt6EDzSWBDF9PMetxjDY8YNBZwXNBTYxomvn9IaQSvNv8S', 1);
 
--- 8.5. Thêm Sản phẩm (Products)
--- Sản phẩm 1 & 2 thuộc Store 1 (IT). Sản phẩm 3 thuộc Store 2 (Design)
-INSERT INTO products (id, store_id, category_id, title, description, price, preview_url, status) VALUES
-(1, 1, 2, 'Khóa học PHP MVC Cơ bản', 'Tài liệu PDF hướng dẫn code PHP thuần chuẩn kiến trúc MVC.', 150000.0000, 'https://via.placeholder.com/400', 2),
-(2, 1, 3, 'Kỹ thuật xử lý Cycle Deadlock trong SQL Server', 'Báo cáo chi tiết về tình huống table lock chéo giữa KhachHang và HangThanhVien. Hướng dẫn thiết lập mức độ cô lập (Transaction Isolation) và sử dụng lệnh delay để mô phỏng deadlock.', 350000.0000, 'https://via.placeholder.com/400', 2),
-(3, 2, 5, 'Bộ 50 Template Figma Thương mại điện tử', 'Thiết kế chuẩn Mobile app cho ứng dụng mua bán.', 400000.0000, 'https://via.placeholder.com/400', 2);
+-- 2. Insert Wallets (Cấp ví cho User & nạp sẵn tiền giả định)
+INSERT INTO wallets (user_id, balance, frozen_balance) VALUES 
+(1, 0, 0), -- Admin
+(2, 5000000.00, 0), -- Seller 1
+(3, 150000.00, 0), -- Seller 2
+(4, 1000000.00, 0); -- Buyer
 
--- 8.6. Thêm File tài liệu thực tế (Documents)
-INSERT INTO documents (product_id, file_url, ai_label_id, ai_score) VALUES
-(1, 'https://www.youtube.com/results?search_query=rickroll', 1, 99.5),
-(2, 'https://www.youtube.com/results?search_query=sql+deadlock+tutorial', 1, 100.0),
-(3, 'https://www.youtube.com/results?search_query=figma+ecommerce+templates', 2, 45.0);
+-- 3. Insert Stores
+INSERT INTO stores (user_id, name, status) VALUES 
+(2, 'Code Master Store', 1),
+(3, 'Design UI/UX Hub', 1);
 
--- 8.7. Thêm Dữ liệu Đơn hàng giả lập để test Dashboard Admin/Seller
-INSERT INTO orders (id, buyer_id, total_amount, status) VALUES
-(1, 103, 150000.0000, 1),
-(2, 103, 350000.0000, 1);
+-- 4. Insert Products
+INSERT INTO products (store_id, title, price, status) VALUES 
+(1, 'Source Code Quản lý Khách sạn PHP', 500000.00, 2), -- Đã duyệt
+(1, 'Template Admin Dashboard VueJS', 200000.00, 1), -- Chờ duyệt
+(2, 'Bộ icon Figma E-Commerce 2024', 150000.00, 2); -- Đã duyệt
 
-INSERT INTO order_items (id, order_id, product_id, price) VALUES
-(1, 1, 1, 150000.0000),
-(2, 2, 2, 350000.0000);
+-- 5. Insert AI Labels & Documents
+INSERT INTO ai_labels (name) VALUES ('Human Written'), ('AI Generated'), ('Mixed');
+INSERT INTO documents (product_id, file_url, ai_score, ai_label_id) VALUES 
+(1, 'https://s3.aws.com/files/hotel_php.zip', 5.5, 1),
+(2, 'https://s3.aws.com/files/vue_admin.zip', 12.0, 1),
+(3, 'https://s3.aws.com/files/figma_icons.zip', 95.5, 2);
+
+-- 6. Insert Tags
+INSERT INTO tags (name, slug) VALUES ('PHP', 'php'), ('VueJS', 'vuejs'), ('Figma', 'figma');
+INSERT INTO product_tags (product_id, tag_id) VALUES (1, 1), (2, 2), (3, 3);
+
+-- 7. Test Triggers: Insert Review
+INSERT INTO reviews (product_id, user_id, rating, comment) VALUES 
+(1, 4, 5, 'Source code rất tốt, dễ hiểu!'),
+(3, 4, 4, 'Icon đẹp nhưng hơi ít màu.');
+
+-- 8. Test Triggers: Insert Download
+INSERT INTO downloads (user_id, product_id, ip_address) VALUES 
+(4, 1, '192.168.1.1'),
+(4, 1, '192.168.1.1'), 
+(4, 3, '192.168.1.5');
+
+-- 9. Test Stored Procedure: Tạo 1 yêu cầu rút tiền Pending cho Seller 1
+CALL sp_RequestWithdrawal(2, 2000000.00, 'Vietcombank', '0123456789', 'SELLER ONE');
+
+SET FOREIGN_KEY_CHECKS = 1;

@@ -3,8 +3,8 @@ class Admin extends Controller {
     
     public function __construct() {
         // 1. Kiểm tra xem user đã đăng nhập chưa
-        if (!isset($_SESSION['user_id'])) {
-            header('location: ' . URLROOT . '/users/login');
+        if ($_SESSION['user_role'] != 3) {
+            header('location: ' . URLROOT);
             exit();
         }
         
