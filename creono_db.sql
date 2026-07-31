@@ -233,3 +233,59 @@ DELIMITER ;
 INSERT INTO roles (code, name) VALUES ('ADMIN', 'Administrator'), ('BUYER', 'Buyer'), ('SELLER', 'Seller'), ('CENSOR', 'Censor');
 INSERT INTO system_configs (config_key, config_value, description) VALUES ('COMMISSION_RATE', '0.10', 'Phí sàn 10%');
 INSERT INTO ai_labels (code, name) VALUES ('HUMAN', '100% Human Written'), ('AI_ASSISTED', 'AI Assisted'), ('AI_GENERATED', 'AI Generated');
+
+-- 8. DỮ LIỆU MẪU DÀNH CHO TEAM PHÁT TRIỂN (SEED DATA)
+-- Mật khẩu chung cho tất cả tài khoản dưới đây là: password
+-- ==========================================
+
+-- 8.1. Thêm Danh mục (Categories)
+INSERT INTO categories (id, parent_id, name, slug, status) VALUES
+(1, NULL, 'Công nghệ thông tin', 'cong-nghe-thong-tin', 1),
+(2, 1, 'Lập trình Web', 'lap-trinh-web', 1),
+(3, 1, 'Cơ sở dữ liệu', 'co-so-du-lieu', 1),
+(4, NULL, 'Thiết kế đồ họa', 'thiet-ke-do-hoa', 1),
+(5, 4, 'UI/UX Design', 'ui-ux-design', 1);
+
+-- 8.2. Thêm Users mẫu (1 Admin, 2 Seller, 1 Buyer)
+-- (Sử dụng INSERT IGNORE để nếu bạn đã tạo tài khoản trùng email thì không báo lỗi)
+INSERT IGNORE INTO users (id, email, password_hash, role_id, kyc_status, status) VALUES
+(100, 'admin@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, 2, 1),
+(101, 'seller_dev@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 2, 1),
+(102, 'seller_design@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 2, 1),
+(103, 'buyer@creono.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 0, 1);
+
+-- 8.3. Cập nhật Profile & Ví cho Users (Do Trigger đã tạo sẵn dòng)
+UPDATE user_profiles SET full_name = 'Quản trị viên', bio = 'System Admin' WHERE user_id = 100;
+UPDATE user_profiles SET full_name = 'Dev Master', bio = 'Chuyên gia IT' WHERE user_id = 101;
+UPDATE user_profiles SET full_name = 'Design Studio', bio = 'Designer 10 năm kinh nghiệm' WHERE user_id = 102;
+UPDATE user_profiles SET full_name = 'Khách Mua Hàng', bio = 'Học sinh sinh viên' WHERE user_id = 103;
+
+UPDATE wallets SET balance = 5000000 WHERE user_id = 101; -- Seller có sẵn 5 triệu
+UPDATE wallets SET balance = 10000000 WHERE user_id = 103; -- Buyer có sẵn 10 triệu để test mua hàng
+
+-- 8.4. Thêm Cửa hàng (Stores)
+INSERT INTO stores (id, seller_id, name, description, status) VALUES
+(1, 101, 'IT Master Store', 'Chuyên cung cấp tài liệu lập trình, source code, tài liệu tối ưu hệ thống.', 1),
+(2, 102, 'Art & Design', 'Cung cấp Template UI/UX, Mockup chất lượng cao.', 1);
+
+-- 8.5. Thêm Sản phẩm (Products)
+-- Sản phẩm 1 & 2 thuộc Store 1 (IT). Sản phẩm 3 thuộc Store 2 (Design)
+INSERT INTO products (id, store_id, category_id, title, description, price, preview_url, status) VALUES
+(1, 1, 2, 'Khóa học PHP MVC Cơ bản', 'Tài liệu PDF hướng dẫn code PHP thuần chuẩn kiến trúc MVC.', 150000.0000, 'https://via.placeholder.com/400', 2),
+(2, 1, 3, 'Kỹ thuật xử lý Cycle Deadlock trong SQL Server', 'Báo cáo chi tiết về tình huống table lock chéo giữa KhachHang và HangThanhVien. Hướng dẫn thiết lập mức độ cô lập (Transaction Isolation) và sử dụng lệnh delay để mô phỏng deadlock.', 350000.0000, 'https://via.placeholder.com/400', 2),
+(3, 2, 5, 'Bộ 50 Template Figma Thương mại điện tử', 'Thiết kế chuẩn Mobile app cho ứng dụng mua bán.', 400000.0000, 'https://via.placeholder.com/400', 2);
+
+-- 8.6. Thêm File tài liệu thực tế (Documents)
+INSERT INTO documents (product_id, file_url, ai_label_id, ai_score) VALUES
+(1, 'https://www.youtube.com/results?search_query=rickroll', 1, 99.5),
+(2, 'https://www.youtube.com/results?search_query=sql+deadlock+tutorial', 1, 100.0),
+(3, 'https://www.youtube.com/results?search_query=figma+ecommerce+templates', 2, 45.0);
+
+-- 8.7. Thêm Dữ liệu Đơn hàng giả lập để test Dashboard Admin/Seller
+INSERT INTO orders (id, buyer_id, total_amount, status) VALUES
+(1, 103, 150000.0000, 1),
+(2, 103, 350000.0000, 1);
+
+INSERT INTO order_items (id, order_id, product_id, price) VALUES
+(1, 1, 1, 150000.0000),
+(2, 2, 2, 350000.0000);
