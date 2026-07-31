@@ -15,11 +15,25 @@
         <div class="container">
             <a class="logo" href="<?php echo URLROOT; ?>"><?php echo SITENAME; ?></a>
             <ul class="nav-links">
-                <li><a href="<?php echo URLROOT; ?>">Trang chủ</a></li>
-                <li><a href="<?php echo URLROOT; ?>/pages/about">Giới thiệu</a></li>
-                <li><a href="<?php echo URLROOT; ?>/users/login">Đăng nhập</a></li>
-                <li><a href="<?php echo URLROOT; ?>/users/register">Đăng ký</a></li>
-            </ul>
+    <li><a href="<?php echo URLROOT; ?>">Trang chủ</a></li>
+    <li><a href="<?php echo URLROOT; ?>/pages/about">Giới thiệu</a></li>
+    
+    <?php if(isset($_SESSION['user_id'])) : ?>
+        <!-- Hiển thị khi ĐÃ đăng nhập -->
+        <li><a href="#">Chào, <?php echo $_SESSION['user_email']; ?></a></li>
+        
+        <!-- Nút vào Admin (chỉ hiện nếu role_id = 1) -->
+        <?php if($_SESSION['user_role'] == 1) : ?>
+            <li><a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Panel</a></li>
+        <?php endif; ?>
+        
+        <li><a href="<?php echo URLROOT; ?>/users/logout">Đăng xuất</a></li>
+    <?php else : ?>
+        <!-- Hiển thị khi CHƯA đăng nhập -->
+        <li><a href="<?php echo URLROOT; ?>/users/login">Đăng nhập</a></li>
+        <li><a href="<?php echo URLROOT; ?>/users/register">Đăng ký</a></li>
+    <?php endif; ?>
+</ul>
         </div>
     </nav>
     

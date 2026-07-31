@@ -38,6 +38,6 @@ class App {
             $url = explode('/', $url);
             return $url;
         }
-        return ['Pages', 'index']; // Mặc định nếu không có URL
+        return ['Products', 'index']; // Mặc định nếu không có URL
     }
 }
