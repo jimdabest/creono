@@ -1,22 +1,11 @@
 <?php
+require_once '../app/Middleware/AuthMiddleware.php';
+require_once '../app/Middleware/RoleMiddleware.php';
+
 class Admin extends Controller {
     
     public function __construct() {
-        // 1. Kiểm tra xem user đã đăng nhập chưa
-        if ($_SESSION['user_role'] != 3) {
-            header('location: ' . URLROOT);
-            exit();
-        }
-        
-        // 2. Kiểm tra xem user có phải là Admin (role_id = 1) không
-        if ($_SESSION['user_role'] != 1) {
-            // Nếu không phải Admin, đá văng về trang chủ
-            header('location: ' . URLROOT);
-            exit();
-        }
-        
-        // Nếu qua được 2 ải trên, có thể nạp các Model cần thiết cho Admin
-        // $this->userModel = $this->model('User');
+        RoleMiddleware::check([3]);
     }
 
     // Chức năng UC39: Dashboard Admin

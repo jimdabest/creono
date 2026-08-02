@@ -1,10 +1,10 @@
 <?php
 class User extends BaseModel {
     // Định nghĩa bảng mà model này tương tác
-    protected $table = 'users';
+    protected string $table = 'users';
 
     // Hàm kiểm tra Email đã tồn tại chưa
-    public function findByEmail($email) {
+    public function findByEmail(string $email): bool {
         $this->db->query('SELECT * FROM users WHERE email = :email');
         
         // Gán giá trị
@@ -21,7 +21,7 @@ class User extends BaseModel {
     }
 
     // Lấy toàn bộ thông tin User bằng Email
-    public function getUserByEmail($email) {
+    public function getUserByEmail(string $email): ?object {
         $this->db->query('SELECT * FROM users WHERE email = :email');
         $this->db->bind(':email', $email);
         
@@ -29,7 +29,7 @@ class User extends BaseModel {
     }
 
     // Đăng ký người dùng mới
-    public function register($data) {
+    public function register(array $data): bool {
         // 1. Thêm vào bảng users (Bổ sung trường name, role = 1)
         $this->db->query('INSERT INTO users (name, email, password, role) VALUES (:name, :email, :password, 1)');
         $this->db->bind(':name', $data['name']);
@@ -53,7 +53,7 @@ class User extends BaseModel {
     }
     
     // Xác thực người dùng (Kiểm tra Email và Mật khẩu)
-    public function login($email, $password) {
+    public function login(string $email, string $password): object|false {
         // Đã xóa 'AND deleted_at IS NULL'
         $this->db->query("SELECT * FROM {$this->table} WHERE email = :email");
         $this->db->bind(':email', $email);
@@ -74,4 +74,39 @@ class User extends BaseModel {
             return false; // Không tìm thấy user
         }
     }
+
+    // Lấy user theo ID (kèm profile)
+    public function getUserWithProfile(int $id): ?object {
+        $this->db->query("SELECT u.id, u.name, u.email, u.role, 
+                                p.full_name, p.avatar_url, p.bio 
+                        FROM {$this->table} u 
+                        LEFT JOIN user_profiles p ON u.id = p.user_id 
+                        WHERE u.id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    // Cập nhật KYC status
+    public function updateKycStatus(int $user_id, int $status): bool {
+        $this->db->query("UPDATE {$this->table} SET kyc_status = :status WHERE id = :id");
+        $this->db->bind(':status',$status);
+        $this->db->bind(':id',$user_id);
+        return $this->db->execute();
+    }
+
+public function changePassword(int $user_id, string $new_password): bool {
+    $hash = password_hash($new_password, PASSWORD_DEFAULT);
+    $this->db->query("UPDATE {$this->table} SET password = :hash WHERE id = :id");
+    $this->db->bind(':hash', $hash);
+    $this->db->bind(':id', $user_id);
+    return $this->db->execute();
+}
+
+    // Kiểm tra role
+public function hasRole(int $user_id, int $role): bool {
+    $this->db->query("SELECT id FROM {$this->table} WHERE id = :id AND role = :role");
+    $this->db->bind(':id', $user_id);
+    $this->db->bind(':role', $role);
+    return $this->db->rowCount() > 0;
+}
 }

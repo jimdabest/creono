@@ -8,6 +8,7 @@
     
     <!-- Gửi dữ liệu về lại hàm register trong Controller Users -->
     <form action="<?php echo URLROOT; ?>/users/register" method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($data['csrf_token'] ?? generateCsrfToken()); ?>">
         
         <!-- Khối nhập Họ và Tên (VỪA ĐƯỢC THÊM VÀO ĐÂY) -->
         <div class="form-group">

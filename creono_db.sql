@@ -40,6 +40,17 @@ CREATE TABLE stores (
     CONSTRAINT fk_store_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE user_profiles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    full_name VARCHAR(255) NULL,
+    avatar_url VARCHAR(500) NULL,
+    bio TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE products (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     store_id BIGINT NOT NULL,

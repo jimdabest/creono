@@ -38,3 +38,15 @@
     </nav>
     
     <div class="container">
+        <?php if (function_exists('getFlash')) : ?>
+            <?php $successFlash = getFlash('success'); ?>
+            <?php $errorFlash = getFlash('error'); ?>
+
+            <?php if ($successFlash) : ?>
+                <div class="alert alert-success"><?php echo htmlspecialchars($successFlash['message']); ?></div>
+            <?php endif; ?>
+
+            <?php if ($errorFlash) : ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($errorFlash['message']); ?></div>
+            <?php endif; ?>
+        <?php endif; ?>

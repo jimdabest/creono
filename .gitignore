@@ -1,14 +1,182 @@
-# Bỏ qua file cấu hình thật
+# ==========================================
+# CREONO - .gitignore
+# Dự án PHP MVC thuần
+# ==========================================
+
+# ==========================================
+# 1. CẤU HÌNH VÀ MÔI TRƯỜNG
+# ==========================================
+
+# Cấu hình database (chứa thông tin nhạy cảm)
 /config/config.php
+/config/config.ini
+/config/.env
+/.env
+/.env.local
+/.env.*.local
 
-# Bỏ qua thư mục hệ thống / IDE
-.vscode/
-.idea/
+# File cấu hình IDE
+/.vscode/
+/.idea/
+/.project
+/.settings/
+/*.iml
+
+# ==========================================
+# 2. LOGS VÀ CACHE
+# ==========================================
+
+# Log files
+/logs/
+/logs/*.log
+*.log
+error_log
+access_log
+
+# Cache
+/cache/
+/cache/*.tmp
+/tmp/
+/*.tmp
+/*.cache
+
+# ==========================================
+# 3. THƯ MỤC UPLOAD (File người dùng)
+# ==========================================
+
+# Thư mục upload (giữ cấu trúc nhưng bỏ qua files)
+/public/uploads/
+/public/uploads/avatars/
+/public/uploads/products/
+/public/uploads/temp/
+/public/uploads/*.*
+!/public/uploads/index.html
+!/public/uploads/.gitkeep
+
+# ==========================================
+# 4. DEPENDENCIES VÀ PACKAGES
+# ==========================================
+
+# Composer
+/vendor/
+/composer.lock
+/composer.phar
+
+# NPM/Node
+/node_modules/
+/npm-debug.log
+/yarn-error.log
+/package-lock.json
+/yarn.lock
+
+# ==========================================
+# 5. HỆ ĐIỀU HÀNH
+# ==========================================
+
+# Windows
+Thumbs.db
+*.exe
+*.dll
+*.bat
+*.cmd
+*.lnk
+desktop.ini
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
 
-# Bỏ qua repomix
+# Linux
+*~
+*.swp
+*.swo
+*.swn
+*.bak
+*.old
+
+# ==========================================
+# 6. TOOLS VÀ BUILD
+# ==========================================
+
+# Repomix
 repomix-output.xml
+repomix-output.json
+repomix-output.txt
 
-# Bỏ qua thư mục chứa file người dùng upload (nếu sau này có)
-# /public/uploads/*
-# !/public/uploads/index.html
+# Backup
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.sql.gz
+*.sql.zip
+*.bak.sql
+
+# IDE
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# ==========================================
+# 7. TESTING
+# ==========================================
+
+# Unit tests reports
+/tests/_output/
+/tests/coverage/
+*.test.log
+coverage.xml
+*.clover
+
+# ==========================================
+# 8. PROJECT SPECIFIC
+# ==========================================
+
+# Database dumps (trừ file mẫu)
+/*.sql
+!creono_db.sql
+!sample_data.sql
+!migration/*.sql
+
+# Session files
+/tmp/sessions/
+/sessions/
+*.sess
+
+# Custom config
+/config/custom.php
+/config/local.php
+
+# ==========================================
+# 9. MISCELLANEOUS
+# ==========================================
+
+# Editor files
+.editorconfig
+.eslintrc
+.prettierrc
+.stylelintrc
+
+# Git
+*.orig
+*.merge
+*.rej
+
+# Phar
+*.phar
+*.phar.gz
+
+# Compiled PHP
+*.phar
+*.phar.gz
+
+# ==========================================
+# LƯU Ý:
+# 1. Giữ lại file mẫu để hướng dẫn
+# 2. Thêm pattern theo nhu cầu dự án
+# 3. Kiểm tra lại trước khi commit
+# ==========================================

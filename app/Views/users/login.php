@@ -5,6 +5,7 @@
     <h2>Đăng nhập Creono</h2>
     
     <form action="<?php echo URLROOT; ?>/users/login" method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($data['csrf_token'] ?? generateCsrfToken()); ?>">
         <!-- Input Email -->
         <div class="form-group">
             <label for="email">Email: *</label>
