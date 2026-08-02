@@ -25,4 +25,11 @@ class Pages extends Controller {
         ];
         $this->view('pages/about', $data);
     }
+    // app/Controllers/Pages.php
+    public function js_test() {
+        $data = [
+            'title' => 'JavaScript Test'
+        ];
+        $this->view('pages/js_test', $data);
+    }
 }

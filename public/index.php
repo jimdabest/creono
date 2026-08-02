@@ -10,11 +10,11 @@ if (function_exists('handleException')) {
 	set_exception_handler('handleException');
 }
 
-// Tự động load các file Core
 require_once '../app/Core/Database.php';
 require_once '../app/Core/BaseModel.php';
 require_once '../app/Core/Controller.php';
 require_once '../app/Core/App.php';
+require_once '../app/Core/Validator.php';
 
 // Khởi tạo router
 $init = new App();

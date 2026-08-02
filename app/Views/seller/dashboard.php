@@ -1,30 +1,30 @@
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<div class="container" style="margin-top: 30px;">
-    <div class="card" style="max-width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+<div class="container mt-4">
+    <div class="card dashboard-card">
+        <div class="dashboard-header">
             <h2>Dashboard Người bán</h2>
-            <a href="#" class="btn" style="width: auto; background: #28a745;">+ Thêm sản phẩm</a>
+            <a href="#" class="btn btn-success">+ Thêm sản phẩm</a>
         </div>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
-            <div class="stat-card" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+        <div class="stats-grid">
+            <div class="stat-card">
                 <h3>Sản phẩm</h3>
-                <p style="font-size: 24px; font-weight: bold;">0</p>
+                <p class="stat-value">0</p>
             </div>
-            <div class="stat-card" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+            <div class="stat-card">
                 <h3>Doanh thu</h3>
-                <p style="font-size: 24px; font-weight: bold;">0đ</p>
+                <p class="stat-value">0đ</p>
             </div>
-            <div class="stat-card" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+            <div class="stat-card">
                 <h3>Đánh giá</h3>
-                <p style="font-size: 24px; font-weight: bold;">⭐ 0.0</p>
+                <p class="stat-value">⭐ 0.0</p>
             </div>
         </div>
         
-        <div style="margin-top: 20px;">
+        <div class="dashboard-section">
             <h3>Danh sách sản phẩm</h3>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; color: #999;">
+            <div class="empty-state">
                 Chưa có sản phẩm nào. Bắt đầu đăng bán ngay!
             </div>
         </div>

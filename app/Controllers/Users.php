@@ -9,190 +9,173 @@ class Users extends Controller {
     private UserProfile $userProfileModel;
 
     public function __construct() {
-        $this->userModel =$this->model('User');
-        $this->userProfileModel =$this->model('UserProfile');
+        $this->userModel = $this->model('User');
+        $this->userProfileModel = $this->model('UserProfile');
+    }
+
+    /**
+     * Helper: Trả về JSON response
+     */
+    private function jsonResponse(bool $success, string $message, array $data = []): void {
+        header('Content-Type: application/json');
+        echo json_encode(array_merge([
+            'success' => $success,
+            'message' => $message
+        ], $data));
+        exit();
+    }
+
+    /**
+     * Helper: Lấy đường dẫn redirect theo role
+     */
+    private function getRedirectPath(int $role): string {
+        $paths = [
+            3 => '/admin/dashboard',
+            2 => '/seller/dashboard',
+            1 => '/products/index'
+        ];
+        return $paths[$role] ?? '/products/index';
+    }
+
+    /**
+     * Helper: Kiểm tra request có phải AJAX không
+     */
+    private function isAjaxRequest(): bool {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     // Chức năng UC-01: Đăng ký tài khoản
     public function register(): void {
-        // Kiểm tra request là POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-                die('CSRF token validation failed');
+                $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
-            // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
+            // Gộp dữ liệu đầu vào
             $data = [
-                'name' => trim($_POST['name']),
-                'email' => trim($_POST['email']),
-                'password' => trim($_POST['password']),
-                'confirm_password' => trim($_POST['confirm_password']),
-                'csrf_token' => generateCsrfToken(),
-                'name_err' => '',
-                'email_err' => '',
-                'password_err' => '',
-                'confirm_password_err' => ''
+                'name' => $_POST['name'] ?? '',
+                'email' => $_POST['email'] ?? '',
+                'password' => $_POST['password'] ?? '',
+                'confirm_password' => $_POST['confirm_password'] ?? '',
             ];
 
-            // Validate Name
-            if (empty($data['name'])) {
-                $data['name_err'] = 'Vui lòng nhập họ và tên';
+            // Chạy Validator
+            $validator = new Validator($_POST);
+            $errors = $validator->validate([
+                'name' => 'required',
+                'email' => 'required|email',
+                'password' => 'required|min:6',
+                'confirm_password' => 'required|match:password'
+            ]);
+
+            // Check email trùng trong DB
+            if (empty($errors['email_err']) && $this->userModel->findByEmail($data['email'])) {
+                $errors['email_err'] = 'Email này đã được sử dụng';
             }
 
-            // Validate Email
-            if (empty($data['email'])) {
-                $data['email_err'] = 'Vui lòng nhập email';
-            } else {
-                // Kiểm tra email đã tồn tại chưa bằng Model
-                if ($this->userModel->findByEmail($data['email'])) {
-                    $data['email_err'] = 'Email này đã được sử dụng';
-                }
-            }
-
-            // Validate Password
-            if (empty($data['password'])) {
-                $data['password_err'] = 'Vui lòng nhập mật khẩu';
-            } elseif (strlen($data['password']) < 6) {
-                $data['password_err'] = 'Mật khẩu phải có ít nhất 6 ký tự';
-            }
-
-            // Validate Confirm Password
-            if (empty($data['confirm_password'])) {
-                $data['confirm_password_err'] = 'Vui lòng xác nhận mật khẩu';
-            } else {
-                if ($data['password'] != $data['confirm_password']) {
-                    $data['confirm_password_err'] = 'Mật khẩu không khớp';
-                }
-            }
-
-            // Make sure errors are empty
-            if (empty($data['name_err']) && empty($data['email_err']) && empty($data['password_err']) && empty($data['confirm_password_err'])) {
-                
-                // Hash Password (Lưu trực tiếp vào $data['password'] theo DB mới)
+            // Nếu không có lỗi gì thì cho đăng ký
+            if ($validator->passes() && empty($errors['email_err'])) {
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
-                // Gọi hàm register() của Model
                 if ($this->userModel->register($data)) {
-                    // 1. Lấy thông tin user vừa mới lưu vào Database
                     $newUser = $this->userModel->getUserByEmail($data['email']);
-                    
-                    // 2. Gọi hàm tạo Session đăng nhập luôn (hàm này sẽ tự động chuyển hướng trang)
                     $this->createUserSession($newUser);
-                    
+                    return; // Thêm return để dừng execution
                 } else {
-                    setFlash('error', 'Hệ thống đang bận, không thể đăng ký lúc này.');
-                    $this->view('users/register', $data);
+                    $this->jsonResponse(false, 'Hệ thống đang bận, không thể đăng ký lúc này.');
                 }
             } else {
-                // Load view with errors
-                $this->view('users/register', $data);
+                $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
             }
-
         } else {
-            // Khởi tạo data rỗng khi load form lần đầu
             $data = [
-                'name' => '',
-                'email' => '',
-                'password' => '',
-                'confirm_password' => '',
+                'name' => '', 'email' => '', 'password' => '', 'confirm_password' => '',
                 'csrf_token' => generateCsrfToken(),
-                'name_err' => '',
-                'email_err' => '',
-                'password_err' => '',
-                'confirm_password_err' => ''
             ];
-
-            // Load view
             $this->view('users/register', $data);
         }
     }
     
+    // Chức năng UC-02: Đăng nhập
     public function login(): void {
-        // Kiểm tra xem submit POST hay truy cập GET
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-                die('CSRF token validation failed');
+                $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
             $data = [
-                'email' => trim($_POST['email']),
-                'password' => trim($_POST['password']),
-                'csrf_token' => generateCsrfToken(),
-                'email_err' => '',
-                'password_err' => ''
+                'email' => $_POST['email'] ?? '',
+                'password' => $_POST['password'] ?? '',
             ];
 
-            // Validate Email
-            if (empty($data['email'])) {
-                $data['email_err'] = 'Vui lòng nhập email';
-            } elseif (!$this->userModel->findByEmail($data['email'])) {
-                $data['email_err'] = 'Email không tồn tại trong hệ thống';
-            }
+            $validator = new Validator($_POST);
+            $errors = $validator->validate([
+                'email' => 'required|email',
+                'password' => 'required'
+            ]);
 
-            // Validate Password
-            if (empty($data['password'])) {
-                $data['password_err'] = 'Vui lòng nhập mật khẩu';
-            }
-
-            // Nếu không có lỗi form thì tiến hành Login
-            if (empty($data['email_err']) && empty($data['password_err'])) {
-                // Kiểm tra với Database
-                $loggedInUser = $this->userModel->login($data['email'], $data['password']);
-
-                if ($loggedInUser) {
-                    // Đăng nhập thành công -> Tạo Session
-                    $this->createUserSession($loggedInUser);
+            if ($validator->passes()) {
+                if (!$this->userModel->findByEmail($data['email'])) {
+                    $errors['email_err'] = 'Email không tồn tại trong hệ thống';
                 } else {
-                    $data['password_err'] = 'Mật khẩu không chính xác';
-                    $this->view('users/login', $data);
+                    $loggedInUser = $this->userModel->login($data['email'], $data['password']);
+                    if ($loggedInUser) {
+                        $this->createUserSession($loggedInUser);
+                        return; // Thêm return để dừng execution
+                    } else {
+                        $errors['password_err'] = 'Mật khẩu không chính xác';
+                    }
                 }
-            } else {
-                $this->view('users/login', $data);
+            }
+            
+            if (!empty($errors)) {
+                $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
             }
         } else {
-            // Hiển thị form rỗng (Truy cập lần đầu)
             $data = [
-                'email' => '',
-                'password' => '',
-                'csrf_token' => generateCsrfToken(),
-                'email_err' => '',
-                'password_err' => ''
+                'email' => '', 'password' => '', 'csrf_token' => generateCsrfToken()
             ];
             $this->view('users/login', $data);
         }
     }
 
-    // Hàm hỗ trợ lưu Session sau khi đăng nhập thành công
+    // Hàm hỗ trợ lưu Session an toàn
     public function createUserSession(object $user): void {
-    $_SESSION['user_id'] = $user->id;
-    $_SESSION['user_name'] = $user->name; // Đổi từ user_email thành user_name cho thân thiện
-    $_SESSION['user_email'] = $user->email;
-    $_SESSION['user_role'] = $user->role; // Cột trong DB giờ là 'role' thay vì 'role_id'
-    
-    // Chuyển hướng dựa trên Role
-    if ($_SESSION['user_role'] == 3) {
-        header('location: ' . URLROOT . '/admin/dashboard'); // Admin
-        exit();
-    } elseif ($_SESSION['user_role'] == 2) {
-        header('location: ' . URLROOT . '/seller/dashboard'); // Seller
-        exit();
-    } else {
-        header('location: ' . URLROOT . '/products/index'); // Buyer
+        session_regenerate_id(true);
+
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['user_name'] = $user->name; 
+        $_SESSION['user_email'] = $user->email;
+        $_SESSION['user_role'] = $user->role; 
+        
+        $path = $this->getRedirectPath($user->role);
+        $fullPath = URLROOT . $path;
+        
+        // Trả về JSON cho AJAX request
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(true, 'Đăng nhập thành công!', [
+                'redirect' => $fullPath
+            ]);
+        }
+        
+        // Fallback cho non-AJAX (redirect thường)
+        header('location: ' . $fullPath);
         exit();
     }
-}
-    
-    // Đăng xuất (UC-04)
+
+    // Đăng xuất
     public function logout(): void {
         unset($_SESSION['user_id']);
         unset($_SESSION['user_email']);
         unset($_SESSION['user_role']);
         session_destroy();
         header('location: ' . URLROOT . '/users/login');
+        exit();
     }
 
     // Trang Hồ sơ cá nhân
@@ -214,7 +197,7 @@ class Users extends Controller {
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-                die('CSRF token validation failed');
+                $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
@@ -224,112 +207,92 @@ class Users extends Controller {
                 'bio' => trim($_POST['bio'])
             ];
 
-            // Xử lý upload Avatar nếu có
+            // Xử lý upload avatar
             if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
-                $upload_dir = '../public/uploads/avatars/';
-                $file_name = time() . '_' . basename($_FILES['avatar']['name']);
-                $target_file = $upload_dir . $file_name;
-                
-                if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_file)) {
-                    $updateData['avatar_url'] = '/uploads/avatars/' . $file_name;
+                $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+                $file_info = finfo_open(FILEINFO_MIME_TYPE);
+                $mime_type = finfo_file($file_info, $_FILES['avatar']['tmp_name']);
+                finfo_close($file_info);
+
+                if (in_array($mime_type, $allowed_types)) {
+                    $upload_dir = '../public/uploads/avatars/';
+                    // Tạo thư mục nếu chưa có
+                    if (!is_dir($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
+                    
+                    $extension = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
+                    $file_name = time() . '_' . uniqid() . '.' . $extension;
+                    $target_file = $upload_dir . $file_name;
+                    
+                    if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_file)) {
+                        $updateData['avatar_url'] = '/uploads/avatars/' . $file_name;
+                    } else {
+                        $this->jsonResponse(false, 'Không thể upload ảnh. Vui lòng thử lại.');
+                    }
+                } else {
+                    $this->jsonResponse(false, 'File không hợp lệ! Chỉ chấp nhận ảnh JPG, PNG hoặc GIF.');
                 }
             }
 
             if ($this->userProfileModel->updateProfile($_SESSION['user_id'], $updateData)) {
-                setFlash('success', 'Cập nhật hồ sơ thành công!');
-                header('location: ' . URLROOT . '/users/profile');
-                exit();
+                $this->jsonResponse(true, 'Cập nhật hồ sơ thành công!', [
+                    'redirect' => URLROOT . '/users/profile'
+                ]);
             } else {
-                setFlash('error', 'Đã xảy ra lỗi khi cập nhật.');
-                header('location: ' . URLROOT . '/users/profile');
-                exit();
+                $this->jsonResponse(false, 'Đã xảy ra lỗi khi cập nhật.');
             }
         }
     }
 
     // Xử lý Đổi mật khẩu
     public function changePassword(): void {
-        // Đảm bảo user đã đăng nhập
         AuthMiddleware::check();
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-                die('CSRF token validation failed');
+                $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
-            // Lọc dữ liệu đầu vào
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
             
             $data = [
-                'old_password' => trim($_POST['old_password']),
-                'new_password' => trim($_POST['new_password']),
-                'confirm_password' => trim($_POST['confirm_password']),
-                'csrf_token' => generateCsrfToken(),
-                'old_password_err' => '',
-                'new_password_err' => '',
-                'confirm_password_err' => ''
+                'old_password' => $_POST['old_password'] ?? '',
+                'new_password' => $_POST['new_password'] ?? '',
+                'confirm_password' => $_POST['confirm_password'] ?? '',
             ];
 
-            // 1. Kiểm tra mật khẩu hiện tại
-            if (empty($data['old_password'])) {
-                $data['old_password_err'] = 'Vui lòng nhập mật khẩu hiện tại';
-            } else {
-                // Lấy thông tin user hiện tại từ Database
+            $validator = new Validator($_POST);
+            $errors = $validator->validate([
+                'old_password' => 'required',
+                'new_password' => 'required|min:6',
+                'confirm_password' => 'required|match:new_password'
+            ]);
+
+            if ($validator->passes()) {
                 $user = $this->userModel->findById($_SESSION['user_id']);
                 
-                // Kiểm tra xem pass nhập vào có khớp với mã băm trong DB không
                 if (!$user || !password_verify($data['old_password'], $user->password)) {
-                    $data['old_password_err'] = 'Mật khẩu hiện tại không chính xác';
-                }
-            }
-
-            // 2. Kiểm tra mật khẩu mới
-            if (empty($data['new_password'])) {
-                $data['new_password_err'] = 'Vui lòng nhập mật khẩu mới';
-            } elseif (strlen($data['new_password']) < 6) {
-                $data['new_password_err'] = 'Mật khẩu phải có ít nhất 6 ký tự';
-            }
-
-            // 3. Kiểm tra xác nhận mật khẩu
-            if (empty($data['confirm_password'])) {
-                $data['confirm_password_err'] = 'Vui lòng xác nhận mật khẩu mới';
-            } else {
-                if ($data['new_password'] != $data['confirm_password']) {
-                    $data['confirm_password_err'] = 'Mật khẩu xác nhận không khớp';
-                }
-            }
-
-            // Nếu không có lỗi nào, tiến hành đổi mật khẩu
-            if (empty($data['old_password_err']) && empty($data['new_password_err']) && empty($data['confirm_password_err'])) {
-                
-                // Gọi hàm changePassword ở Model (Hàm này đã có logic tự băm mật khẩu mới)
-                if ($this->userModel->changePassword($_SESSION['user_id'], $data['new_password'])) {
-                    // Set thông báo thành công và chuyển hướng về trang Profile
-                    setFlash('success', 'Đã cập nhật mật khẩu mới thành công!');
-                    header('location: ' . URLROOT . '/users/profile');
-                    exit();
+                    $errors['old_password_err'] = 'Mật khẩu hiện tại không chính xác';
                 } else {
-                    setFlash('error', 'Đã xảy ra lỗi hệ thống khi cập nhật mật khẩu.');
-                    header('location: ' . URLROOT . '/users/changePassword');
-                    exit();
+                    if ($this->userModel->changePassword($_SESSION['user_id'], $data['new_password'])) {
+                        $this->jsonResponse(true, 'Đã cập nhật mật khẩu mới thành công!', [
+                            'redirect' => URLROOT . '/users/profile'
+                        ]);
+                    } else {
+                        $this->jsonResponse(false, 'Đã xảy ra lỗi hệ thống khi cập nhật mật khẩu.');
+                    }
                 }
-            } else {
-                // Nếu có lỗi, load lại view hiển thị form lỗi
-                $this->view('users/change_password', $data);
+            }
+            
+            if (!empty($errors)) {
+                $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
             }
         } else {
-            // Khi truy cập bằng phương thức GET (Mới click vào link)
             $data = [
-                'old_password' => '',
-                'new_password' => '',
-                'confirm_password' => '',
-                'csrf_token' => generateCsrfToken(),
-                'old_password_err' => '',
-                'new_password_err' => '',
-                'confirm_password_err' => ''
+                'old_password' => '', 'new_password' => '', 'confirm_password' => '',
+                'csrf_token' => generateCsrfToken()
             ];
-
-            // Tải View form đổi mật khẩu
             $this->view('users/change_password', $data);
         }
     }
