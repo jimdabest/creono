@@ -8,8 +8,8 @@ class Admin extends Controller {
             exit();
         }
         
-        // 2. Kiểm tra xem user có phải là Admin (role_id = 1) không
-        if ($_SESSION['user_role'] != 1) {
+        // 2. Kiểm tra xem user có phải là Admin (role_id = 3) không
+        if ($_SESSION['user_role'] = 3) {
             // Nếu không phải Admin, đá văng về trang chủ
             header('location: ' . URLROOT);
             exit();
