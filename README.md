@@ -10,7 +10,7 @@ Dành cho Developer mới tham gia dự án, hãy làm theo các bước sau đ�
 
 1. **Clone mã nguồn:**
 ```bash
-git clone [https://github.com/your-username/creono_project.git](https://github.com/your-username/creono_project.git)
+git clone [https://github.com/jimdabest/creono_project.git](https://github.com/jimdabest/creono.git)
 ```
 *(Lưu ý: Clone trực tiếp vào thư mục `htdocs` của XAMPP).*
 
@@ -26,7 +26,7 @@ git clone [https://github.com/your-username/creono_project.git](https://github.c
 
 4. **Kiểm tra URL Rewrite (.htaccess):**
 <!-- *   Hãy chắc chắn rằng XAMPP của bạn đã bật module `mod_rewrite` trong Apache (`httpd.conf`). -->
-*   Truy cập trang chủ: `http://localhost/creono_project`. Nếu trang load thành công nghĩa là hệ thống đã hoạt động!
+*   Truy cập trang chủ: `http://localhost/creono`. Nếu trang load thành công nghĩa là hệ thống đã hoạt động!
 
 ---
 
