@@ -1,6 +1,6 @@
 -- ==============================================================================
--- HỆ THỐNG CREONO - DATABASE FULL SCRIPT (VERSION 3)
--- Tối ưu hóa Schema, loại bỏ Alter dư thừa, tinh gọn Stored Procedures.
+-- HỆ THỐNG CREONO - DATABASE FULL SCRIPT (VERSION 3.1 - FINAL)
+-- Tối ưu hóa Schema, tích hợp đầy đủ trường dữ liệu (Description, Avatar)
 -- ==============================================================================
 
 SET NAMES utf8mb4;
@@ -12,7 +12,7 @@ CREATE DATABASE creono_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_
 USE creono_db;
 
 -- ==========================================
--- PHẦN 1: TẠO BẢNG (BASE SCHEMA) - Đã gộp toàn bộ cột tối ưu
+-- PHẦN 1: TẠO BẢNG (BASE SCHEMA)
 -- ==========================================
 
 CREATE TABLE users (
@@ -20,6 +20,7 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    avatar_url VARCHAR(500) NULL, -- Đã bổ sung trường Avatar
     role TINYINT DEFAULT 1 COMMENT '1:Buyer, 2:Seller, 3:Admin, 4:Censor',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -44,6 +45,7 @@ CREATE TABLE products (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     store_id BIGINT NOT NULL,
     title VARCHAR(255) NOT NULL,
+    description TEXT NULL, -- Đã bổ sung trường Mô tả sản phẩm
     price DECIMAL(19,4) NOT NULL,
     preview_url VARCHAR(500),
     rating DECIMAL(3,2) DEFAULT 0.00,
@@ -156,7 +158,7 @@ CREATE TABLE product_tags (
     CONSTRAINT fk_pt_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
--- UC15, UC16: Giỏ hàng (Đã loại bỏ ràng buộc UNIQUE ở user_id)
+-- UC15, UC16: Giỏ hàng
 CREATE TABLE carts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
