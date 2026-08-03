@@ -10,7 +10,7 @@ Dành cho Developer mới tham gia dự án, hãy làm theo các bước sau đ�
 
 1. **Clone mã nguồn:**
 ```bash
-git clone [https://github.com/jimdabest/creono_project.git](https://github.com/jimdabest/creono.git)
+git clone (https://github.com/jimdabest/creono.git)
 ```
 *(Lưu ý: Clone trực tiếp vào thư mục `htdocs` của XAMPP).*
 
