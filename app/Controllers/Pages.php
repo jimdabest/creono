@@ -1,28 +1,59 @@
 <?php
 class Pages extends Controller {
     
+    private $productModel;
+    private $categoryModel;
+    private $testimonialModel;
+    private $userModel;
+    
     public function __construct() {
-        // Nếu cần load Model nào đó ngay khi vào trang chủ thì gọi ở đây
-        // Ví dụ: $this->productModel = $this->model('Product');
+        $this->productModel = $this->model('Product');
+        $this->categoryModel = $this->model('Category');
+        $this->testimonialModel = $this->model('Testimonial');
+        $this->userModel = $this->model('User');
     }
 
-    // Hàm index() là hàm mặc định được gọi khi người dùng truy cập trang chủ (URL rỗng)
     public function index() {
-        // Chuẩn bị dữ liệu để gửi ra View
+        // Lấy sản phẩm nổi bật
+        $featuredProducts = $this->productModel->getProducts();
+        
+        // Lấy danh mục có sản phẩm
+        $categories = $this->categoryModel->getCategoriesWithProducts();
+        
+        // Lấy đánh giá nổi bật
+        $testimonials = $this->testimonialModel->getFeatured(3);
+        
+        // Thống kê sử dụng các hàm từ Model
+        $stats = [
+            'products' => $this->productModel->getTotalProducts(),
+            'users' => $this->userModel->getTotalUsers(),
+            'sellers' => $this->userModel->getTotalSellers(),
+            'rating' => '4.8'
+        ];
+        
         $data = [
             'title' => 'Chào mừng đến với Creono',
-            'description' => 'Nền tảng mua bán tài liệu số C2C hàng đầu.'
+            'description' => 'Nền tảng mua bán tài liệu số C2C hàng đầu.',
+            'featured_products' => $featuredProducts,
+            'categories' => $categories,
+            'testimonials' => $testimonials,
+            'stats' => $stats
         ];
 
-        // Gọi View 'pages/index' và truyền biến $data vào
         $this->view('pages/index', $data);
     }
-
-    // Một ví dụ về trang phụ (vd: truy cập http://localhost/creono_project/pages/about)
+    
     public function about() {
         $data = [
             'title' => 'Về chúng tôi'
         ];
         $this->view('pages/about', $data);
+    }
+    
+    public function js_test() {
+        $data = [
+            'title' => 'JavaScript Test'
+        ];
+        $this->view('pages/js_test', $data);
     }
 }

@@ -1,7 +1,8 @@
 <?php
 class BaseModel {
-    protected $db;
-    protected $table = ''; // Tên bảng sẽ được Model con định nghĩa
+    protected Database $db;
+    protected string $table = ''; // Tên bảng sẽ được Model con định nghĩa
+    protected array $cache = [];
 
     public function __construct() {
         // Tự động kết nối DB cho tất cả các model kế thừa
@@ -9,24 +10,33 @@ class BaseModel {
     }
 
     // 1. Lấy tất cả bản ghi (Bỏ qua các bản ghi đã bị xóa mềm)
-    public function findAll() {
-        // Kiểm tra xem bảng có cột deleted_at không, ở đây ta giả định hệ thống dùng Soft Delete
-        $sql = "SELECT * FROM {$this->table} WHERE deleted_at IS NULL";
-        $this->db->query($sql);
+    public function findAll(): array {
+        $this->db->query("SELECT * FROM {$this->table}");
         return $this->db->resultSet();
     }
 
     // 2. Lấy 1 bản ghi theo ID
-    public function findById($id) {
-        $sql = "SELECT * FROM {$this->table} WHERE id = :id AND deleted_at IS NULL";
+    public function findById(int $id): ?object {
+        $cacheKey = $this->table . '_' . $id;
+        if (isset($this->cache[$cacheKey])) {
+            return $this->cache[$cacheKey];
+        }
+
+        $sql = "SELECT * FROM {$this->table} WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        $result = $this->db->single();
+
+        if ($result) {
+            $this->cache[$cacheKey] = $result;
+        }
+
+        return $result;
     }
 
     // 3. Thêm mới bản ghi linh hoạt
     // Truyền vào mảng associative: ['title' => 'Sách PHP', 'price' => 50000]
-    public function create($data) {
+    public function create(array $data): bool {
         $keys = array_keys($data);
         $fields = implode(', ', $keys);
         $placeholders = ':' . implode(', :', $keys);
@@ -43,7 +53,7 @@ class BaseModel {
     }
 
     // 4. Cập nhật bản ghi linh hoạt
-    public function update($id, $data) {
+    public function update(int $id, array $data): bool {
         $setClause = '';
         foreach ($data as $key => $value) {
             $setClause .= "{$key} = :{$key}, ";
@@ -61,22 +71,37 @@ class BaseModel {
             $this->db->bind(':' . $key, $value);
         }
 
-        return $this->db->execute();
+        $updated = $this->db->execute();
+        if ($updated) {
+            unset($this->cache[$this->table . '_' . $id]);
+        }
+
+        return $updated;
     }
 
     // 5. Xóa mềm (Cập nhật cột deleted_at)
-    public function delete($id) {
+    public function delete(int $id): bool {
         $sql = "UPDATE {$this->table} SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind(':id', $id);
-        return $this->db->execute();
+        $deleted = $this->db->execute();
+        if ($deleted) {
+            unset($this->cache[$this->table . '_' . $id]);
+        }
+
+        return $deleted;
     }
 
     // 6. Xóa cứng (Xóa vĩnh viễn khỏi DB)
-    public function destroy($id) {
+    public function destroy(int $id): bool {
         $sql = "DELETE FROM {$this->table} WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind(':id', $id);
-        return $this->db->execute();
+        $destroyed = $this->db->execute();
+        if ($destroyed) {
+            unset($this->cache[$this->table . '_' . $id]);
+        }
+
+        return $destroyed;
     }
 }

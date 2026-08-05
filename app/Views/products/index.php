@@ -1,40 +1,85 @@
 <?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<div class="container" style="margin-top: 30px; min-height: 60vh;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>Khám phá Tài liệu nổi bật</h2>
-        <!-- Thanh tìm kiếm nhanh -->
-        <input type="text" placeholder="Tìm kiếm tài liệu, mã nguồn..." style="padding: 8px 15px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+<div class="container page-container" style="margin-top: 60px;">
+    <!-- ============================== -->
+    <!-- MARKET HEADER & SPOTLIGHT SEARCH -->
+    <!-- ============================== -->
+    <div class="market-header text-center" style="margin-bottom: 40px; max-width: 700px; margin-left: auto; margin-right: auto;">
+        <h2 style="font-size: 44px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 24px;">Khám phá kho tài liệu.</h2>
+        
+        <div class="spotlight-search">
+            <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" placeholder="Tìm kiếm mã nguồn, đồ án, template...">
+            <button class="btn-search-clear" aria-label="Xóa">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
     </div>
 
-    <!-- Lưới hiển thị sản phẩm (CSS Grid) -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-        
+    <!-- ============================== -->
+    <!-- CATEGORY PILL FILTERS -->
+    <!-- ============================== -->
+    <div class="categories-scroll" style="margin-bottom: 48px;">
+        <div class="categories-flex" style="justify-content: center;">
+            <a href="#" class="category-pill" style="background: var(--apple-black); color: #fff; border-color: var(--apple-black);">
+                <span class="category-name" style="color: #fff;">Tất cả</span>
+            </a>
+            <a href="#" class="category-pill">
+                <span class="category-name">Lập trình</span>
+            </a>
+            <a href="#" class="category-pill">
+                <span class="category-name">Thiết kế UI/UX</span>
+            </a>
+            <a href="#" class="category-pill">
+                <span class="category-name">Đồ án Đại học</span>
+            </a>
+            <a href="#" class="category-pill">
+                <span class="category-name">Khóa học</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- PRODUCT GRID -->
+    <!-- ============================== -->
+    <div class="product-grid">
         <?php if(!empty($data['products'])) : ?>
             <?php foreach($data['products'] as $product) : ?>
-                <div class="card" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <div style="background: #f4f4f4; height: 140px; display: flex; align-items: center; justify-content: center; border-radius: 4px; margin-bottom: 15px; color: #888;">
-                            <span>[Ảnh Preview]</span>
-                        </div>
-                        <span style="font-size: 12px; color: #666; background: #e9ecef; padding: 3px 8px; border-radius: 3px;"><?php echo htmlspecialchars($product->store_name); ?></span>
-                        <h3 style="font-size: 18px; margin: 10px 0;"><?php echo htmlspecialchars($product->title); ?></h3>
-                        <p style="font-size: 14px; color: #555; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo htmlspecialchars($product->description); ?></p>
+                <div class="product-card interactive-hover" style="border-radius: 24px;">
+                    <div class="product-image-wrapper" style="border-radius: 24px 24px 0 0;">
+                        <div class="product-placeholder">Preview</div>
+                        <span class="product-badge"><?php echo htmlspecialchars($product->store_name); ?></span>
+                        <?php if($product->rating > 0) : ?>
+                            <span class="product-rating">
+                                ★ <?php echo number_format($product->rating, 1); ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="product-content">
+                        <h3 class="product-title"><?php echo htmlspecialchars($product->title); ?></h3>
+                        <p class="product-desc"><?php echo htmlspecialchars($product->description ?? 'Tài liệu số chất lượng cao được kiểm duyệt trên Creono.'); ?></p>
                     </div>
 
-                    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 18px; font-weight: bold; color: var(--primary-color);">
-                            <?php echo number_format($product->price, 0, ',', '.'); ?> đ
-                        </span>
-                        <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" class="btn" style="background: #007bff; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 14px;">Xem chi tiết</a>
+                    <div class="product-footer">
+                        <span class="product-price"><?php echo number_format($product->price, 0, ',', '.'); ?> ₫</span>
+                        <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" class="btn btn-secondary">Chi tiết</a>
                     </div>
                 </div>
             <?php endforeach; ?>
         <?php else : ?>
-            <p>Hiện chưa có tài liệu nào được đăng tải lên hệ thống.</p>
+            <div class="empty-state" style="border-radius: 24px; padding: 64px 24px;">
+                <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.4;">📦</div>
+                <h3 style="margin-bottom: 8px;">Chưa có tài liệu</h3>
+                <p>Hiện chưa có tài liệu nào được đăng tải lên hệ thống.</p>
+            </div>
         <?php endif; ?>
-
     </div>
 </div>
 

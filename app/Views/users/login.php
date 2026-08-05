@@ -1,38 +1,41 @@
 <?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<div class="card">
-    <h2>Đăng nhập Creono</h2>
-    
-    <form action="<?php echo URLROOT; ?>/users/login" method="POST">
-        <!-- Input Email -->
-        <div class="form-group">
-            <label for="email">Email: *</label>
-            <input type="email" name="email" 
-                   class="<?php echo (!empty($data['email_err'])) ? 'is-invalid' : ''; ?>" 
-                   value="<?php echo $data['email']; ?>">
+<div class="auth-page">
+    <div class="glass-card">
+        <h2>Đăng nhập</h2>
+        <p class="subtitle">Mừng bạn quay trở lại Creono.</p>
+        
+        <form action="<?php echo URLROOT; ?>/users/login" method="POST" id="loginForm" data-ajax>
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($data['csrf_token'] ?? generateCsrfToken()); ?>">
             
-            <?php if(!empty($data['email_err'])) : ?>
-                <span class="error-text"><?php echo $data['email_err']; ?></span>
-            <?php endif; ?>
-        </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" 
+                       class="form-control" 
+                       value="<?php echo htmlspecialchars($data['email'] ?? ''); ?>"
+                       placeholder="name@example.com"
+                       required>
+                <span class="error-text" id="email_err"></span>
+            </div>
 
-        <!-- Input Mật khẩu -->
-        <div class="form-group">
-            <label for="password">Mật khẩu: *</label>
-            <input type="password" name="password" 
-                   class="<?php echo (!empty($data['password_err'])) ? 'is-invalid' : ''; ?>" 
-                   value="<?php echo $data['password']; ?>">
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" name="password" id="password" 
+                       class="form-control" 
+                       value="<?php echo htmlspecialchars($data['password'] ?? ''); ?>"
+                       placeholder="Nhập mật khẩu"
+                       required>
+                <span class="error-text" id="password_err"></span>
+            </div>
+
+            <button type="submit" class="btn btn-submit" id="loginBtn">Đăng nhập</button>
             
-            <?php if(!empty($data['password_err'])) : ?>
-                <span class="error-text"><?php echo $data['password_err']; ?></span>
-            <?php endif; ?>
-        </div>
-
-        <!-- Buttons -->
-        <input type="submit" value="Đăng nhập" class="btn">
-        <a href="<?php echo URLROOT; ?>/users/register" class="btn btn-light mt-2">Chưa có tài khoản? Đăng ký ngay</a>
-    </form>
+            <a href="<?php echo URLROOT; ?>/users/register" class="auth-link">
+                Chưa có tài khoản? <span style="color: var(--apple-blue); font-weight: 600;">Đăng ký ngay</span>
+            </a>
+        </form>
+    </div>
 </div>
 
 <?php require APPROOT . '/Views/inc/footer.php'; ?>

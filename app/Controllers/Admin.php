@@ -1,12 +1,11 @@
 <?php
+require_once '../app/Middleware/AuthMiddleware.php';
+require_once '../app/Middleware/RoleMiddleware.php';
+
 class Admin extends Controller {
     
     public function __construct() {
-    // 1. Kiểm tra xem user đã đăng nhập chưa bằng cách check user_id
-    if (!isset($_SESSION['user_id'])) {
-        // Chưa đăng nhập thì đá về trang Login
-        header('location: ' . URLROOT . '/users/login');
-        exit();
+        RoleMiddleware::check([3]);
     }
     
     // 2. Kiểm tra xem user có phải là Admin (role = 3) không

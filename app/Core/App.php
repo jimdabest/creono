@@ -6,7 +6,7 @@ class App {
 
     public function __construct() {
         $url = $this->getUrl();
-
+        // echo "Đang gọi: " . $this->currentController . "/" . $this->currentMethod; // Debug
         // Kiểm tra xem file Controller có tồn tại không
         if (isset($url[0]) && file_exists('../app/Controllers/' . ucwords($url[0]) . '.php')) {
             $this->currentController = ucwords($url[0]);
@@ -38,6 +38,6 @@ class App {
             $url = explode('/', $url);
             return $url;
         }
-        return ['Products', 'index']; // Mặc định nếu không có URL
+        return ['Pages', 'index'];// Mặc định nếu không có URL
     }
 }
