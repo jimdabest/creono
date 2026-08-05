@@ -48,51 +48,94 @@ class Users extends Controller {
     // Chức năng UC-01: Đăng ký tài khoản
     public function register(): void {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Kiểm tra CSRF token
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
                 $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
+            // Lọc dữ liệu đầu vào
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             // Gộp dữ liệu đầu vào
             $data = [
-                'name' => $_POST['name'] ?? '',
-                'email' => $_POST['email'] ?? '',
+                'name' => trim($_POST['name'] ?? ''),
+                'email' => trim($_POST['email'] ?? ''),
                 'password' => $_POST['password'] ?? '',
                 'confirm_password' => $_POST['confirm_password'] ?? '',
             ];
 
-            // Chạy Validator
-            $validator = new Validator($_POST);
-            $errors = $validator->validate([
-                'name' => 'required',
-                'email' => 'required|email',
-                'password' => 'required|min:6',
-                'confirm_password' => 'required|match:password'
-            ]);
+            // Khởi tạo mảng errors
+            $errors = [];
 
-            // Check email trùng trong DB
-            if (empty($errors['email_err']) && $this->userModel->findByEmail($data['email'])) {
-                $errors['email_err'] = 'Email này đã được sử dụng';
+            // ====== VALIDATION THỦ CÔNG ======
+            
+            // 1. Kiểm tra name
+            if (empty($data['name'])) {
+                $errors['name_err'] = 'Vui lòng nhập họ và tên';
+            } elseif (strlen($data['name']) < 2) {
+                $errors['name_err'] = 'Họ và tên phải có ít nhất 2 ký tự';
+            } elseif (strlen($data['name']) > 100) {
+                $errors['name_err'] = 'Họ và tên không được vượt quá 100 ký tự';
             }
 
-            // Nếu không có lỗi gì thì cho đăng ký
-            if ($validator->passes() && empty($errors['email_err'])) {
+            // 2. Kiểm tra email
+            if (empty($data['email'])) {
+                $errors['email_err'] = 'Vui lòng nhập email';
+            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors['email_err'] = 'Vui lòng nhập đúng định dạng email (ví dụ: name@example.com)';
+            } elseif ($this->userModel->findByEmail($data['email'])) {
+                $errors['email_err'] = 'Email này đã được sử dụng. Vui lòng chọn email khác';
+            }
+
+            // 3. Kiểm tra password
+            if (empty($data['password'])) {
+                $errors['password_err'] = 'Vui lòng nhập mật khẩu';
+            } elseif (strlen($data['password']) < 6) {
+                $errors['password_err'] = 'Mật khẩu phải có ít nhất 6 ký tự';
+            } elseif (strlen($data['password']) > 255) {
+                $errors['password_err'] = 'Mật khẩu không được vượt quá 255 ký tự';
+            }
+
+            // 4. Kiểm tra confirm password
+            if (empty($data['confirm_password'])) {
+                $errors['confirm_password_err'] = 'Vui lòng xác nhận mật khẩu';
+            } elseif ($data['password'] !== $data['confirm_password']) {
+                $errors['confirm_password_err'] = 'Mật khẩu xác nhận không khớp';
+            }
+
+            // ====== XỬ LÝ ĐĂNG KÝ ======
+            
+            // Nếu không có lỗi thì tiến hành đăng ký
+            if (empty($errors)) {
+                // Mã hóa mật khẩu
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
+                // Thực hiện đăng ký
                 if ($this->userModel->register($data)) {
+                    // Lấy thông tin user vừa tạo
                     $newUser = $this->userModel->getUserByEmail($data['email']);
-                    $this->createUserSession($newUser);
-                    return; // Thêm return để dừng execution
+                    
+                    if ($newUser) {
+                        // Tạo session cho user
+                        $this->createUserSession($newUser);
+                        return;
+                    } else {
+                        $this->jsonResponse(false, 'Đăng ký thành công nhưng không thể tạo session. Vui lòng đăng nhập lại.');
+                    }
                 } else {
-                    $this->jsonResponse(false, 'Hệ thống đang bận, không thể đăng ký lúc này.');
+                    $this->jsonResponse(false, 'Hệ thống đang bận, không thể đăng ký lúc này. Vui lòng thử lại sau.');
                 }
             } else {
-                $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
+                // Trả về lỗi validation
+                $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin đăng ký', ['errors' => $errors]);
             }
         } else {
+            // Hiển thị form đăng ký (GET request)
             $data = [
-                'name' => '', 'email' => '', 'password' => '', 'confirm_password' => '',
+                'name' => '',
+                'email' => '',
+                'password' => '',
+                'confirm_password' => '',
                 'csrf_token' => generateCsrfToken(),
             ];
             $this->view('users/register', $data);

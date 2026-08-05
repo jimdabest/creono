@@ -59,6 +59,7 @@
 
             // Các tính năng bổ sung
             initNavbar();
+            initNavbarScroll(); // THÊM MỚI: Hiệu ứng scroll cho navbar
             initDropdown();
             initBackToTop();
             initFormLoading(); // Thêm loading cho form không dùng AJAX
@@ -128,6 +129,50 @@
     }
 
     /**
+     * ========== APPLE NAVBAR SCROLL EFFECT ==========
+     * Hiệu ứng glassmorphism khi scroll (giống Apple Store)
+     */
+    function initNavbarScroll() {
+        const navbar = document.querySelector('.navbar');
+        if (!navbar) return;
+        
+        let ticking = false;
+        let lastScrollY = 0;
+        
+        function updateNavbar() {
+            const scrollY = window.scrollY;
+            
+            // Thêm class 'scrolled' khi scroll > 50px
+            if (scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+            
+            // Cập nhật độ trong suốt dựa trên scroll (Apple style)
+            const progress = Math.min(scrollY / 200, 1);
+            const opacity = 0.72 + (progress * 0.13); // 0.72 -> 0.85
+            navbar.style.setProperty('--nav-bg-opacity', opacity);
+            
+            lastScrollY = scrollY;
+            ticking = false;
+        }
+        
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    updateNavbar();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+        
+        // Khởi tạo lần đầu
+        updateNavbar();
+    }
+
+    /**
      * Xử lý Dropdown Menu cho User
      */
     function initDropdown() {
@@ -156,7 +201,7 @@
     }
 
     /**
-     * Nút "Back to Top"
+     * Nút "Back to Top" - Apple Style
      */
     function initBackToTop() {
         // Tạo nút
@@ -164,23 +209,30 @@
         backToTop.className = 'back-to-top';
         backToTop.innerHTML = '↑';
         backToTop.setAttribute('aria-label', 'Back to top');
+        
+        // Apple style cho nút back to top
         backToTop.style.cssText = `
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: var(--primary-color, #3498db);
-            color: #fff;
-            border: none;
-            font-size: 24px;
+            background: #ffffff;
+            color: #1d1d1f;
+            border: 1px solid #d2d2d7;
+            font-size: 20px;
+            font-weight: 300;
             cursor: pointer;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 999;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
         `;
 
         document.body.appendChild(backToTop);
@@ -193,12 +245,21 @@
 
             if (shouldShow !== isVisible) {
                 isVisible = shouldShow;
-                backToTop.style.opacity = shouldShow ? '1' : '0';
-                backToTop.style.visibility = shouldShow ? 'visible' : 'hidden';
+                if (shouldShow) {
+                    backToTop.classList.add('visible');
+                    backToTop.style.opacity = '1';
+                    backToTop.style.visibility = 'visible';
+                    backToTop.style.transform = 'translateY(0)';
+                } else {
+                    backToTop.classList.remove('visible');
+                    backToTop.style.opacity = '0';
+                    backToTop.style.visibility = 'hidden';
+                    backToTop.style.transform = 'translateY(12px)';
+                }
             }
-        });
+        }, { passive: true });
 
-        // Xử lý click
+        // Xử lý click - smooth scroll
         backToTop.addEventListener('click', function() {
             window.scrollTo({
                 top: 0,
@@ -208,9 +269,16 @@
 
         // Hover effect
         backToTop.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1)';
+            this.style.background = '#1d1d1f';
+            this.style.color = '#ffffff';
+            this.style.borderColor = '#1d1d1f';
+            this.style.transform = 'scale(1.05)';
         });
+        
         backToTop.addEventListener('mouseleave', function() {
+            this.style.background = '#ffffff';
+            this.style.color = '#1d1d1f';
+            this.style.borderColor = '#d2d2d7';
             this.style.transform = 'scale(1)';
         });
     }
@@ -249,7 +317,7 @@
     }
 
     /**
-     * Hàm tiện ích: show loading spinner
+     * Hàm tiện ích: show loading spinner (Apple Style)
      */
     window.showLoading = function(show = true, message = 'Đang xử lý...') {
         let loader = document.querySelector('.loader-overlay');
@@ -264,12 +332,13 @@
                     left: 0;
                     width: 100%;
                     height: 100%;
-                    background: rgba(0,0,0,0.6);
+                    background: rgba(255, 255, 255, 0.85);
+                    backdrop-filter: saturate(180%) blur(16px);
+                    -webkit-backdrop-filter: saturate(180%) blur(16px);
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    z-index: 9999;
-                    backdrop-filter: blur(4px);
+                    z-index: 99999;
                     transition: all 0.3s ease;
                 `;
                 
@@ -277,20 +346,20 @@
                 const container = document.createElement('div');
                 container.style.cssText = `
                     text-align: center;
-                    color: #fff;
+                    color: #1d1d1f;
                 `;
                 
-                // Spinner
+                // Spinner Apple style
                 const spinner = document.createElement('div');
                 spinner.className = 'loader-spinner';
                 spinner.style.cssText = `
-                    width: 60px;
-                    height: 60px;
-                    border: 5px solid rgba(255,255,255,0.3);
-                    border-top: 5px solid #4f46e5;
+                    width: 40px;
+                    height: 40px;
+                    border: 3px solid #d2d2d7;
+                    border-top: 3px solid #0071e3;
                     border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                    margin: 0 auto 20px;
+                    animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                    margin: 0 auto 16px;
                 `;
                 
                 // Text
@@ -299,9 +368,10 @@
                 text.textContent = message;
                 text.style.cssText = `
                     font-size: 16px;
-                    font-weight: 500;
-                    color: #fff;
-                    opacity: 0.9;
+                    font-weight: 400;
+                    color: #86868b;
+                    letter-spacing: -0.016em;
+                    font-family: inherit;
                 `;
                 
                 // Thêm keyframe animation
@@ -340,11 +410,14 @@
             void loader.offsetWidth;
         } else {
             if (loader) {
-                loader.style.display = 'none';
+                loader.style.opacity = '0';
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                    loader.style.opacity = '1';
+                }, 300);
             }
         }
     };
-
 
     // Khởi tạo khi trang load
     if (document.readyState === 'loading') {

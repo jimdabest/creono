@@ -133,6 +133,68 @@ const Utils = {
                 setTimeout(() => inThrottle = false, limit);
             }
         };
+    },
+
+    /**
+     * Apple Style Dialog (Thay thế alert/confirm)
+     */
+    Dialog: {
+        show: function(options) {
+            const { title, message, type = 'confirm', confirmText = 'OK', cancelText = 'Hủy', onConfirm } = options;
+            
+            // Xóa dialog cũ nếu có
+            const oldOverlay = document.getElementById('apple-dialog');
+            if (oldOverlay) oldOverlay.remove();
+
+            // Tạo overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'apple-dialog-overlay';
+            overlay.id = 'apple-dialog';
+
+            // Dựng HTML
+            let html = `
+                <div class="apple-dialog-box">
+                    <div class="apple-dialog-content">
+                        <div class="apple-dialog-title">${title}</div>
+                        ${message ? `<div class="apple-dialog-message">${message}</div>` : ''}
+                    </div>
+                    <div class="apple-dialog-actions">
+            `;
+
+            if (type === 'confirm') {
+                html += `<button class="apple-dialog-btn cancel" id="dialog-btn-cancel">${cancelText}</button>`;
+            }
+            
+            // Nếu là hành động nguy hiểm (như đăng xuất/xóa) thì cho chữ đỏ
+            const confirmClass = (title.toLowerCase().includes('đăng xuất') || title.toLowerCase().includes('xóa')) 
+                                 ? 'danger confirm' : 'confirm';
+                                 
+            html += `<button class="apple-dialog-btn ${confirmClass}" id="dialog-btn-confirm">${confirmText}</button>
+                    </div>
+                </div>`;
+                
+            overlay.innerHTML = html;
+            document.body.appendChild(overlay);
+
+            // Bật hiệu ứng sau 10ms để CSS transition kịp chạy
+            setTimeout(() => overlay.classList.add('active'), 10);
+
+            // Xử lý sự kiện
+            const closeDialog = () => {
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.remove(), 200);
+            };
+
+            document.getElementById('dialog-btn-confirm').addEventListener('click', () => {
+                closeDialog();
+                if (typeof onConfirm === 'function') onConfirm();
+            });
+
+            const cancelBtn = document.getElementById('dialog-btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', closeDialog);
+            }
+        }
     }
 };
 

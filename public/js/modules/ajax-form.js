@@ -10,8 +10,8 @@ const AjaxFormModule = (function() {
 
     // Cấu hình
     const CONFIG = {
-        MIN_LOADING_TIME: 800, // Thời gian tối thiểu hiển thị loading (ms)
-        REDIRECT_DELAY: 1500,  // Thời gian chờ trước khi redirect (ms)
+        MIN_LOADING_TIME: 800,
+        REDIRECT_DELAY: 1500,
     };
 
     /**
@@ -21,7 +21,6 @@ const AjaxFormModule = (function() {
         const forms = document.querySelectorAll('form[data-ajax]');
         
         forms.forEach(function(form) {
-            // Không init lại nếu đã có
             if (form.dataset.ajaxInitialized === 'true') {
                 return;
             }
@@ -42,27 +41,23 @@ const AjaxFormModule = (function() {
         const submitBtn = form.querySelector('[type="submit"]');
         const originalText = submitBtn ? submitBtn.textContent : 'Submit';
         
-        // Lưu lại text gốc
         if (submitBtn) {
             submitBtn.dataset.originalText = originalText;
         }
         
-        // Clear old errors
         clearErrors(form);
         
-        // Show loading
         if (typeof window.showLoading === 'function') {
             window.showLoading(true);
         }
         
-        // Disable button và thay đổi text
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Đang xử lý...';
         }
         
         const formData = new FormData(form);
-        const startTime = Date.now(); // Đánh dấu thời gian bắt đầu
+        const startTime = Date.now();
         
         fetch(form.action, {
             method: form.method || 'POST',
@@ -79,11 +74,9 @@ const AjaxFormModule = (function() {
             return response.json();
         })
         .then(data => {
-            // Tính thời gian đã trôi qua
             const elapsed = Date.now() - startTime;
             const remaining = CONFIG.MIN_LOADING_TIME - elapsed;
             
-            // Đảm bảo loading hiển thị ít nhất MIN_LOADING_TIME ms
             if (remaining > 0) {
                 setTimeout(() => {
                     handleResponse(form, submitBtn, data);
@@ -93,7 +86,6 @@ const AjaxFormModule = (function() {
             }
         })
         .catch(function(error) {
-            // Tính thời gian đã trôi qua
             const elapsed = Date.now() - startTime;
             const remaining = CONFIG.MIN_LOADING_TIME - elapsed;
             
@@ -111,48 +103,42 @@ const AjaxFormModule = (function() {
      * Xử lý response thành công
      */
     function handleResponse(form, submitBtn, data) {
-        // Hide loading
         if (typeof window.showLoading === 'function') {
             window.showLoading(false);
         }
         
-        // Restore button
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = submitBtn.dataset.originalText || 'Submit';
         }
         
         if (data.success) {
-            // Show success message
             if (typeof FlashModule !== 'undefined') {
                 FlashModule.show(data.message || 'Thành công!', 'success');
             }
             
-            // Redirect if needed
             if (data.redirect) {
                 setTimeout(function() {
                     window.location.href = data.redirect;
                 }, CONFIG.REDIRECT_DELAY);
             }
             
-            // Trigger custom event cho các module khác
             const event = new CustomEvent('ajaxFormSuccess', {
                 detail: { form: form, data: data }
             });
             document.dispatchEvent(event);
             
         } else {
-            // Show error message
+            // Hiển thị thông báo lỗi chung
             if (typeof FlashModule !== 'undefined') {
                 FlashModule.show(data.message || 'Có lỗi xảy ra', 'error');
             }
             
-            // Show field errors
-            if (data.errors) {
+            // Hiển thị lỗi cho từng field
+            if (data.errors && typeof data.errors === 'object') {
                 showErrors(form, data.errors);
             }
             
-            // Trigger custom event cho các module khác
             const event = new CustomEvent('ajaxFormError', {
                 detail: { form: form, data: data }
             });
@@ -164,25 +150,21 @@ const AjaxFormModule = (function() {
      * Xử lý lỗi
      */
     function handleError(form, submitBtn, error) {
-        // Hide loading
         if (typeof window.showLoading === 'function') {
             window.showLoading(false);
         }
         
-        // Restore button
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = submitBtn.dataset.originalText || 'Submit';
         }
         
-        // Show error
         if (typeof FlashModule !== 'undefined') {
             FlashModule.show('Lỗi kết nối server. Vui lòng thử lại!', 'error');
         }
         
         console.error('AJAX Error:', error);
         
-        // Trigger custom event
         const event = new CustomEvent('ajaxFormError', {
             detail: { form: form, error: error }
         });
@@ -193,10 +175,11 @@ const AjaxFormModule = (function() {
      * Clear old errors
      */
     function clearErrors(form) {
-        // Clear error text spans
+        // Clear error text spans - tìm theo ID hoặc class
         const errorSpans = form.querySelectorAll('.error-text');
         errorSpans.forEach(function(span) {
             span.textContent = '';
+            span.style.display = 'none';
         });
         
         // Remove invalid class
@@ -207,14 +190,45 @@ const AjaxFormModule = (function() {
     }
     
     /**
-     * Show field errors
+     * Show field errors - CẢI THIỆN HIỂN THỊ LỖI
      */
     function showErrors(form, errors) {
+        let hasError = false;
+        
         Object.keys(errors).forEach(function(key) {
-            // Tìm error span theo id (field_err)
-            const errorSpan = document.getElementById(key);
+            const errorMessage = errors[key];
+            if (!errorMessage) return;
+            
+            hasError = true;
+            
+            // Tìm error span theo ID trước
+            let errorSpan = document.getElementById(key);
+            
+            // Nếu không tìm thấy theo ID, tìm theo data-field
+            if (!errorSpan) {
+                errorSpan = form.querySelector(`.error-text[data-field="${key}"]`);
+            }
+            
+            // Nếu vẫn không tìm thấy, tìm theo class name (fallback)
+            if (!errorSpan) {
+                errorSpan = form.querySelector(`.${key}`);
+            }
+            
+            // Nếu vẫn không tìm thấy, tạo mới error span
+            if (!errorSpan) {
+                const fieldName = key.replace('_err', '');
+                const input = form.querySelector(`[name="${fieldName}"]`);
+                if (input && input.parentElement) {
+                    errorSpan = document.createElement('span');
+                    errorSpan.className = 'error-text';
+                    errorSpan.id = key;
+                    input.parentElement.appendChild(errorSpan);
+                }
+            }
+            
             if (errorSpan) {
-                errorSpan.textContent = errors[key];
+                errorSpan.textContent = errorMessage;
+                errorSpan.style.display = 'block';
             }
             
             // Tìm input tương ứng và thêm class invalid
@@ -222,17 +236,21 @@ const AjaxFormModule = (function() {
             const input = form.querySelector(`[name="${fieldName}"]`);
             if (input) {
                 input.classList.add('is-invalid');
+                // Thêm attribute aria-invalid
+                input.setAttribute('aria-invalid', 'true');
             }
         });
         
-        // Scroll to first error
-        const firstError = form.querySelector('.is-invalid');
-        if (firstError) {
-            firstError.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-            firstError.focus();
+        // Scroll đến lỗi đầu tiên
+        if (hasError) {
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                firstError.focus();
+            }
         }
     }
     
@@ -243,7 +261,6 @@ const AjaxFormModule = (function() {
         form.reset();
         clearErrors(form);
         
-        // Reset button
         const submitBtn = form.querySelector('[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = false;

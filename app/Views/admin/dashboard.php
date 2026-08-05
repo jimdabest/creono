@@ -26,10 +26,10 @@
         <div class="dashboard-section">
             <h3>Chức năng quản trị</h3>
             <ul class="action-list">
-                <li><a href="#" class="action-item">📋 Quản lý người dùng</a></li>
-                <li><a href="#" class="action-item">📦 Quản lý sản phẩm</a></li>
-                <li><a href="#" class="action-item">💰 Quản lý rút tiền</a></li>
-                <li><a href="#" class="action-item">🔍 Duyệt tài liệu</a></li>
+                <li><a href="#" class="action-item">Quản lý người dùng</a></li>
+                <li><a href="#" class="action-item">Quản lý sản phẩm</a></li>
+                <li><a href="#" class="action-item">Quản lý rút tiền</a></li>
+                <li><a href="#" class="action-item">Duyệt tài liệu</a></li>
             </ul>
         </div>
     </div>

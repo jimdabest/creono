@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Module xử lý flash messages
+ * Module xử lý flash messages (Apple Toast Style)
  */
 const FlashModule = (function() {
     'use strict';
@@ -11,72 +11,86 @@ const FlashModule = (function() {
      * Khởi tạo flash messages
      */
     function init() {
+        // Tìm tất cả các alert hiện có (do PHP render ra ở header)
         const alerts = document.querySelectorAll('.alert');
         
-        alerts.forEach(function(alert) {
-            // Tạo nút đóng
-            let closeBtn = alert.querySelector('.alert-close');
-            if (!closeBtn) {
-                closeBtn = document.createElement('button');
-                closeBtn.type = 'button';
-                closeBtn.className = 'alert-close';
-                closeBtn.innerHTML = '&times;';
-                closeBtn.setAttribute('aria-label', 'Đóng thông báo');
-                alert.appendChild(closeBtn);
-            }
+        // Tạo container chứa Toast nếu chưa có
+        let container = document.getElementById('toast-container');
+        if (!container && alerts.length > 0) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
             
-            // Xử lý sự kiện click nút đóng
-            closeBtn.addEventListener('click', function() {
-                fadeOut(alert, 300, function() {
-                    alert.remove();
-                });
+            // Di chuyển các alert cũ cắm rễ trong HTML vào container nổi
+            alerts.forEach(function(alert) {
+                container.appendChild(alert);
             });
+        }
 
-            // Tự động ẩn sau 5 giây
-            const autoDismiss = alert.getAttribute('data-auto-dismiss');
-            if (autoDismiss) {
-                setTimeout(function() {
-                    if (alert.parentNode) {
-                        fadeOut(alert, 500, function() {
-                            alert.remove();
-                        });
-                    }
-                }, parseInt(autoDismiss));
-            }
+        alerts.forEach(function(alert) {
+            setupAlert(alert);
         });
     }
 
     /**
-     * Hiệu ứng fade out
+     * Setup sự kiện cho từng alert
      */
-    function fadeOut(element, duration = 300, callback) {
-        const start = performance.now();
-        const startOpacity = parseFloat(getComputedStyle(element).opacity) || 1;
-        
-        function animate(currentTime) {
-            const elapsed = currentTime - start;
-            const progress = Math.min(elapsed / duration, 1);
-            element.style.opacity = startOpacity * (1 - progress);
-            
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                element.style.display = 'none';
-                if (typeof callback === 'function') {
-                    callback();
-                }
-            }
+    function setupAlert(alert) {
+        // Tạo nút đóng nếu chưa có
+        let closeBtn = alert.querySelector('.alert-close');
+        if (!closeBtn) {
+            closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'alert-close';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.setAttribute('aria-label', 'Đóng thông báo');
+            alert.appendChild(closeBtn);
         }
         
-        requestAnimationFrame(animate);
+        // Xử lý sự kiện click nút đóng
+        closeBtn.addEventListener('click', function() {
+            fadeOut(alert, 300, function() {
+                alert.remove();
+            });
+        });
+
+        // Tự động ẩn (Mặc định 5s)
+        const autoDismiss = alert.getAttribute('data-auto-dismiss') || 5000;
+        setTimeout(function() {
+            if (alert.parentNode) {
+                fadeOut(alert, 300, function() {
+                    alert.remove();
+                });
+            }
+        }, parseInt(autoDismiss));
     }
 
     /**
-     * Hiển thị flash message mới
+     * Hiệu ứng fade out mượt mà lúc thu về
+     */
+    function fadeOut(element, duration = 300, callback) {
+        element.style.transition = `opacity ${duration}ms ease, transform ${duration}ms ease`;
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(-16px) scale(0.9)';
+        
+        setTimeout(() => {
+            element.style.display = 'none';
+            if (typeof callback === 'function') {
+                callback();
+            }
+        }, duration);
+    }
+
+    /**
+     * Hiển thị flash message mới (Dùng cho form AJAX)
      */
     function show(message, type = 'success', duration = 5000) {
-        const container = document.querySelector('.container');
-        if (!container) return;
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
 
         const alert = document.createElement('div');
         alert.className = `alert alert-${type}`;
@@ -96,39 +110,9 @@ const FlashModule = (function() {
         const text = document.createTextNode(' ' + message);
         alert.appendChild(text);
         
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'alert-close';
-        closeBtn.innerHTML = '&times;';
-        closeBtn.setAttribute('aria-label', 'Đóng thông báo');
-        alert.appendChild(closeBtn);
-        
-        alert.style.opacity = '0';
-        alert.style.transition = 'opacity 0.3s ease';
-
-        // Chèn vào đầu container
-        container.insertBefore(alert, container.firstChild);
-
-        // Fade in
-        requestAnimationFrame(() => {
-            alert.style.opacity = '1';
-        });
-
-        // Xử lý nút đóng
-        closeBtn.addEventListener('click', function() {
-            fadeOut(alert, 500, () => {
-                alert.remove();
-            });
-        });
-
-        // Tự động ẩn
-        setTimeout(() => {
-            if (alert.parentNode) {
-                fadeOut(alert, 500, () => {
-                    alert.remove();
-                });
-            }
-        }, duration);
+        // Chèn vào cuối container
+        container.appendChild(alert);
+        setupAlert(alert);
 
         return alert;
     }

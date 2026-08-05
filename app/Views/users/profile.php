@@ -22,7 +22,6 @@
             </div>
         <?php endif; ?>
 
-        <!-- Thêm data-ajax và enctype cho upload file -->
         <form action="<?php echo URLROOT; ?>/users/updateProfile" method="POST" enctype="multipart/form-data" id="profileForm" data-ajax>
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generateCsrfToken()); ?>">
 
@@ -44,20 +43,17 @@
                 <label for="avatar">Ảnh đại diện</label>
                 <input type="file" name="avatar" id="avatar" accept="image/*" class="form-control">
                 <span class="error-text" id="avatar_err"></span>
-                <!-- Preview ảnh sẽ hiển thị ở đây -->
                 <div id="avatarPreviewContainer" style="margin-top: 10px;"></div>
             </div>
 
             <button type="submit" class="btn" id="updateProfileBtn">Cập nhật hồ sơ</button>
-            <a href="<?php echo URLROOT; ?>/users/changePassword" class="btn btn-light mt-2" style="display: block; text-align: center; text-decoration: none;">🔑 Đổi mật khẩu</a>
+            <a href="<?php echo URLROOT; ?>/users/changePassword" class="btn btn-light mt-2" style="display: block; text-align: center; text-decoration: none;">Đổi mật khẩu</a>
         </form>
     </div>
 </div>
 
-<!-- Script xử lý preview ảnh -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Preview avatar khi chọn file
     const avatarInput = document.getElementById('avatar');
     const previewContainer = document.getElementById('avatarPreviewContainer');
     
@@ -69,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.onload = function(e) {
                     previewContainer.innerHTML = `
                         <img src="${e.target.result}" 
-                             style="max-width: 150px; border-radius: 8px; border: 2px solid #e2e8f0; padding: 4px;">
+                             style="max-width: 150px; border-radius: 8px; border: 2px solid #d2d2d7; padding: 4px;">
                     `;
                 };
                 reader.readAsDataURL(file);

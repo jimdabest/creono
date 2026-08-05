@@ -54,7 +54,6 @@ class User extends BaseModel {
     
     // Xác thực người dùng (Kiểm tra Email và Mật khẩu)
     public function login(string $email, string $password): object|false {
-        // Đã xóa 'AND deleted_at IS NULL'
         $this->db->query("SELECT * FROM {$this->table} WHERE email = :email");
         $this->db->bind(':email', $email);
 
@@ -62,7 +61,6 @@ class User extends BaseModel {
 
         // Nếu email tồn tại, kiểm tra hash mật khẩu
         if ($row) {
-            // Đã sửa thành $row->password để khớp với DB mới
             $hashed_password = $row->password; 
             
             if (password_verify($password, $hashed_password)) {
@@ -94,19 +92,33 @@ class User extends BaseModel {
         return $this->db->execute();
     }
 
-public function changePassword(int $user_id, string $new_password): bool {
-    $hash = password_hash($new_password, PASSWORD_DEFAULT);
-    $this->db->query("UPDATE {$this->table} SET password = :hash WHERE id = :id");
-    $this->db->bind(':hash', $hash);
-    $this->db->bind(':id', $user_id);
-    return $this->db->execute();
-}
+    public function changePassword(int $user_id, string $new_password): bool {
+        $hash = password_hash($new_password, PASSWORD_DEFAULT);
+        $this->db->query("UPDATE {$this->table} SET password = :hash WHERE id = :id");
+        $this->db->bind(':hash', $hash);
+        $this->db->bind(':id', $user_id);
+        return $this->db->execute();
+    }
 
     // Kiểm tra role
-public function hasRole(int $user_id, int $role): bool {
-    $this->db->query("SELECT id FROM {$this->table} WHERE id = :id AND role = :role");
-    $this->db->bind(':id', $user_id);
-    $this->db->bind(':role', $role);
-    return $this->db->rowCount() > 0;
-}
+    public function hasRole(int $user_id, int $role): bool {
+        $this->db->query("SELECT id FROM {$this->table} WHERE id = :id AND role = :role");
+        $this->db->bind(':id', $user_id);
+        $this->db->bind(':role', $role);
+        return $this->db->rowCount() > 0;
+    }
+
+    // Lấy tổng số lượng người dùng
+    public function getTotalUsers(): int {
+        $this->db->query("SELECT COUNT(*) as total FROM {$this->table}");
+        $result = $this->db->single();
+        return $result ? (int)$result->total : 0;
+    }
+
+    // Lấy tổng số lượng người bán (role = 2)
+    public function getTotalSellers(): int {
+        $this->db->query("SELECT COUNT(*) as total FROM {$this->table} WHERE role = 2");
+        $result = $this->db->single();
+        return $result ? (int)$result->total : 0;
+    }
 }

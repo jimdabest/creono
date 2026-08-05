@@ -11,13 +11,22 @@ const AuthModule = (function() {
      * Khởi tạo các tính năng auth
      */
     function init() {
-        // Xử lý logout với confirm
         const logoutLinks = document.querySelectorAll('a[href*="logout"]');
         logoutLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
-                if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                    e.preventDefault();
-                }
+                e.preventDefault(); // Chặn chuyển trang ngay lập tức
+                const targetHref = this.href;
+
+                // Dùng Dialog mới tạo thay cho confirm()
+                Utils.Dialog.show({
+                    title: 'Đăng xuất',
+                    message: 'Bạn có chắc chắn muốn đăng xuất khỏi Creono?',
+                    type: 'confirm',
+                    confirmText: 'Đăng xuất',
+                    onConfirm: function() {
+                        window.location.href = targetHref;
+                    }
+                });
             });
         });
 
