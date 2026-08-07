@@ -8,9 +8,10 @@
 # ==========================================
 
 # Cấu hình database (chứa thông tin nhạy cảm)
-/config/config.php
-/config/config.ini
-/config/.env
+# Bỏ qua toàn bộ file trong config nhưng giữ lại các file .example
+/config/*
+!/config/*.example
+
 /.env
 /.env.local
 /.env.*.local
@@ -27,8 +28,9 @@
 # ==========================================
 
 # Log files
-/logs/
-/logs/*.log
+# Bỏ qua toàn bộ file trong logs nhưng giữ lại các file .example
+/logs/*
+!/logs/*.example
 *.log
 error_log
 access_log
@@ -146,10 +148,6 @@ coverage.xml
 /tmp/sessions/
 /sessions/
 *.sess
-
-# Custom config
-/config/custom.php
-/config/local.php
 
 # ==========================================
 # 9. MISCELLANEOUS
