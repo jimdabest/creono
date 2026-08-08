@@ -38,11 +38,12 @@ class Users extends Controller {
     }
 
     /**
-     * Helper: Kiểm tra request có phải AJAX không
+     * Helper: Kiểm tra request có phải AJAX / Fetch không
      */
     private function isAjaxRequest(): bool {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+               (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+               (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
     }
 
     // Chức năng UC-01: Đăng ký tài khoản
@@ -53,8 +54,8 @@ class Users extends Controller {
                 $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
-            // Lọc dữ liệu đầu vào
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // Lọc dữ liệu đầu vào (Sửa FILTER_SANITIZE_STRING thành FILTER_SANITIZE_SPECIAL_CHARS)
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
             // Gộp dữ liệu đầu vào
             $data = [
@@ -105,7 +106,6 @@ class Users extends Controller {
 
             // ====== XỬ LÝ ĐĂNG KÝ ======
             
-            // Nếu không có lỗi thì tiến hành đăng ký
             if (empty($errors)) {
                 // Mã hóa mật khẩu
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -117,7 +117,7 @@ class Users extends Controller {
                     
                     if ($newUser) {
                         // Tạo session cho user
-                        $this->createUserSession($newUser);
+                        $this->createUserSession($newUser, 'Đăng ký thành công!');
                         return;
                     } else {
                         $this->jsonResponse(false, 'Đăng ký thành công nhưng không thể tạo session. Vui lòng đăng nhập lại.');
@@ -168,8 +168,8 @@ class Users extends Controller {
                 } else {
                     $loggedInUser = $this->userModel->login($data['email'], $data['password']);
                     if ($loggedInUser) {
-                        $this->createUserSession($loggedInUser);
-                        return; // Thêm return để dừng execution
+                        $this->createUserSession($loggedInUser, 'Đăng nhập thành công!');
+                        return;
                     } else {
                         $errors['password_err'] = 'Mật khẩu không chính xác';
                     }
@@ -188,7 +188,10 @@ class Users extends Controller {
     }
 
     // Hàm hỗ trợ lưu Session an toàn
-    public function createUserSession(object $user): void {
+    public function createUserSession(object $user, string $message = 'Thành công!'): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         session_regenerate_id(true);
 
         $_SESSION['user_id'] = $user->id;
@@ -199,14 +202,14 @@ class Users extends Controller {
         $path = $this->getRedirectPath($user->role);
         $fullPath = URLROOT . $path;
         
-        // Trả về JSON cho AJAX request
-        if ($this->isAjaxRequest()) {
-            $this->jsonResponse(true, 'Đăng nhập thành công!', [
+        // Trả về JSON nếu là request qua JS/AJAX
+        if ($this->isAjaxRequest() || $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->jsonResponse(true, $message, [
                 'redirect' => $fullPath
             ]);
         }
         
-        // Fallback cho non-AJAX (redirect thường)
+        // Fallback cho non-AJAX
         header('location: ' . $fullPath);
         exit();
     }
@@ -259,7 +262,6 @@ class Users extends Controller {
 
                 if (in_array($mime_type, $allowed_types)) {
                     $upload_dir = '../public/uploads/avatars/';
-                    // Tạo thư mục nếu chưa có
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0777, true);
                     }

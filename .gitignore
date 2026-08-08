@@ -1,16 +1,9 @@
 # ==========================================
-# CREONO - .gitignore
-# Dự án PHP MVC thuần
-# ==========================================
-
-# ==========================================
 # 1. CẤU HÌNH VÀ MÔI TRƯỜNG
 # ==========================================
 
-# Cấu hình database (chứa thông tin nhạy cảm)
 # Bỏ qua toàn bộ file trong config nhưng giữ lại các file .example
-/config/*
-!/config/*.example
+# /config/*
 
 /.env
 /.env.local

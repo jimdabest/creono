@@ -21,8 +21,8 @@ git clone https://github.com/jimdabest/creono.git
 
 3. **Cấu hình Môi trường (Config):**
 *   Vào thư mục `config/`.
-*   Copy file `config.php.example` tên thành `config.php`.
-*   Copy file `error.log.example` tên thành `error.log`.
+*   Copy file `config.php.example` tạo mới 1 file `config.php`.
+*   Copy file `error.log.example` tạo mới 1 file `error.log`.
 *   Cập nhật thông số Database và `URLROOT` trong file `config.php` cho khớp với máy của bạn.
 
 4. **Kiểm tra URL Rewrite (.htaccess):**
