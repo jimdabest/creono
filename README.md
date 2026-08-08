@@ -10,7 +10,7 @@ Dành cho Developer mới tham gia dự án, hãy làm theo các bước sau đ�
 
 1. **Clone mã nguồn:**
 ```bash
-git clone (https://github.com/jimdabest/creono.git)
+git clone https://github.com/jimdabest/creono.git
 ```
 *(Lưu ý: Clone trực tiếp vào thư mục `htdocs` của XAMPP).*
 
@@ -21,7 +21,8 @@ git clone (https://github.com/jimdabest/creono.git)
 
 3. **Cấu hình Môi trường (Config):**
 *   Vào thư mục `config/`.
-*   Copy file `config.example.php` và đổi tên thành `config.php`.
+*   Copy file `config.php.example` tên thành `config.php`.
+*   Copy file `error.log.example` tên thành `error.log`.
 *   Cập nhật thông số Database và `URLROOT` trong file `config.php` cho khớp với máy của bạn.
 
 4. **Kiểm tra URL Rewrite (.htaccess):**
