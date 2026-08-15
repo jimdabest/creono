@@ -75,13 +75,28 @@
             </div>
 
             <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
-                <button class="btn btn-primary btn-block" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; transition: all 0.2s ease;">
-                    🛒 Thêm vào giỏ hàng
-                </button>
+                <!-- Mua ngay (UC29) -->
                 <a href="<?= URLROOT; ?>/orders/checkout/<?= $data['product']->id; ?>"
-                    class="btn btn-primary"
-                    style="display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 6px;">
-                    <i class="fas fa-bolt" style="margin-right: 8px;"></i> Mua ngay
+                    class="btn btn-primary btn-block"
+                    style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 14px; background: #27ae60; color: #fff; transition: all 0.2s ease;">
+                    <span>⚡ Mua ngay</span>
+                </a>
+
+                <!-- Add to Cart (UC18) -->
+                <button type="button" id="btnAddToCart" class="btn btn-primary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span><?php echo (!empty($data['in_cart'])) ? '✓ Đã có trong giỏ' : 'Thêm vào giỏ hàng'; ?></span>
+                </button>
+
+                <!-- Toggle Favorite (UC17) -->
+                <button type="button" id="btnToggleFavorite" class="btn btn-secondary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: #f5f5f7; border: 1px solid rgba(0,0,0,0.08); color: <?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : '#1d1d1f'; ?>; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg class="fav-icon" width="20" height="20" viewBox="0 0 24 24" fill="<?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : 'none'; ?>" stroke="<?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : 'currentColor'; ?>" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <span id="favText"><?php echo (!empty($data['is_favorited'])) ? 'Đã yêu thích' : 'Yêu thích'; ?></span>
+                </button>
+
+                <!-- View Cart Link -->
+                <a href="<?php echo URLROOT; ?>/carts/index" class="btn-view-cart-link" style="display: block; text-align: center; font-size: 14px; color: var(--apple-blue, #0071e3); text-decoration: none; padding: 4px 0;">
+                    Xem giỏ hàng →
                 </a>
             </div>
 
@@ -581,6 +596,109 @@
                     });
             }
         });
+
+        // 4. ADD TO CART (UC18) AJAX
+        const btnAddToCart = document.getElementById('btnAddToCart');
+        if (btnAddToCart) {
+            btnAddToCart.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const originalHtml = this.innerHTML;
+
+                this.disabled = true;
+                this.querySelector('span').textContent = 'Đang thêm...';
+
+                const formData = new FormData();
+                formData.append('product_id', productId);
+
+                fetch('<?php echo URLROOT; ?>/carts/add', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.disabled = false;
+                    if (data.success) {
+                        this.querySelector('span').textContent = '✓ Đã có trong giỏ';
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show('success', data.message);
+                        } else {
+                            alert(data.message);
+                        }
+                        // Update navbar badge
+                        const badges = document.querySelectorAll('#nav-cart-badge');
+                        badges.forEach(b => {
+                            b.textContent = data.cart_count;
+                            b.style.display = 'flex';
+                        });
+                    } else {
+                        this.innerHTML = originalHtml;
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    this.disabled = false;
+                    this.innerHTML = originalHtml;
+                    console.error('Add cart error:', err);
+                });
+            });
+        }
+
+        // 5. TOGGLE FAVORITE (UC17) AJAX
+        const btnToggleFavorite = document.getElementById('btnToggleFavorite');
+        if (btnToggleFavorite) {
+            btnToggleFavorite.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const favIcon = this.querySelector('.fav-icon');
+                const favText = document.getElementById('favText');
+
+                this.disabled = true;
+
+                const formData = new FormData();
+                formData.append('product_id', productId);
+
+                fetch('<?php echo URLROOT; ?>/favorites/toggle', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.disabled = false;
+                    if (data.success) {
+                        if (data.is_favorited) {
+                            this.style.color = '#ff3b30';
+                            if (favIcon) {
+                                favIcon.setAttribute('fill', '#ff3b30');
+                                favIcon.setAttribute('stroke', '#ff3b30');
+                            }
+                            if (favText) favText.textContent = 'Đã yêu thích';
+                        } else {
+                            this.style.color = '#1d1d1f';
+                            if (favIcon) {
+                                favIcon.setAttribute('fill', 'none');
+                                favIcon.setAttribute('stroke', 'currentColor');
+                            }
+                            if (favText) favText.textContent = 'Yêu thích';
+                        }
+
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show('success', data.message);
+                        }
+                    } else {
+                        if (data.require_login) {
+                            window.location.href = '<?php echo URLROOT; ?>/users/login';
+                            return;
+                        }
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    this.disabled = false;
+                    console.error('Toggle favorite error:', err);
+                });
+            });
+        }
 
         // HELPER: Append new review to DOM
         function appendNewReviewToDOM(reviewData, ratingVal) {

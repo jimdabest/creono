@@ -73,5 +73,23 @@
             </div>
         </div>
     </footer>
+
+    <!-- Global Cart Badge Loader -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('<?php echo URLROOT; ?>/carts/count')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.count > 0) {
+                    const badges = document.querySelectorAll('#nav-cart-badge');
+                    badges.forEach(b => {
+                        b.textContent = data.count;
+                        b.style.display = 'flex';
+                    });
+                }
+            })
+            .catch(function(err) { /* silent */ });
+    });
+    </script>
 </body>
 </html>
