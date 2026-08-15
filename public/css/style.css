@@ -2520,4 +2520,11 @@ a:hover {
 .tab-btn.active { background: var(--apple-blue); color: #fff; border-color: var(--apple-blue); }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
+
+/* Reviews Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 

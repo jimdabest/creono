@@ -122,4 +122,26 @@ class Product extends BaseModel {
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
+
+    /**
+     * Lấy chi tiết sản phẩm đầy đủ thông tin (kèm store, seller, category)
+     */
+    public function getProductDetail(int $id): ?object {
+        $this->db->query("
+            SELECT p.*, 
+                   s.name as store_name, 
+                   s.user_id as seller_id,
+                   u.name as seller_name,
+                   c.name as category_name,
+                   c.slug as category_slug
+            FROM {$this->table} p
+            JOIN stores s ON p.store_id = s.id
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE p.id = :id AND p.deleted_at IS NULL
+        ");
+        $this->db->bind(':id', $id);
+        $result = $this->db->single();
+        return $result ?: null;
+    }
 }
