@@ -80,6 +80,19 @@
                 </li>
                 
                 <?php if(isset($_SESSION['user_id'])) : ?>
+                    <!-- Favorites Icon -->
+                    <li role="none">
+                        <a href="<?php echo URLROOT; ?>/favorites/index" role="menuitem" class="nav-icon-link" aria-label="Yêu thích" title="Sản phẩm yêu thích" style="display: flex; align-items: center; padding: 6px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        </a>
+                    </li>
+                    <!-- Cart Icon with Badge -->
+                    <li role="none">
+                        <a href="<?php echo URLROOT; ?>/carts/index" role="menuitem" class="nav-icon-link" aria-label="Giỏ hàng" title="Giỏ hàng" style="display: flex; align-items: center; padding: 6px; position: relative;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            <span id="nav-cart-badge" style="display: none; position: absolute; top: 0; right: -4px; background: #ff3b30; color: #fff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; align-items: center; justify-content: center;">0</span>
+                        </a>
+                    </li>
                     <li role="none" class="nav-dropdown">
                         <a href="#" role="menuitem" class="nav-user" aria-haspopup="true">
                             <span class="user-avatar">
@@ -109,6 +122,13 @@
                         </ul>
                     </li>
                 <?php else : ?>
+                    <!-- Guest Cart Icon -->
+                    <li role="none">
+                        <a href="<?php echo URLROOT; ?>/carts/index" role="menuitem" class="nav-icon-link" aria-label="Giỏ hàng" title="Giỏ hàng" style="display: flex; align-items: center; padding: 6px; position: relative;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            <span id="nav-cart-badge" style="display: none; position: absolute; top: 0; right: -4px; background: #ff3b30; color: #fff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; align-items: center; justify-content: center;">0</span>
+                        </a>
+                    </li>
                     <li role="none"><a href="<?php echo URLROOT; ?>/users/login" role="menuitem" class="btn-nav btn-login">Đăng nhập</a></li>
                     <li role="none"><a href="<?php echo URLROOT; ?>/users/register" role="menuitem" class="btn-nav btn-register">Đăng ký</a></li>
                 <?php endif; ?>
