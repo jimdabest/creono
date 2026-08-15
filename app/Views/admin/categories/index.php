@@ -9,7 +9,7 @@
                 <span class="text-muted">Quản lý Danh mục</span>
             </nav>
             <h1 class="admin-title">Danh sách Danh mục</h1>
-            <p class="admin-subtitle">Quản lý các ngành hàng và nhóm tài liệu số trên Creono (UC42)</p>
+            <p class="admin-subtitle">Quản lý các ngành hàng và nhóm tài liệu số trên Creono</p>
         </div>
         <div class="admin-actions">
             <a href="<?php echo URLROOT; ?>/admin/categoryCreate" class="btn btn-success">

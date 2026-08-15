@@ -2507,4 +2507,17 @@ a:hover {
 
 /* Form Card Styling */
 .form-card-lg { max-width: 680px; margin: 0 auto; padding: 36px; background: #fff; border-radius: var(--apple-radius-lg); border: 1px solid var(--apple-gray-border); box-shadow: var(--apple-shadow-sm); }
-.form-hint { font-size: 13px; color: var(--apple-gray); margin-top: 4px; display: block; }
+.form-hint { font-size: 13px; color: var(--apple-gray); margin-top: 4px; display: block; }
+
+/* Badges Extra */
+.badge-danger { background: rgba(255, 59, 48, 0.1); color: var(--apple-red); }
+.badge-warning { background: rgba(255, 149, 0, 0.1); color: var(--apple-orange); }
+
+/* Admin Tabs (UC44) */
+.admin-tabs { display: flex; gap: 12px; border-bottom: 1px solid var(--apple-gray-border); padding-bottom: 12px; }
+.tab-btn { background: var(--apple-gray-bg); border: 1px solid var(--apple-gray-border); color: var(--apple-gray); padding: 10px 20px; border-radius: var(--apple-radius-full); font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+.tab-btn:hover { background: #fff; color: var(--apple-black); }
+.tab-btn.active { background: var(--apple-blue); color: #fff; border-color: var(--apple-blue); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+

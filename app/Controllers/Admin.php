@@ -8,6 +8,10 @@ require_once '../app/Core/Validator.php';
 class Admin extends Controller {
     private $statModel;
     private $categoryModel;
+    private $productModel;
+    private $productApprovalModel;
+    private $reportModel;
+    private $aiAppealModel;
 
     public function __construct() {
         // Chỉ cho phép Admin (role = 3) truy cập
@@ -15,6 +19,10 @@ class Admin extends Controller {
 
         $this->statModel = $this->model('StatModel');
         $this->categoryModel = $this->model('Category');
+        $this->productModel = $this->model('Product');
+        $this->productApprovalModel = $this->model('ProductApproval');
+        $this->reportModel = $this->model('Report');
+        $this->aiAppealModel = $this->model('AiAppeal');
     }
 
     public function index() {
@@ -32,7 +40,9 @@ class Admin extends Controller {
             'total_orders' => $this->statModel->getTotalOrders(),
             'total_revenue' => $this->statModel->getTotalRevenue(),
             'top_products' => $this->statModel->getTopProducts(5),
-            'seller_revenues' => $this->statModel->getSellerRevenueOverview(5)
+            'seller_revenues' => $this->statModel->getSellerRevenueOverview(5),
+            'pending_approvals_count' => $this->productModel->getPendingCount(),
+            'pending_reports_count' => $this->reportModel->getPendingCount() + $this->aiAppealModel->getPendingCount()
         ];
 
         $this->view('admin/dashboard', $data);
@@ -61,18 +71,15 @@ class Admin extends Controller {
      */
     public function categoryCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Kiểm tra CSRF Token
             if (isset($_POST['csrf_token'])) {
                 verifyCsrfToken($_POST['csrf_token']);
             }
 
-            // Lấy & làm sạch dữ liệu đầu vào
             $name = trim($_POST['name'] ?? '');
             $slug = trim($_POST['slug'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $sort_order = isset($_POST['sort_order']) && $_POST['sort_order'] !== '' ? (int)$_POST['sort_order'] : 0;
 
-            // Nếu người dùng không nhập slug, tự động tạo slug từ name
             if (empty($slug) && !empty($name)) {
                 $slug = $this->slugify($name);
             } else {
@@ -88,7 +95,6 @@ class Admin extends Controller {
                 'errors' => []
             ];
 
-            // Validation bằng Validator
             $validator = new Validator([
                 'name' => $name,
                 'slug' => $slug
@@ -99,7 +105,6 @@ class Admin extends Controller {
                 'slug' => 'required'
             ]);
 
-            // Kiểm tra trùng lặp Tên & Slug
             if (!isset($errors['name_err']) && $this->categoryModel->nameExists($name)) {
                 $errors['name_err'] = 'Tên danh mục này đã tồn tại';
             }
@@ -109,7 +114,6 @@ class Admin extends Controller {
             }
 
             if (empty($errors)) {
-                // Thêm vào DB
                 $insertData = [
                     'name' => $name,
                     'slug' => $slug,
@@ -130,7 +134,6 @@ class Admin extends Controller {
 
             $this->view('admin/categories/create', $data);
         } else {
-            // GET request - Hiển thị form tạo mới
             $data = [
                 'title' => 'Thêm Danh mục Mới - Creono Admin',
                 'name' => '',
@@ -164,7 +167,6 @@ class Admin extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Kiểm tra CSRF Token
             if (isset($_POST['csrf_token'])) {
                 verifyCsrfToken($_POST['csrf_token']);
             }
@@ -201,7 +203,6 @@ class Admin extends Controller {
                 'slug' => 'required'
             ]);
 
-            // Kiểm tra trùng lặp loại trừ ID hiện tại
             if (!isset($errors['name_err']) && $this->categoryModel->nameExists($name, $categoryId)) {
                 $errors['name_err'] = 'Tên danh mục này đã tồn tại';
             }
@@ -231,7 +232,6 @@ class Admin extends Controller {
 
             $this->view('admin/categories/edit', $data);
         } else {
-            // GET request - Load form với dữ liệu cũ
             $data = [
                 'title' => 'Chỉnh sửa Danh mục - Creono Admin',
                 'id' => $category->id,
@@ -266,7 +266,6 @@ class Admin extends Controller {
             exit();
         }
 
-        // Đảm bảo có xác thực nếu gửi theo form POST CSRF
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
             verifyCsrfToken($_POST['csrf_token']);
         }
@@ -281,11 +280,215 @@ class Admin extends Controller {
         exit();
     }
 
+    // =========================================================================
+    // UC43: Duyệt sản phẩm (Product Approval System)
+    // =========================================================================
+
+    /**
+     * Hiển thị danh sách sản phẩm chờ duyệt và lịch sử phê duyệt
+     */
+    public function approvals() {
+        $pendingProducts = $this->productModel->getPendingApprovals();
+        $recentApprovals = $this->productApprovalModel->getRecentApprovals(10);
+
+        $data = [
+            'title' => 'Duyệt Sản Phẩm - Creono Admin',
+            'pending_products' => $pendingProducts,
+            'recent_approvals' => $recentApprovals
+        ];
+
+        $this->view('admin/approvals/index', $data);
+    }
+
+    /**
+     * Phê duyệt sản phẩm (Approve)
+     */
+    public function approveProduct($id = null) {
+        if (!$id || !is_numeric($id)) {
+            setFlash('error', 'ID sản phẩm không hợp lệ');
+            header('location: ' . URLROOT . '/admin/approvals');
+            exit();
+        }
+
+        $productId = (int)$id;
+        $product = $this->productModel->findById($productId);
+
+        if (!$product) {
+            setFlash('error', 'Sản phẩm không tồn tại');
+            header('location: ' . URLROOT . '/admin/approvals');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+            verifyCsrfToken($_POST['csrf_token']);
+        }
+
+        $adminId = (int)$_SESSION['user_id'];
+        $note = trim($_POST['note'] ?? 'Sản phẩm đạt yêu cầu và được phê duyệt đăng tải');
+
+        // Cập nhật trạng thái sản phẩm sang Approved (status = 2)
+        if ($this->productModel->updateStatus($productId, 2)) {
+            // Ghi lịch sử phê duyệt
+            $this->productApprovalModel->logApproval($productId, $adminId, 'APPROVE', $note);
+            setFlash('success', "Đã phê duyệt thành công sản phẩm '{$product->title}'!");
+        } else {
+            setFlash('error', 'Có lỗi xảy ra khi phê duyệt sản phẩm.');
+        }
+
+        header('location: ' . URLROOT . '/admin/approvals');
+        exit();
+    }
+
+    /**
+     * Từ chối sản phẩm (Reject)
+     */
+    public function rejectProduct($id = null) {
+        if (!$id || !is_numeric($id)) {
+            setFlash('error', 'ID sản phẩm không hợp lệ');
+            header('location: ' . URLROOT . '/admin/approvals');
+            exit();
+        }
+
+        $productId = (int)$id;
+        $product = $this->productModel->findById($productId);
+
+        if (!$product) {
+            setFlash('error', 'Sản phẩm không tồn tại');
+            header('location: ' . URLROOT . '/admin/approvals');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+            verifyCsrfToken($_POST['csrf_token']);
+        }
+
+        $adminId = (int)$_SESSION['user_id'];
+        $note = trim($_POST['note'] ?? 'Sản phẩm chưa đạt tiêu chuẩn kiểm duyệt');
+
+        // Cập nhật trạng thái sản phẩm sang Rejected (status = 3)
+        if ($this->productModel->updateStatus($productId, 3)) {
+            // Ghi lịch sử phê duyệt
+            $this->productApprovalModel->logApproval($productId, $adminId, 'REJECT', $note);
+            setFlash('warning', "Đã từ chối đăng tải sản phẩm '{$product->title}'.");
+        } else {
+            setFlash('error', 'Có lỗi xảy ra khi từ chối sản phẩm.');
+        }
+
+        header('location: ' . URLROOT . '/admin/approvals');
+        exit();
+    }
+
+    // =========================================================================
+    // UC44: Quản lý Báo cáo vi phạm & Khiếu nại AI (Reports & AI Appeals)
+    // =========================================================================
+
+    /**
+     * Danh sách Báo cáo vi phạm và Khiếu nại nhãn AI
+     */
+    public function reports() {
+        $reports = $this->reportModel->getAllWithDetails();
+        $appeals = $this->aiAppealModel->getAllWithDetails();
+
+        $data = [
+            'title' => 'Quản lý Báo cáo Vi phạm & Khiếu nại AI - Creono Admin',
+            'reports' => $reports,
+            'appeals' => $appeals
+        ];
+
+        $this->view('admin/reports/index', $data);
+    }
+
+    /**
+     * Xử lý báo cáo vi phạm từ người dùng (Resolve / Dismiss / Investigate)
+     */
+    public function resolveReport($id = null) {
+        if (!$id || !is_numeric($id)) {
+            setFlash('error', 'ID báo cáo không hợp lệ');
+            header('location: ' . URLROOT . '/admin/reports');
+            exit();
+        }
+
+        $reportId = (int)$id;
+        $report = $this->reportModel->findById($reportId);
+
+        if (!$report) {
+            setFlash('error', 'Không tìm thấy báo cáo vi phạm');
+            header('location: ' . URLROOT . '/admin/reports');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+            verifyCsrfToken($_POST['csrf_token']);
+        }
+
+        $adminId = (int)$_SESSION['user_id'];
+        $action = trim($_POST['action'] ?? 'resolve'); // 'resolve', 'dismiss', 'investigate'
+
+        if ($action === 'resolve') {
+            // Nếu chấp nhận báo cáo vi phạm đối tượng là PRODUCT -> Khóa sản phẩm (status = 3)
+            if ($report->target_type === 'PRODUCT') {
+                $this->productModel->updateStatus((int)$report->target_id, 3);
+            }
+
+            $this->reportModel->updateReportStatus($reportId, 3, $adminId); // 3: Resolved
+            setFlash('success', "Đã giải quyết báo cáo vi phạm #{$reportId} thành công!");
+        } elseif ($action === 'dismiss') {
+            $this->reportModel->updateReportStatus($reportId, 4, $adminId); // 4: Dismissed
+            setFlash('info', "Đã bác bỏ báo cáo vi phạm #{$reportId}.");
+        } elseif ($action === 'investigate') {
+            $this->reportModel->updateReportStatus($reportId, 2, $adminId); // 2: Investigating
+            setFlash('warning', "Đang tiến hành điều tra báo cáo #{$reportId}.");
+        }
+
+        header('location: ' . URLROOT . '/admin/reports');
+        exit();
+    }
+
+    /**
+     * Xử lý khiếu nại nhãn AI từ Seller (Approve / Reject Appeal)
+     */
+    public function processAppeal($id = null) {
+        if (!$id || !is_numeric($id)) {
+            setFlash('error', 'ID khiếu nại không hợp lệ');
+            header('location: ' . URLROOT . '/admin/reports');
+            exit();
+        }
+
+        $appealId = (int)$id;
+        $appeal = $this->aiAppealModel->findById($appealId);
+
+        if (!$appeal) {
+            setFlash('error', 'Không tìm thấy khiếu nại nhãn AI');
+            header('location: ' . URLROOT . '/admin/reports');
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+            verifyCsrfToken($_POST['csrf_token']);
+        }
+
+        $adminId = (int)$_SESSION['user_id'];
+        $action = trim($_POST['action'] ?? 'approve'); // 'approve', 'reject'
+
+        if ($action === 'approve') {
+            // Chấp nhận khiếu nại AI -> Khôi phục sản phẩm sang Approved (status = 2)
+            $this->productModel->updateStatus((int)$appeal->product_id, 2);
+            $this->aiAppealModel->updateAppealStatus($appealId, 2, $adminId); // 2: Approved
+            setFlash('success', "Đã chấp nhận khiếu nại AI #{$appealId} và khôi phục sản phẩm!");
+        } else {
+            // Từ chối khiếu nại AI
+            $this->aiAppealModel->updateAppealStatus($appealId, 3, $adminId); // 3: Rejected
+            setFlash('warning', "Đã từ chối khiếu nại nhãn AI #{$appealId}.");
+        }
+
+        header('location: ' . URLROOT . '/admin/reports');
+        exit();
+    }
+
     /**
      * Helper tạo URL Slug chuẩn Tiếng Việt
      */
     private function slugify(string $text): string {
-        // Chuyển ký tự Tiếng Việt có dấu thành không dấu
         $utf8_map = [
             'à'=>'a', 'á'=>'a', 'ả'=>'a', 'ã'=>'a', 'ạ'=>'a',
             'ă'=>'a', 'ằ'=>'a', 'ắ'=>'a', 'ẳ'=>'a', 'ẵ'=>'a', 'ặ'=>'a',

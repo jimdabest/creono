@@ -177,7 +177,7 @@
                 <div class="link-icon">📁</div>
                 <div class="link-info">
                     <h4>Quản lý Danh mục</h4>
-                    <p>Thêm, sửa, xóa các danh mục sản phẩm (UC42)</p>
+                    <p>Thêm, sửa, xóa các danh mục sản phẩm</p>
                 </div>
                 <span class="link-arrow">&rarr;</span>
             </a>
@@ -186,28 +186,36 @@
                 <div class="link-icon">👥</div>
                 <div class="link-info">
                     <h4>Quản lý Người dùng</h4>
-                    <p>Quản lý tài khoản Buyer, Seller (UC40)</p>
+                    <p>Quản lý tài khoản Buyer, Seller & Phân quyền</p>
                 </div>
-                <span class="link-badge">Task 6</span>
+                <span class="link-badge">Sắp ra mắt</span>
             </div>
 
-            <div class="quick-link-card disabled">
+            <a href="<?php echo URLROOT; ?>/admin/approvals" class="quick-link-card">
                 <div class="link-icon">✅</div>
                 <div class="link-info">
                     <h4>Duyệt tài liệu sản phẩm</h4>
-                    <p>Phê duyệt hoặc từ chối sản phẩm (UC43)</p>
+                    <p>Phê duyệt hoặc từ chối tài liệu sản phẩm</p>
                 </div>
-                <span class="link-badge">Task 6</span>
-            </div>
+                <?php if (!empty($data['pending_approvals_count'])) : ?>
+                    <span class="badge badge-warning" style="margin-left: auto; font-size: 13px; padding: 4px 10px;"><?php echo $data['pending_approvals_count']; ?> chờ duyệt</span>
+                <?php else : ?>
+                    <span class="link-arrow">&rarr;</span>
+                <?php endif; ?>
+            </a>
 
-            <div class="quick-link-card disabled">
+            <a href="<?php echo URLROOT; ?>/admin/reports" class="quick-link-card">
                 <div class="link-icon">🚩</div>
                 <div class="link-info">
                     <h4>Quản lý Báo cáo vi phạm</h4>
-                    <p>Xử lý các báo cáo vi phạm nội dung (UC44)</p>
+                    <p>Xử lý báo cáo vi phạm & khiếu nại dán nhãn AI</p>
                 </div>
-                <span class="link-badge">Task 6</span>
-            </div>
+                <?php if (!empty($data['pending_reports_count'])) : ?>
+                    <span class="badge badge-danger" style="margin-left: auto; font-size: 13px; padding: 4px 10px;"><?php echo $data['pending_reports_count']; ?> chưa xử lý</span>
+                <?php else : ?>
+                    <span class="link-arrow">&rarr;</span>
+                <?php endif; ?>
+            </a>
         </div>
     </div>
 </div>

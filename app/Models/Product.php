@@ -79,8 +79,47 @@ class Product extends BaseModel {
             ORDER BY p.download_count DESC
             LIMIT :limit
         ");
-        $this->db->bind(':user_id', $user_id);
         $this->db->bind(':limit', $limit);
         return $this->db->resultSet();
+    }
+
+    /**
+     * Lấy tất cả sản phẩm đang chờ duyệt (status = 1) kèm thông tin chi tiết
+     */
+    public function getPendingApprovals(): array {
+        $this->db->query("
+            SELECT p.*, 
+                   s.name as store_name, 
+                   c.name as category_name,
+                   d.file_url, d.ai_score,
+                   al.name as ai_label_name
+            FROM {$this->table} p
+            JOIN stores s ON p.store_id = s.id
+            LEFT JOIN categories c ON p.category_id = c.id
+            LEFT JOIN documents d ON p.id = d.product_id
+            LEFT JOIN ai_labels al ON d.ai_label_id = al.id
+            WHERE p.status = 1 AND p.deleted_at IS NULL
+            ORDER BY p.created_at ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Đếm số sản phẩm đang chờ duyệt (status = 1)
+     */
+    public function getPendingCount(): int {
+        $this->db->query("SELECT COUNT(*) as total FROM {$this->table} WHERE status = 1 AND deleted_at IS NULL");
+        $result = $this->db->single();
+        return $result ? (int)$result->total : 0;
+    }
+
+    /**
+     * Cập nhật trạng thái sản phẩm (1: Pending, 2: Approved, 3: Rejected)
+     */
+    public function updateStatus(int $id, int $status): bool {
+        $this->db->query("UPDATE {$this->table} SET status = :status WHERE id = :id");
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
     }
 }
