@@ -144,4 +144,26 @@ class Product extends BaseModel {
         $result = $this->db->single();
         return $result ?: null;
     }
+
+    public function getProductWithSeller($productId) {
+        $this->db->query("SELECT p.*, s.user_id as seller_id FROM products p JOIN stores s ON p.store_id = s.id WHERE p.id = :id");
+        $this->db->bind(':id', $productId);
+        return $this->db->single();
+    }
+
+    // Lấy link file tải của sản phẩm từ bảng documents
+    public function getDocumentByProductId($productId) {
+        $this->db->query("SELECT file_url FROM documents WHERE product_id = :id");
+        $this->db->bind(':id', $productId);
+        return $this->db->single();
+    }
+    // Ghi log vào bảng downloads
+    public function logDownload($userId, $productId, $ip) {
+        $this->db->query("INSERT INTO downloads (user_id, product_id, ip_address) VALUES (:user_id, :product_id, :ip)");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':product_id', $productId);
+        $this->db->bind(':ip', $ip);
+        return $this->db->execute();
+    }
+
 }
