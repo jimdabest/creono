@@ -51,26 +51,39 @@
     <div class="product-grid">
         <?php if(!empty($data['products'])) : ?>
             <?php foreach($data['products'] as $product) : ?>
-                <div class="product-card interactive-hover" style="border-radius: 24px;">
-                    <div class="product-image-wrapper" style="border-radius: 24px 24px 0 0;">
-                        <div class="product-placeholder">Preview</div>
-                        <span class="product-badge"><?php echo htmlspecialchars($product->store_name); ?></span>
-                        <?php if($product->rating > 0) : ?>
-                            <span class="product-rating">
-                                ★ <?php echo number_format($product->rating, 1); ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
+                <div class="product-card interactive-hover" style="border-radius: 24px; display: flex; flex-direction: column; overflow: hidden;">
                     
-                    <div class="product-content">
-                        <h3 class="product-title"><?php echo htmlspecialchars($product->title); ?></h3>
-                        <p class="product-desc"><?php echo htmlspecialchars($product->description ?? 'Tài liệu số chất lượng cao được kiểm duyệt trên Creono.'); ?></p>
+                    <!-- Nhấp vào thân thẻ để xem chi tiết sản phẩm -->
+                    <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; flex-grow: 1;">
+                        <div class="product-image-wrapper" style="border-radius: 24px 24px 0 0;">
+                            <div class="product-placeholder">Preview</div>
+                            <span class="product-badge"><?php echo htmlspecialchars($product->store_name); ?></span>
+                            <?php if($product->rating > 0) : ?>
+                                <span class="product-rating">
+                                    ★ <?php echo number_format($product->rating, 1); ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="product-content" style="flex-grow: 1;">
+                            <h3 class="product-title"><?php echo htmlspecialchars($product->title); ?></h3>
+                            <p class="product-desc"><?php echo htmlspecialchars($product->description ?? 'Tài liệu số chất lượng cao được kiểm duyệt trên Creono.'); ?></p>
+                        </div>
+                    </a>
+
+                    <!-- Khu vực giá & Nút Mua ngay ôm sát chữ -->
+                    <div class="product-footer" style="padding: 12px 18px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span class="product-price" style="font-size: 15px; font-weight: 700; color: #2c3e50; white-space: nowrap; flex-shrink: 0;">
+                            <?php echo number_format($product->price, 0, ',', '.'); ?>&nbsp;₫
+                        </span>
+                        
+                        <a href="<?php echo URLROOT; ?>/orders/checkout/<?php echo $product->id; ?>" 
+                           class="btn btn-primary" 
+                           style="width: fit-content; min-width: auto; padding: 4px 10px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 980px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; flex-shrink: 0; line-height: 1.2;">
+                            Mua ngay
+                        </a>
                     </div>
 
-                    <div class="product-footer">
-                        <span class="product-price"><?php echo number_format($product->price, 0, ',', '.'); ?> ₫</span>
-                        <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" class="btn btn-secondary">Chi tiết</a>
-                    </div>
                 </div>
             <?php endforeach; ?>
         <?php else : ?>
