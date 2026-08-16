@@ -1,14 +1,19 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Middleware/GuestMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
 
-class Users extends Controller {
+class Users extends Controller
+{
     private User $userModel;
     private UserProfile $userProfileModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->userModel = $this->model('User');
         $this->userProfileModel = $this->model('UserProfile');
     }
@@ -16,7 +21,8 @@ class Users extends Controller {
     /**
      * Helper: Trả về JSON response
      */
-    private function jsonResponse(bool $success, string $message, array $data = []): void {
+    private function jsonResponse(bool $success, string $message, array $data = []): void
+    {
         header('Content-Type: application/json');
         echo json_encode(array_merge([
             'success' => $success,
@@ -28,7 +34,8 @@ class Users extends Controller {
     /**
      * Helper: Lấy đường dẫn redirect theo role
      */
-    private function getRedirectPath(int $role): string {
+    private function getRedirectPath(int $role): string
+    {
         $paths = [
             3 => '/admin/dashboard',
             2 => '/seller/dashboard',
@@ -38,24 +45,25 @@ class Users extends Controller {
     }
 
     /**
-     * Helper: Kiểm tra request có phải AJAX / Fetch không
+     * Helper: Kiểm tra request có phải AJAX không
      */
-    private function isAjaxRequest(): bool {
-        return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
-               (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
-               (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
+    private function isAjaxRequest(): bool
+    {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     // Chức năng UC-01: Đăng ký tài khoản
-    public function register(): void {
+    public function register(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Kiểm tra CSRF token
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
                 $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
-            // Lọc dữ liệu đầu vào (Sửa FILTER_SANITIZE_STRING thành FILTER_SANITIZE_SPECIAL_CHARS)
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            // Lọc dữ liệu đầu vào
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             // Gộp dữ liệu đầu vào
             $data = [
@@ -69,7 +77,7 @@ class Users extends Controller {
             $errors = [];
 
             // ====== VALIDATION THỦ CÔNG ======
-            
+
             // 1. Kiểm tra name
             if (empty($data['name'])) {
                 $errors['name_err'] = 'Vui lòng nhập họ và tên';
@@ -105,7 +113,8 @@ class Users extends Controller {
             }
 
             // ====== XỬ LÝ ĐĂNG KÝ ======
-            
+
+            // Nếu không có lỗi thì tiến hành đăng ký
             if (empty($errors)) {
                 // Mã hóa mật khẩu
                 $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -114,10 +123,10 @@ class Users extends Controller {
                 if ($this->userModel->register($data)) {
                     // Lấy thông tin user vừa tạo
                     $newUser = $this->userModel->getUserByEmail($data['email']);
-                    
+
                     if ($newUser) {
                         // Tạo session cho user
-                        $this->createUserSession($newUser, 'Đăng ký thành công!');
+                        $this->createUserSession($newUser);
                         return;
                     } else {
                         $this->jsonResponse(false, 'Đăng ký thành công nhưng không thể tạo session. Vui lòng đăng nhập lại.');
@@ -141,9 +150,10 @@ class Users extends Controller {
             $this->view('users/register', $data);
         }
     }
-    
+
     // Chức năng UC-02: Đăng nhập
-    public function login(): void {
+    public function login(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
                 $this->jsonResponse(false, 'CSRF token validation failed');
@@ -168,54 +178,55 @@ class Users extends Controller {
                 } else {
                     $loggedInUser = $this->userModel->login($data['email'], $data['password']);
                     if ($loggedInUser) {
-                        $this->createUserSession($loggedInUser, 'Đăng nhập thành công!');
-                        return;
+                        $this->createUserSession($loggedInUser);
+                        return; // Thêm return để dừng execution
                     } else {
                         $errors['password_err'] = 'Mật khẩu không chính xác';
                     }
                 }
             }
-            
+
             if (!empty($errors)) {
                 $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
             }
         } else {
             $data = [
-                'email' => '', 'password' => '', 'csrf_token' => generateCsrfToken()
+                'email' => '',
+                'password' => '',
+                'csrf_token' => generateCsrfToken()
             ];
             $this->view('users/login', $data);
         }
     }
 
     // Hàm hỗ trợ lưu Session an toàn
-    public function createUserSession(object $user, string $message = 'Thành công!'): void {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+    public function createUserSession(object $user): void
+    {
         session_regenerate_id(true);
 
         $_SESSION['user_id'] = $user->id;
-        $_SESSION['user_name'] = $user->name; 
+        $_SESSION['user_name'] = $user->name;
         $_SESSION['user_email'] = $user->email;
-        $_SESSION['user_role'] = $user->role; 
-        
+        $_SESSION['user_role'] = $user->role;
+
         $path = $this->getRedirectPath($user->role);
         $fullPath = URLROOT . $path;
-        
-        // Trả về JSON nếu là request qua JS/AJAX
-        if ($this->isAjaxRequest() || $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->jsonResponse(true, $message, [
+
+        // Trả về JSON cho AJAX request
+        if ($this->isAjaxRequest()) {
+            $this->jsonResponse(true, 'Đăng nhập thành công!', [
                 'redirect' => $fullPath
             ]);
         }
-        
-        // Fallback cho non-AJAX
+
+        // Fallback cho non-AJAX (redirect thường)
         header('location: ' . $fullPath);
         exit();
     }
 
     // Đăng xuất
-    public function logout(): void {
+    public function logout(): void
+    {
         unset($_SESSION['user_id']);
         unset($_SESSION['user_email']);
         unset($_SESSION['user_role']);
@@ -225,7 +236,8 @@ class Users extends Controller {
     }
 
     // Trang Hồ sơ cá nhân
-    public function profile(): void {
+    public function profile(): void
+    {
         AuthMiddleware::check();
 
         $user = $this->userModel->getUserWithProfile($_SESSION['user_id']);
@@ -238,7 +250,8 @@ class Users extends Controller {
     }
 
     // Cập nhật Hồ sơ cá nhân
-    public function updateProfile(): void {
+    public function updateProfile(): void
+    {
         AuthMiddleware::check();
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -262,14 +275,15 @@ class Users extends Controller {
 
                 if (in_array($mime_type, $allowed_types)) {
                     $upload_dir = '../public/uploads/avatars/';
+                    // Tạo thư mục nếu chưa có
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0777, true);
                     }
-                    
+
                     $extension = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
                     $file_name = time() . '_' . uniqid() . '.' . $extension;
                     $target_file = $upload_dir . $file_name;
-                    
+
                     if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_file)) {
                         $updateData['avatar_url'] = '/uploads/avatars/' . $file_name;
                     } else {
@@ -291,7 +305,8 @@ class Users extends Controller {
     }
 
     // Xử lý Đổi mật khẩu
-    public function changePassword(): void {
+    public function changePassword(): void
+    {
         AuthMiddleware::check();
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -300,7 +315,7 @@ class Users extends Controller {
             }
 
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-            
+
             $data = [
                 'old_password' => $_POST['old_password'] ?? '',
                 'new_password' => $_POST['new_password'] ?? '',
@@ -316,7 +331,7 @@ class Users extends Controller {
 
             if ($validator->passes()) {
                 $user = $this->userModel->findById($_SESSION['user_id']);
-                
+
                 if (!$user || !password_verify($data['old_password'], $user->password)) {
                     $errors['old_password_err'] = 'Mật khẩu hiện tại không chính xác';
                 } else {
@@ -329,16 +344,106 @@ class Users extends Controller {
                     }
                 }
             }
-            
+
             if (!empty($errors)) {
                 $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
             }
         } else {
             $data = [
-                'old_password' => '', 'new_password' => '', 'confirm_password' => '',
+                'old_password' => '',
+                'new_password' => '',
+                'confirm_password' => '',
                 'csrf_token' => generateCsrfToken()
             ];
             $this->view('users/change_password', $data);
         }
     }
+    public function forgotPassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $email = trim($_POST['email']);
+
+            if ($this->userModel->findByEmail($email)) {
+                // Tạo token 64 ký tự và hạn 15 phút (900 giây)
+                $token = bin2hex(random_bytes(32));
+                $expire = date('Y-m-d H:i:s', time() + 900);
+
+                if ($this->userModel->setResetToken($email, $token, $expire)) {
+                    // Cấu hình PHPMailer
+                    $mail = new PHPMailer(true);
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host = 'smtp.gmail.com';
+                        $mail->SMTPAuth = true;
+                        $mail->Username = 'email_cua_ban@gmail.com'; // Cập nhật email của bạn
+                        $mail->Password = 'app_password_cua_ban';    // Cập nhật app password
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                        $mail->Port = 587;
+                        $mail->CharSet = 'UTF-8';
+
+                        $mail->setFrom('noreply@creono.com', SITENAME);
+                        $mail->addAddress($email);
+
+                        $mail->isHTML(true);
+                        $mail->Subject = 'Yêu cầu đặt lại mật khẩu - ' . SITENAME;
+
+                        $resetLink = URLROOT . '/users/resetPassword/' . $token;
+                        $mail->Body = "<h2>Xin chào,</h2>
+                                       <p>Hệ thống nhận được yêu cầu đặt lại mật khẩu từ tài khoản của bạn.</p>
+                                       <p>Vui lòng click vào đường dẫn bên dưới để thiết lập mật khẩu mới (link có hiệu lực trong 15 phút):</p>
+                                       <p><a href='{$resetLink}' style='padding: 10px 20px; background: #0071e3; color: #fff; text-decoration: none; border-radius: 5px;'>Đặt lại mật khẩu</a></p>
+                                       <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>";
+
+                        $mail->send();
+                        // setFlash('success', 'Link đặt lại mật khẩu đã được gửi vào email của bạn.');
+                        header('Location: ' . URLROOT . '/users/login');
+                        exit;
+                    } catch (Exception $e) {
+                        die("Lỗi gửi mail: {$mail->ErrorInfo}");
+                    }
+                }
+            } else {
+                $data = [
+                    'email' => $email,
+                    'email_err' => 'Email không tồn tại trong hệ thống.'
+                ];
+                $this->view('users/forgot_password', $data);
+            }
+        } else {
+            $this->view('users/forgot_password', ['email' => '', 'email_err' => '']);
+        }
+    }
+
+    public function resetPassword($token = '')
+    {
+        // Kiểm tra token hợp lệ
+        $user = $this->userModel->checkValidResetToken($token);
+        if (!$user) {
+            die('Token không hợp lệ hoặc đã hết hạn.');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $password = trim($_POST['password']);
+            $confirm_password = trim($_POST['confirm_password']);
+
+            if (strlen($password) < 6) {
+                $data['password_err'] = 'Mật khẩu phải từ 6 ký tự.';
+            } elseif ($password !== $confirm_password) {
+                $data['confirm_err'] = 'Mật khẩu xác nhận không khớp.';
+            }
+
+            if (empty($data['password_err']) && empty($data['confirm_err'])) {
+                if ($this->userModel->resetPasswordWithToken($token, $password)) {
+                    // setFlash('success', 'Đổi mật khẩu thành công. Vui lòng đăng nhập.');
+                    header('Location: ' . URLROOT . '/users/login');
+                    exit;
+                }
+            } else {
+                $this->view('users/reset_password', ['token' => $token, 'data' => $data]);
+            }
+        } else {
+            $this->view('users/reset_password', ['token' => $token]);
+        }
+    }
+
 }
