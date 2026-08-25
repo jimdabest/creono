@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 class BaseModel {
     protected Database $db;
     protected string $table = ''; // Tên bảng sẽ được Model con định nghĩa
@@ -103,5 +104,12 @@ class BaseModel {
         }
 
         return $destroyed;
+    }
+
+    /**
+     * Lấy ID của bản ghi vừa được insert
+     */
+    public function getLastInsertId(): int {
+        return (int)$this->db->lastInsertId();
     }
 }

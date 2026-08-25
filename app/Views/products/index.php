@@ -222,4 +222,170 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- Responsive Media Queries (giữ nguyên mọi style cũ) -->
+<style>
+    /* Tablet & Mobile responsive - chỉ điều chỉnh kích thước, layout, spacing */
+    @media only screen and (max-width: 992px) {
+        .product-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 20px !important;
+        }
+        .market-header h2 {
+            font-size: 36px !important;
+        }
+        .categories-flex {
+            justify-content: flex-start !important;
+            gap: 10px !important;
+        }
+        .category-pill {
+            font-size: 13px !important;
+            padding: 6px 16px !important;
+        }
+    }
+
+    @media only screen and (max-width: 768px) {
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+        }
+        .market-header h2 {
+            font-size: 28px !important;
+        }
+        .spotlight-search input {
+            font-size: 15px !important;
+            padding: 12px 16px 12px 42px !important;
+        }
+        .spotlight-search .search-icon {
+            width: 18px !important;
+            height: 18px !important;
+            left: 14px !important;
+        }
+        .categories-flex {
+            gap: 8px !important;
+        }
+        .category-pill {
+            font-size: 12px !important;
+            padding: 6px 14px !important;
+        }
+        .product-card {
+            border-radius: 20px !important;
+        }
+        .product-image-wrapper {
+            height: 140px !important;
+        }
+        .product-title {
+            font-size: 15px !important;
+        }
+        .product-desc {
+            font-size: 13px !important;
+        }
+        .product-price {
+            font-size: 15px !important;
+        }
+        .product-footer {
+            padding: 10px 14px !important;
+        }
+        .btn-cart-add-mini {
+            width: 28px !important;
+            height: 28px !important;
+        }
+        .btn-cart-add-mini svg {
+            width: 13px !important;
+            height: 13px !important;
+        }
+        .btn-primary {
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        .container.page-container {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+        .product-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 12px !important;
+        }
+        .market-header h2 {
+            font-size: 24px !important;
+            margin-bottom: 16px !important;
+        }
+        .spotlight-search input {
+            font-size: 14px !important;
+            padding: 10px 12px 10px 36px !important;
+            border-radius: 40px !important;
+        }
+        .spotlight-search .search-icon {
+            left: 12px !important;
+            width: 16px !important;
+            height: 16px !important;
+        }
+        .category-pill {
+            font-size: 11px !important;
+            padding: 4px 12px !important;
+        }
+        .product-image-wrapper {
+            height: 110px !important;
+        }
+        .product-content {
+            padding: 12px 12px 6px !important;
+        }
+        .product-title {
+            font-size: 13px !important;
+            white-space: normal !important;
+            line-height: 1.3 !important;
+        }
+        .product-desc {
+            font-size: 12px !important;
+            -webkit-line-clamp: 1 !important;
+        }
+        .product-footer {
+            padding: 8px 12px !important;
+            flex-wrap: nowrap !important;
+        }
+        .product-price {
+            font-size: 14px !important;
+        }
+        .btn-cart-add-mini {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 6px !important;
+        }
+        .btn-cart-add-mini svg {
+            width: 12px !important;
+            height: 12px !important;
+        }
+        .btn-primary {
+            font-size: 10px !important;
+            padding: 4px 8px !important;
+        }
+        .btn-fav-toggle {
+            width: 30px !important;
+            height: 30px !important;
+            top: 8px !important;
+            right: 8px !important;
+        }
+        .btn-fav-toggle svg {
+            width: 15px !important;
+            height: 15px !important;
+        }
+        .product-badge,
+        .product-rating {
+            font-size: 10px !important;
+            padding: 2px 8px !important;
+        }
+        .empty-state {
+            padding: 40px 16px !important;
+        }
+        .empty-state h3 {
+            font-size: 18px !important;
+        }
+        .empty-state p {
+            font-size: 14px !important;
+        }
+    }
+</style>
+
 <?php require APPROOT . '/Views/inc/footer.php'; ?>

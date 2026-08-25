@@ -3,17 +3,20 @@ require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
 
-class Favorites extends Controller {
-    private $favoriteModel;
+class Favorites extends Controller
+{
+    private Favorite $favoriteModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->favoriteModel = $this->model('Favorite');
     }
 
     /**
      * Helper: Trả về JSON response
      */
-    private function jsonResponse(bool $success, string $message, array $data = []): void {
+    private function jsonResponse(bool $success, string $message, array $data = []): void
+    {
         header('Content-Type: application/json');
         echo json_encode(array_merge([
             'success' => $success,
@@ -26,7 +29,8 @@ class Favorites extends Controller {
      * UC17: Toggle yêu thích (thêm/xoá) - AJAX
      * POST /favorites/toggle
      */
-    public function toggle(): void {
+    public function toggle(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(false, 'Method not allowed');
         }
@@ -68,7 +72,8 @@ class Favorites extends Controller {
      * Trang danh sách yêu thích của user
      * GET /favorites/index
      */
-    public function index(): void {
+    public function index(): void
+    {
         AuthMiddleware::check();
 
         $userId = (int)$_SESSION['user_id'];
@@ -87,7 +92,8 @@ class Favorites extends Controller {
      * Kiểm tra trạng thái yêu thích (cho AJAX check)
      * GET /favorites/status/{product_id}
      */
-    public function status(int $productId = 0): void {
+    public function status(int $productId = 0): void
+    {
         if (!isset($_SESSION['user_id'])) {
             $this->jsonResponse(true, 'OK', ['is_favorited' => false]);
         }

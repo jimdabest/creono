@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
 
 class Reviews extends Controller {
-    private $reviewModel;
-    private $productModel;
+    private Review $reviewModel;
+    private Product $productModel;
 
     public function __construct() {
         $this->reviewModel = $this->model('Review');
@@ -32,6 +33,11 @@ class Reviews extends Controller {
         // Chỉ chấp nhận POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(false, 'Method not allowed');
+        }
+
+        // ===== KIỂM TRA CSRF TOKEN (THÊM MỚI) =====
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            $this->jsonResponse(false, 'CSRF token validation failed', ['refresh_token_needed' => true]);
         }
 
         // Kiểm tra đăng nhập
@@ -71,7 +77,6 @@ class Reviews extends Controller {
         if (empty($comment)) {
             $this->jsonResponse(false, 'Vui lòng nhập nội dung đánh giá');
         }
-
         if (mb_strlen($comment) > 1000) {
             $this->jsonResponse(false, 'Nội dung đánh giá không được vượt quá 1000 ký tự');
         }
@@ -91,9 +96,7 @@ class Reviews extends Controller {
         ];
 
         if ($this->reviewModel->createReview($reviewData)) {
-            // Lấy rating stats mới để trả về cho client
             $ratingStats = $this->reviewModel->getRatingStats($productId);
-
             $this->jsonResponse(true, 'Đánh giá đã được gửi thành công!', [
                 'review' => [
                     'user_name' => $_SESSION['user_name'] ?? 'Ẩn danh',
@@ -117,6 +120,11 @@ class Reviews extends Controller {
             $this->jsonResponse(false, 'Method not allowed');
         }
 
+        // ===== KIỂM TRA CSRF TOKEN (THÊM MỚI) =====
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            $this->jsonResponse(false, 'CSRF token validation failed', ['refresh_token_needed' => true]);
+        }
+
         if (!isset($_SESSION['user_id'])) {
             $this->jsonResponse(false, 'Vui lòng đăng nhập để bình luận', [
                 'require_login' => true
@@ -134,12 +142,10 @@ class Reviews extends Controller {
         if (empty($comment)) {
             $this->jsonResponse(false, 'Vui lòng nhập nội dung bình luận');
         }
-
         if (mb_strlen($comment) > 500) {
             $this->jsonResponse(false, 'Nội dung bình luận không được vượt quá 500 ký tự');
         }
 
-        // Kiểm tra review cha tồn tại
         $parentReview = $this->reviewModel->findById($parentId);
         if (!$parentReview) {
             $this->jsonResponse(false, 'Đánh giá gốc không tồn tại');
@@ -177,7 +183,6 @@ class Reviews extends Controller {
 
         $reviews = $this->reviewModel->getReviewsByProductId($productId);
 
-        // Lấy reply cho mỗi review
         $reviewsWithReplies = [];
         foreach ($reviews as $review) {
             $reviewObj = (array)$review;

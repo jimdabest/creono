@@ -1,3 +1,4 @@
+<?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container mt-4 mb-5">
@@ -79,5 +80,52 @@
         </form>
     </div>
 </div>
+
+<style>
+/* Responsive cho form tạo danh mục */
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    .admin-title {
+        font-size: 26px !important;
+    }
+    .admin-subtitle {
+        font-size: 14px !important;
+    }
+    .form-card-lg {
+        padding: 20px !important;
+    }
+    .form-actions {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+    .form-actions .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+@media (max-width: 480px) {
+    .admin-title {
+        font-size: 22px !important;
+    }
+    .admin-subtitle {
+        font-size: 13px !important;
+    }
+    .form-card-lg {
+        padding: 16px !important;
+    }
+    .form-group label {
+        font-size: 14px !important;
+    }
+    .form-control {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+}
+</style>
 
 <?php require APPROOT . '/Views/inc/footer.php'; ?>

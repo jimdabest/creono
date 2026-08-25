@@ -1,6 +1,4 @@
-<?php
-
-/** @var array $data */ ?>
+<?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container page-container" style="margin-top: 40px; margin-bottom: 80px;">
@@ -345,7 +343,7 @@
     </div>
 </div>
 
-<!-- STYLES FOR STAR RATING & REVIEWS -->
+<!-- STYLES FOR STAR RATING & REVIEWS + RESPONSIVE -->
 <style>
     .star-item {
         color: #d2d2d7;
@@ -367,424 +365,166 @@
     .btn-toggle-reply:hover {
         text-decoration: underline;
     }
+
+    /* ===== RESPONSIVE: TABLET & MOBILE ===== */
+
+    /* Tablet (max-width: 768px) */
+    @media (max-width: 768px) {
+        .product-hero-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+        }
+
+        .product-main-card,
+        .product-action-card {
+            padding: 20px !important;
+            border-radius: 20px !important;
+        }
+
+        .product-action-card {
+            position: static !important;
+            top: auto !important;
+        }
+
+        .product-detail-title {
+            font-size: 26px !important;
+        }
+
+        .price-amount {
+            font-size: 30px !important;
+        }
+
+        .rating-overview-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+            text-align: center !important;
+        }
+
+        .rating-score-box {
+            border-right: none !important;
+            padding-right: 0 !important;
+        }
+
+        .star-interactive-group {
+            font-size: 28px !important;
+            gap: 6px !important;
+        }
+
+        .review-item-card {
+            padding: 18px !important;
+        }
+
+        .reply-item {
+            margin-left: 16px !important;
+        }
+    }
+
+    /* Điện thoại nhỏ (max-width: 480px) */
+    @media (max-width: 480px) {
+        .product-hero-grid {
+            gap: 16px !important;
+        }
+
+        .product-main-card,
+        .product-action-card {
+            padding: 16px !important;
+            border-radius: 16px !important;
+        }
+
+        .product-detail-title {
+            font-size: 20px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .price-amount {
+            font-size: 24px !important;
+        }
+
+        .product-meta-row {
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            font-size: 13px !important;
+        }
+
+        .btn,
+        .btn-primary,
+        .btn-secondary {
+            font-size: 14px !important;
+            padding: 12px !important;
+        }
+
+        .review-form-container form {
+            padding: 16px !important;
+        }
+
+        .star-interactive-group {
+            font-size: 24px !important;
+            gap: 4px !important;
+        }
+
+        .reviews-card {
+            padding: 16px !important;
+        }
+
+        .rating-overview-grid {
+            padding: 16px !important;
+        }
+
+        .big-score {
+            font-size: 36px !important;
+        }
+
+        .rating-bar-row {
+            font-size: 12px !important;
+            gap: 8px !important;
+        }
+
+        .rating-bar-row span:first-child {
+            width: 40px !important;
+        }
+        .rating-bar-row span:last-child {
+            width: 30px !important;
+        }
+
+        .breadcrumb {
+            font-size: 12px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .product-header-badge {
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+
+        .store-badge,
+        .category-tag {
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+        }
+
+        .seller-info-mini {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+        }
+
+        .seller-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 14px !important;
+        }
+
+        .reply-item {
+            margin-left: 8px !important;
+            padding: 10px 12px !important;
+        }
+    }
 </style>
 
-<!-- JAVASCRIPT FOR STAR INTERACTION & AJAX REVIEW SUBMISSION (UC34, UC35) -->
+<?php require APPROOT . '/Views/inc/footer.php'; ?>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        'use strict';
-
-        // 1. STAR RATING INTERACTIVE LOGIC (UC34)
-        const starPicker = document.getElementById('starPicker');
-        const ratingInput = document.getElementById('ratingInput');
-        const ratingLabel = document.getElementById('ratingLabel');
-        const ratingErr = document.getElementById('rating_err');
-
-        const ratingTexts = {
-            1: '1 sao - Rất kém',
-            2: '2 sao - Kém',
-            3: '3 sao - Bình thường',
-            4: '4 sao - Tốt',
-            5: '5 sao - Rất tốt'
-        };
-
-        if (starPicker) {
-            const stars = starPicker.querySelectorAll('.star-item');
-
-            stars.forEach(function(star) {
-                // Hover effect
-                star.addEventListener('mouseenter', function() {
-                    const val = parseInt(this.getAttribute('data-value'));
-                    highlightStars(val);
-                    if (ratingLabel) ratingLabel.textContent = '(' + ratingTexts[val] + ')';
-                });
-
-                // Mouse leave -> restore selected rating
-                starPicker.addEventListener('mouseleave', function() {
-                    const currentVal = parseInt(ratingInput.value) || 0;
-                    highlightStars(currentVal);
-                    if (ratingLabel) {
-                        ratingLabel.textContent = currentVal > 0 ? '(' + ratingTexts[currentVal] + ')' : '';
-                    }
-                });
-
-                // Click -> select rating
-                star.addEventListener('click', function() {
-                    const val = parseInt(this.getAttribute('data-value'));
-                    ratingInput.value = val;
-                    highlightStars(val);
-                    if (ratingLabel) ratingLabel.textContent = '(' + ratingTexts[val] + ')';
-                    if (ratingErr) ratingErr.textContent = '';
-                });
-            });
-
-            function highlightStars(count) {
-                stars.forEach(function(s) {
-                    const sVal = parseInt(s.getAttribute('data-value'));
-                    if (sVal <= count) {
-                        s.classList.add('active');
-                    } else {
-                        s.classList.remove('active');
-                    }
-                });
-            }
-        }
-
-        // 2. AJAX SUBMIT FOR MAIN REVIEW FORM (UC34)
-        const reviewForm = document.getElementById('reviewForm');
-        if (reviewForm) {
-            reviewForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                // Client Validation
-                const selectedRating = parseInt(ratingInput.value) || 0;
-                const commentVal = document.getElementById('reviewComment').value.trim();
-                let hasErr = false;
-
-                if (ratingErr) ratingErr.textContent = '';
-                const commentErr = document.getElementById('comment_err');
-                if (commentErr) commentErr.textContent = '';
-
-                if (selectedRating <= 0) {
-                    if (ratingErr) ratingErr.textContent = 'Vui lòng chọn số sao đánh giá';
-                    hasErr = true;
-                }
-
-                if (!commentVal) {
-                    if (commentErr) commentErr.textContent = 'Vui lòng nhập nhận xét';
-                    hasErr = true;
-                }
-
-                if (hasErr) return;
-
-                const submitBtn = document.getElementById('btnSubmitReview');
-                const originalText = submitBtn.textContent;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Đang gửi...';
-
-                const formData = new FormData(reviewForm);
-
-                fetch(reviewForm.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
-
-                        if (data.success) {
-                            // Hiển thị flash thành công
-                            if (typeof FlashModule !== 'undefined') {
-                                FlashModule.show('success', data.message);
-                            } else {
-                                alert(data.message);
-                            }
-
-                            // Thay thế form bằng thông báo đã đánh giá
-                            const parentContainer = reviewForm.parentElement;
-                            parentContainer.innerHTML = '<div class="reviewed-notice" style="padding: 16px 20px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 14px; color: #0050b3; font-size: 14px;">✅ Bạn đã gửi đánh giá cho sản phẩm này. Cảm ơn phản hồi của bạn!</div>';
-
-                            // Dynamic UI update: Thêm review mới vào DOM ngay lập tức
-                            if (data.review) {
-                                appendNewReviewToDOM(data.review, selectedRating);
-                            }
-
-                            // Dynamic UI update: Cập nhật stats thanh phần trăm & điểm trung bình
-                            if (data.rating_stats) {
-                                updateRatingStatsUI(data.rating_stats);
-                            }
-                        } else {
-                            if (data.require_login) {
-                                window.location.href = '<?php echo URLROOT; ?>/users/login';
-                                return;
-                            }
-                            if (typeof FlashModule !== 'undefined') {
-                                FlashModule.show('error', data.message);
-                            } else {
-                                alert(data.message);
-                            }
-                        }
-                    })
-                    .catch(err => {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
-                        console.error('Error submitting review:', err);
-                    });
-            });
-        }
-
-        // 3. TOGGLE REPLY FORM & AJAX SUBMIT REPLY (UC35)
-        document.addEventListener('click', function(e) {
-            // Toggle reply form
-            if (e.target.classList.contains('btn-toggle-reply')) {
-                const parentId = e.target.getAttribute('data-parent-id');
-                const replyBox = document.getElementById('reply-form-' + parentId);
-                if (replyBox) {
-                    replyBox.style.display = replyBox.style.display === 'none' ? 'block' : 'none';
-                }
-            }
-
-            // Cancel reply
-            if (e.target.classList.contains('btn-cancel-reply')) {
-                const parentId = e.target.getAttribute('data-parent-id');
-                const replyBox = document.getElementById('reply-form-' + parentId);
-                if (replyBox) {
-                    replyBox.style.display = 'none';
-                }
-            }
-        });
-
-        // AJAX Submit Reply (UC35)
-        document.addEventListener('submit', function(e) {
-            if (e.target.classList.contains('form-reply-ajax')) {
-                e.preventDefault();
-
-                const form = e.target;
-                const commentInput = form.querySelector('textarea[name="comment"]');
-                const commentVal = commentInput.value.trim();
-
-                if (!commentVal) {
-                    alert('Vui lòng nhập nội dung phản hồi');
-                    return;
-                }
-
-                const submitBtn = form.querySelector('.btn-submit-reply');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Đang gửi...';
-
-                const formData = new FormData(form);
-
-                fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Gửi trả lời';
-
-                        if (data.success) {
-                            if (typeof FlashModule !== 'undefined') {
-                                FlashModule.show('success', data.message);
-                            }
-
-                            // Reset form & hide
-                            commentInput.value = '';
-                            const parentId = form.querySelector('input[name="parent_id"]').value;
-                            const replyBox = document.getElementById('reply-form-' + parentId);
-                            if (replyBox) replyBox.style.display = 'none';
-
-                            // Thêm reply vào danh sách ngay lập tức
-                            if (data.reply) {
-                                appendReplyToDOM(parentId, data.reply);
-                            }
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(err => {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Gửi trả lời';
-                        console.error('Reply error:', err);
-                    });
-            }
-        });
-
-        // 4. ADD TO CART (UC18) AJAX
-        const btnAddToCart = document.getElementById('btnAddToCart');
-        if (btnAddToCart) {
-            btnAddToCart.addEventListener('click', function() {
-                const productId = this.getAttribute('data-product-id');
-                const originalHtml = this.innerHTML;
-
-                this.disabled = true;
-                this.querySelector('span').textContent = 'Đang thêm...';
-
-                const formData = new FormData();
-                formData.append('product_id', productId);
-
-                fetch('<?php echo URLROOT; ?>/carts/add', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    this.disabled = false;
-                    if (data.success) {
-                        this.querySelector('span').textContent = '✓ Đã có trong giỏ';
-                        if (typeof FlashModule !== 'undefined') {
-                            FlashModule.show('success', data.message);
-                        } else {
-                            alert(data.message);
-                        }
-                        // Update navbar badge
-                        const badges = document.querySelectorAll('#nav-cart-badge');
-                        badges.forEach(b => {
-                            b.textContent = data.cart_count;
-                            b.style.display = 'flex';
-                        });
-                    } else {
-                        this.innerHTML = originalHtml;
-                        alert(data.message);
-                    }
-                })
-                .catch(err => {
-                    this.disabled = false;
-                    this.innerHTML = originalHtml;
-                    console.error('Add cart error:', err);
-                });
-            });
-        }
-
-        // 5. TOGGLE FAVORITE (UC17) AJAX
-        const btnToggleFavorite = document.getElementById('btnToggleFavorite');
-        if (btnToggleFavorite) {
-            btnToggleFavorite.addEventListener('click', function() {
-                const productId = this.getAttribute('data-product-id');
-                const favIcon = this.querySelector('.fav-icon');
-                const favText = document.getElementById('favText');
-
-                this.disabled = true;
-
-                const formData = new FormData();
-                formData.append('product_id', productId);
-
-                fetch('<?php echo URLROOT; ?>/favorites/toggle', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    this.disabled = false;
-                    if (data.success) {
-                        if (data.is_favorited) {
-                            this.style.color = '#ff3b30';
-                            if (favIcon) {
-                                favIcon.setAttribute('fill', '#ff3b30');
-                                favIcon.setAttribute('stroke', '#ff3b30');
-                            }
-                            if (favText) favText.textContent = 'Đã yêu thích';
-                        } else {
-                            this.style.color = '#1d1d1f';
-                            if (favIcon) {
-                                favIcon.setAttribute('fill', 'none');
-                                favIcon.setAttribute('stroke', 'currentColor');
-                            }
-                            if (favText) favText.textContent = 'Yêu thích';
-                        }
-
-                        if (typeof FlashModule !== 'undefined') {
-                            FlashModule.show('success', data.message);
-                        }
-                    } else {
-                        if (data.require_login) {
-                            window.location.href = '<?php echo URLROOT; ?>/users/login';
-                            return;
-                        }
-                        alert(data.message);
-                    }
-                })
-                .catch(err => {
-                    this.disabled = false;
-                    console.error('Toggle favorite error:', err);
-                });
-            });
-        }
-
-        // HELPER: Append new review to DOM
-        function appendNewReviewToDOM(reviewData, ratingVal) {
-            const emptyMsg = document.getElementById('empty-reviews-msg');
-            if (emptyMsg) emptyMsg.remove();
-
-            const reviewsList = document.getElementById('reviewsList');
-            if (!reviewsList) return;
-
-            let starsHtml = '';
-            for (let i = 1; i <= 5; i++) {
-                starsHtml += i <= ratingVal ? '★' : '☆';
-            }
-
-            const initial = reviewData.user_name ? reviewData.user_name.charAt(0).toUpperCase() : 'U';
-
-            const reviewCardHtml = `
-            <div class="review-item-card" style="background: #ffffff; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.02); animation: fadeIn 0.4s ease;">
-                <div class="review-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <div class="review-user-info" style="display: flex; align-items: center; gap: 12px;">
-                        <div class="user-avatar-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #0071e3; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">
-                            ${initial}
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; font-size: 15px; color: #1d1d1f;">${escapeHtml(reviewData.user_name)}</div>
-                            <div style="font-size: 12px; color: #86868b;">Vừa xong</div>
-                        </div>
-                    </div>
-                    <div class="review-stars" style="color: #ffb800; font-size: 16px;">${starsHtml}</div>
-                </div>
-                <div class="review-comment-body" style="font-size: 15px; color: #333; line-height: 1.6; margin-bottom: 16px;">
-                    ${escapeHtml(reviewData.comment).replace(/\n/g, '<br>')}
-                </div>
-            </div>
-        `;
-
-            reviewsList.insertAdjacentHTML('afterbegin', reviewCardHtml);
-        }
-
-        // HELPER: Append new reply to DOM
-        function appendReplyToDOM(parentId, replyData) {
-            const repliesContainer = document.getElementById('replies-container-' + parentId);
-            if (!repliesContainer) return;
-
-            const replyHtml = `
-            <div class="reply-item" style="margin-left: 36px; padding: 12px 16px; background: #f9f9fb; border-left: 3px solid var(--apple-blue, #0071e3); border-radius: 0 12px 12px 0; animation: fadeIn 0.3s ease;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-weight: 600; font-size: 14px; color: #1d1d1f;">${escapeHtml(replyData.user_name)}</span>
-                    <span style="font-size: 11px; color: #86868b;">Vừa xong</span>
-                </div>
-                <div style="font-size: 14px; color: #444; line-height: 1.5;">${escapeHtml(replyData.comment).replace(/\n/g, '<br>')}</div>
-            </div>
-        `;
-
-            repliesContainer.insertAdjacentHTML('beforeend', replyHtml);
-        }
-
-        // HELPER: Update Rating Stats UI
-        function updateRatingStatsUI(stats) {
-            if (!stats) return;
-
-            const avgScore = document.getElementById('stats-avg-score');
-            if (avgScore) avgScore.textContent = parseFloat(stats.average).toFixed(1);
-
-            const totalCount = document.getElementById('stats-total-count');
-            if (totalCount) totalCount.textContent = 'Dựa trên ' + stats.total + ' đánh giá';
-
-            const heroCount = document.getElementById('hero-review-count');
-            if (heroCount) heroCount.textContent = '(' + stats.total + ' đánh giá)';
-
-            for (let star = 1; star <= 5; star++) {
-                const count = stats[star] || 0;
-                const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
-
-                const barFill = document.getElementById('bar-fill-' + star);
-                if (barFill) barFill.style.width = pct + '%';
-
-                const barCount = document.getElementById('bar-count-' + star);
-                if (barCount) barCount.textContent = count;
-            }
-        }
-
-        function escapeHtml(str) {
-            return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-        }
-    });
+    window.APP_URL = '<?php echo URLROOT; ?>';
 </script>
+<script src="<?php echo URLROOT; ?>/js/modules/product-detail.js"></script>
 
 <?php require APPROOT . '/Views/inc/footer.php'; ?>

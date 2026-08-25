@@ -1,0 +1,88 @@
+/* ============================== */
+/* AUTHENTICATION PAGES (LOGIN/REGISTER) */
+/* ============================== */
+.auth-page {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: -40px;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 36px;
+    padding: 48px 40px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 480px;
+    transition: transform 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+}
+
+.glass-card h2 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--apple-black);
+}
+
+.glass-card .subtitle {
+    text-align: center;
+    color: var(--apple-gray);
+    font-size: 16px;
+    margin-bottom: 32px;
+}
+
+.glass-card .form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1.5px solid var(--apple-gray-border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.glass-card .form-control:focus {
+    background: #fff;
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
+}
+
+.glass-card .btn-submit {
+    width: 100%;
+    padding: 16px;
+    border-radius: 18px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 16px;
+}
+
+.glass-card .auth-link {
+    display: block;
+    text-align: center;
+    margin-top: 24px;
+    font-size: 15px;
+    color: var(--apple-gray);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.glass-card .auth-link:hover {
+    color: var(--apple-blue);
+}

@@ -3,11 +3,14 @@ require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
 
-class Carts extends Controller {
-    private $cartModel;
-    private $productModel;
+class Carts extends Controller
+{
+    private Cart $cartModel;
+    private Product $productModel;
 
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->cartModel = $this->model('Cart');
         $this->productModel = $this->model('Product');
     }
@@ -15,7 +18,8 @@ class Carts extends Controller {
     /**
      * Helper: Trả về JSON response
      */
-    private function jsonResponse(bool $success, string $message, array $data = []): void {
+    private function jsonResponse(bool $success, string $message, array $data = []): void
+    {
         header('Content-Type: application/json');
         echo json_encode(array_merge([
             'success' => $success,
@@ -27,7 +31,8 @@ class Carts extends Controller {
     /**
      * Lấy cart_id của user hiện tại (hoặc session cart)
      */
-    private function getCartId(): ?int {
+    private function getCartId(): ?int
+    {
         if (isset($_SESSION['user_id'])) {
             $cart = $this->cartModel->getOrCreateCart((int)$_SESSION['user_id']);
             return (int)$cart->id;
@@ -39,7 +44,8 @@ class Carts extends Controller {
      * UC18: Thêm sản phẩm vào giỏ hàng (AJAX)
      * POST /carts/add
      */
-    public function add(): void {
+    public function add(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(false, 'Method not allowed');
         }
@@ -97,7 +103,8 @@ class Carts extends Controller {
      * Xóa sản phẩm khỏi giỏ hàng (AJAX)
      * POST /carts/remove
      */
-    public function remove(): void {
+    public function remove(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(false, 'Method not allowed');
         }
@@ -138,7 +145,8 @@ class Carts extends Controller {
      * Hiển thị trang giỏ hàng
      * GET /carts/index
      */
-    public function index(): void {
+    public function index(): void
+    {
         $items = [];
         $total = 0.0;
 
@@ -147,28 +155,12 @@ class Carts extends Controller {
             $items = $this->cartModel->getCartItems($cartId);
             $total = $this->cartModel->getCartTotal($cartId);
         } else {
-            // Guest items từ session
+            // Guest items từ session được Model xử lý
             $guestCartIds = $_SESSION['guest_cart'] ?? [];
-            if (!empty($guestCartIds)) {
-                foreach ($guestCartIds as $pId) {
-                    $prod = $this->productModel->getProductDetail((int)$pId);
-                    if ($prod && $prod->status == 2) {
-                        $items[] = (object)[
-                            'item_id' => $prod->id,
-                            'product_id' => $prod->id,
-                            'title' => $prod->title,
-                            'price' => $prod->price,
-                            'preview_url' => $prod->preview_url,
-                            'rating' => $prod->rating,
-                            'review_count' => $prod->review_count,
-                            'description' => $prod->description,
-                            'store_name' => $prod->store_name,
-                            'added_at' => date('Y-m-d H:i:s')
-                        ];
-                        $total += (float)$prod->price;
-                    }
-                }
-            }
+            $guestData = $this->cartModel->getGuestCartDetails($guestCartIds);
+            
+            $items = $guestData['items'];
+            $total = $guestData['total'];
         }
 
         $data = [
@@ -186,7 +178,8 @@ class Carts extends Controller {
      * Lấy số lượng giỏ hàng hiện tại (cho badge trên Navbar)
      * GET /carts/count
      */
-    public function count(): void {
+    public function count(): void
+    {
         $count = 0;
         if (isset($_SESSION['user_id'])) {
             $cartId = $this->getCartId();

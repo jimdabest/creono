@@ -4,7 +4,7 @@
 
 # Bỏ qua toàn bộ file trong config nhưng giữ lại các file .example
 # /config/*
-
+/config/email.php
 /.env
 /.env.local
 /.env.*.local
@@ -27,7 +27,7 @@
 *.log
 error_log
 access_log
-
+/libs
 # Cache
 /cache/
 /cache/*.tmp
@@ -101,6 +101,8 @@ desktop.ini
 repomix-output.xml
 repomix-output.json
 repomix-output.txt
+.repomixignore
+repomix.config.json
 
 # Backup
 *.zip

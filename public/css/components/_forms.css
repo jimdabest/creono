@@ -1,0 +1,95 @@
+/* ========== FORM ELEMENTS ========== */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--apple-black);
+    letter-spacing: -0.016em;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-sm);
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+    color: var(--apple-black);
+    background: #fff;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--apple-gray-light);
+}
+
+.form-group input.is-invalid {
+    border-color: var(--apple-red);
+}
+
+.form-group input.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.12);
+}
+
+.error-text {
+    color: var(--apple-red);
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+    font-weight: 400;
+}
+
+/* ========== ERROR MESSAGES ANIMATION ========== */
+.error-text {
+    animation: errorFadeIn 0.3s ease;
+    min-height: 20px;
+}
+
+@keyframes errorFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-text:not(:empty) {
+    padding-top: 4px;
+    color: var(--apple-red);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+}
+
+.is-invalid {
+    border-color: var(--apple-red) !important;
+}
+
+.is-invalid:focus {
+    border-color: var(--apple-red) !important;
+    box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.12) !important;
+}

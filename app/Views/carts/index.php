@@ -99,6 +99,191 @@
     <?php endif; ?>
 </div>
 
+<!-- STYLES RESPONSIVE -->
+<style>
+    /* === RESPONSIVE: TABLET & MOBILE === */
+
+    /* Tablet (max-width: 768px) */
+    @media (max-width: 768px) {
+        .cart-layout {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+        }
+
+        .cart-summary-card {
+            position: static !important;
+            top: auto !important;
+            padding: 24px !important;
+        }
+
+        .cart-item-card {
+            padding: 16px !important;
+            gap: 12px !important;
+        }
+
+        .cart-item-preview {
+            width: 60px !important;
+            height: 60px !important;
+        }
+
+        .cart-item-info h3 {
+            font-size: 14px !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+        }
+
+        .cart-item-info div {
+            font-size: 12px !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }
+
+        .cart-item-info div span:last-child {
+            margin-left: 0 !important;
+        }
+
+        .cart-item-card > div:last-child {
+            font-size: 16px !important;
+        }
+
+        .btn-remove-cart-item {
+            padding: 6px !important;
+        }
+
+        .cart-summary-card h3 {
+            font-size: 16px !important;
+        }
+
+        .summary-row {
+            font-size: 14px !important;
+        }
+
+        .summary-row:last-child {
+            font-size: 18px !important;
+        }
+
+        .btn-primary {
+            font-size: 15px !important;
+            padding: 12px !important;
+        }
+
+        h1 {
+            font-size: 28px !important;
+        }
+
+        .page-container > p {
+            font-size: 14px !important;
+        }
+    }
+
+    /* Điện thoại nhỏ (max-width: 480px) */
+    @media (max-width: 480px) {
+        .page-container {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        h1 {
+            font-size: 24px !important;
+        }
+
+        .cart-layout {
+            gap: 16px !important;
+        }
+
+        .cart-item-card {
+            flex-wrap: wrap !important;
+            padding: 14px !important;
+            gap: 10px !important;
+            border-radius: 16px !important;
+        }
+
+        .cart-item-preview {
+            width: 56px !important;
+            height: 56px !important;
+            border-radius: 10px !important;
+        }
+
+        .cart-item-info {
+            flex: 1 1 100% !important;
+            order: 3 !important;
+        }
+
+        .cart-item-info h3 {
+            font-size: 14px !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+        }
+
+        .cart-item-info div {
+            font-size: 12px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .cart-item-card > div:last-child {
+            font-size: 16px !important;
+            text-align: left !important;
+            flex: 1 !important;
+        }
+
+        .btn-remove-cart-item {
+            order: 4 !important;
+            align-self: flex-start !important;
+            padding: 4px !important;
+        }
+
+        .cart-summary-card {
+            padding: 18px !important;
+            border-radius: 16px !important;
+        }
+
+        .cart-summary-card h3 {
+            font-size: 15px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .summary-row {
+            font-size: 13px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .summary-row:last-child {
+            font-size: 17px !important;
+            padding-top: 12px !important;
+            margin-top: 12px !important;
+        }
+
+        .btn-primary {
+            font-size: 14px !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
+        }
+
+        .empty-cart {
+            padding: 48px 16px !important;
+        }
+
+        .empty-cart h3 {
+            font-size: 18px !important;
+        }
+
+        .empty-cart p {
+            font-size: 14px !important;
+        }
+
+        .empty-cart .btn-primary {
+            font-size: 14px !important;
+            padding: 10px 20px !important;
+        }
+
+        a[href*="products/index"] {
+            font-size: 13px !important;
+        }
+    }
+</style>
+
 <!-- AJAX: Xóa item khỏi giỏ hàng -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {

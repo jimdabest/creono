@@ -1,11 +1,13 @@
 <?php
-class Cart extends BaseModel {
+class Cart extends BaseModel
+{
     protected string $table = 'carts';
 
     /**
      * Lấy hoặc tự động tạo giỏ hàng cho user
      */
-    public function getOrCreateCart(int $userId): object {
+    public function getOrCreateCart(int $userId): object
+    {
         $this->db->query("SELECT * FROM {$this->table} WHERE user_id = :user_id LIMIT 1");
         $this->db->bind(':user_id', $userId);
         $cart = $this->db->single();
@@ -28,7 +30,8 @@ class Cart extends BaseModel {
     /**
      * Thêm sản phẩm vào giỏ hàng
      */
-    public function addItem(int $cartId, int $productId): bool {
+    public function addItem(int $cartId, int $productId): bool
+    {
         // Kiểm tra xem sản phẩm đã có trong giỏ chưa (tài liệu số mỗi SP chỉ cần mua 1 lần)
         if ($this->hasItem($cartId, $productId)) {
             return true;
@@ -46,7 +49,8 @@ class Cart extends BaseModel {
     /**
      * Xóa sản phẩm khỏi giỏ hàng
      */
-    public function removeItem(int $cartId, int $productId): bool {
+    public function removeItem(int $cartId, int $productId): bool
+    {
         $this->db->query("
             DELETE FROM cart_items 
             WHERE cart_id = :cart_id AND product_id = :product_id
@@ -59,7 +63,8 @@ class Cart extends BaseModel {
     /**
      * Xóa toàn bộ giỏ hàng
      */
-    public function clearCart(int $cartId): bool {
+    public function clearCart(int $cartId): bool
+    {
         $this->db->query("DELETE FROM cart_items WHERE cart_id = :cart_id");
         $this->db->bind(':cart_id', $cartId);
         return $this->db->execute();
@@ -68,7 +73,8 @@ class Cart extends BaseModel {
     /**
      * Kiểm tra sản phẩm đã có trong giỏ chưa
      */
-    public function hasItem(int $cartId, int $productId): bool {
+    public function hasItem(int $cartId, int $productId): bool
+    {
         $this->db->query("
             SELECT COUNT(*) as total 
             FROM cart_items 
@@ -83,7 +89,8 @@ class Cart extends BaseModel {
     /**
      * Lấy danh sách item trong giỏ hàng (kèm thông tin sản phẩm)
      */
-    public function getCartItems(int $cartId): array {
+    public function getCartItems(int $cartId): array
+    {
         $this->db->query("
             SELECT ci.id as item_id,
                    ci.added_at,
@@ -111,7 +118,8 @@ class Cart extends BaseModel {
     /**
      * Đếm tổng số item trong giỏ hàng
      */
-    public function getCartCount(int $cartId): int {
+    public function getCartCount(int $cartId): int
+    {
         $this->db->query("
             SELECT COUNT(*) as total 
             FROM cart_items 
@@ -125,7 +133,8 @@ class Cart extends BaseModel {
     /**
      * Tính tổng tiền giỏ hàng
      */
-    public function getCartTotal(int $cartId): float {
+    public function getCartTotal(int $cartId): float
+    {
         $this->db->query("
             SELECT COALESCE(SUM(p.price), 0) as total_price
             FROM cart_items ci
@@ -137,5 +146,131 @@ class Cart extends BaseModel {
         $this->db->bind(':cart_id', $cartId);
         $result = $this->db->single();
         return $result ? (float)$result->total_price : 0.0;
+    }
+
+    /**
+     * Hợp nhất giỏ hàng guest vào giỏ hàng của user
+     * 
+     * @param int $userId ID của user
+     * @param array $guestIds Mảng các product_id từ session
+     * @return array ['added' => int, 'invalid' => int, 'own' => int, 'error' => string|null]
+     */
+    public function mergeGuestCart(int $userId, array $guestIds): array
+    {
+        $result = [
+            'added'   => 0,
+            'invalid' => 0,
+            'own'     => 0,
+            'error'   => null
+        ];
+
+        // Loại bỏ ID không hợp lệ
+        $guestIds = array_filter(array_map('intval', $guestIds));
+        if (empty($guestIds)) {
+            return $result;
+        }
+
+        // Lấy danh sách sản phẩm hợp lệ (1 query)
+        $placeholders = implode(',', array_fill(0, count($guestIds), '?'));
+        $sql = "
+        SELECT p.id, s.user_id as seller_id
+        FROM products p
+        JOIN stores s ON p.store_id = s.id
+        WHERE p.id IN ($placeholders)
+          AND p.status = 2
+          AND p.deleted_at IS NULL
+    ";
+        $this->db->query($sql);
+        foreach ($guestIds as $i => $id) {
+            $this->db->bind($i + 1, $id);
+        }
+        $validProducts = $this->db->resultSet();
+
+        // Phân loại sản phẩm
+        $validIds = [];
+        $ownIds = [];
+        foreach ($validProducts as $prod) {
+            if ((int)$prod->seller_id === $userId) {
+                $ownIds[] = $prod->id;
+            } else {
+                $validIds[] = $prod->id;
+            }
+        }
+
+        $result['invalid'] = count($guestIds) - count($validProducts);
+        $result['own'] = count($ownIds);
+
+        // Nếu không có sản phẩm hợp lệ
+        if (empty($validIds)) {
+            return $result;
+        }
+
+        // Bắt đầu transaction
+        $this->db->beginTransaction();
+        try {
+            // Lấy hoặc tạo cart cho user
+            $cart = $this->getOrCreateCart($userId);
+            $cartId = (int)$cart->id;
+
+            $added = 0;
+            foreach ($validIds as $productId) {
+                if ($this->addItem($cartId, $productId)) {
+                    $added++;
+                }
+            }
+
+            $this->db->commit();
+            $result['added'] = $added;
+            return $result;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            $result['error'] = $e->getMessage();
+            return $result;
+        }
+    }
+
+    public function getGuestCartDetails(array $guestCartIds): array
+    {
+        $items = [];
+        $total = 0.0;
+
+        // Chuyển mảng ID thành số nguyên để bảo mật
+        $ids = array_filter(array_map('intval', $guestCartIds));
+
+        if (empty($ids)) {
+            return ['items' => $items, 'total' => $total];
+        }
+
+        // Tạo câu SQL IN (1, 2, 3...)
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "SELECT p.*, s.name as store_name 
+                FROM products p 
+                JOIN stores s ON p.store_id = s.id 
+                WHERE p.id IN ($placeholders) AND p.status = 2";
+
+        $this->db->query($sql);
+        foreach ($ids as $i => $id) {
+            $this->db->bind($i + 1, $id);
+        }
+
+        $products = $this->db->resultSet();
+
+        // Xử lý dữ liệu
+        foreach ($products as $prod) {
+            $items[] = (object)[
+                'item_id' => $prod->id,
+                'product_id' => $prod->id,
+                'title' => $prod->title,
+                'price' => $prod->price,
+                'preview_url' => $prod->preview_url,
+                'rating' => $prod->rating,
+                'review_count' => $prod->review_count,
+                'store_name' => $prod->store_name,
+                'added_at' => date('Y-m-d H:i:s')
+            ];
+            $total += (float)$prod->price;
+        }
+
+        return ['items' => $items, 'total' => $total];
     }
 }

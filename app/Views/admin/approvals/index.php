@@ -1,3 +1,4 @@
+<?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container mt-4 mb-5">
@@ -157,6 +158,86 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Responsive cho trang duyệt sản phẩm */
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    .admin-title {
+        font-size: 26px !important;
+    }
+    .admin-subtitle {
+        font-size: 14px !important;
+    }
+    .admin-card {
+        padding: 16px !important;
+    }
+    .card-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    .card-header h3 {
+        font-size: 18px !important;
+    }
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+    .admin-table th {
+        font-size: 11px !important;
+    }
+    .action-buttons {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+    .btn-action {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+    .badge {
+        font-size: 11px !important;
+        padding: 3px 8px !important;
+    }
+    #reject-row-<?php echo $prod->id; ?> form {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+    #reject-row-<?php echo $prod->id; ?> input[type="text"] {
+        max-width: 100% !important;
+    }
+}
+@media (max-width: 480px) {
+    .admin-title {
+        font-size: 22px !important;
+    }
+    .admin-subtitle {
+        font-size: 13px !important;
+    }
+    .admin-table th,
+    .admin-table td {
+        font-size: 11px !important;
+        padding: 6px 6px !important;
+    }
+    .admin-table th {
+        font-size: 10px !important;
+    }
+    .btn-action {
+        font-size: 10px !important;
+        padding: 4px 6px !important;
+    }
+    .badge {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+    }
+}
+</style>
 
 <script>
 function toggleRejectForm(id) {
