@@ -1,42 +1,69 @@
 <?php
-class Downloads extends Controller {
-    private $orderModel;
-    private $productModel;
 
-    public function __construct() {
+declare(strict_types=1);
+
+class Downloads extends Controller
+{
+    private Order $orderModel;
+    private Product $productModel;
+
+    public function __construct()
+    {
+        // Kiểm tra đăng nhập
         if (!isset($_SESSION['user_id'])) {
+            setFlash('error', 'Vui lòng đăng nhập để tải tài liệu.');
             header('location: ' . URLROOT . '/users/login');
             exit();
         }
+
         $this->orderModel = $this->model('Order');
         $this->productModel = $this->model('Product');
     }
 
-    public function file($productId) {
-        $userId = $_SESSION['user_id'];
+    /**
+     * Tải file tài liệu của sản phẩm
+     * 
+     * @param int $productId ID của sản phẩm
+     * @return void
+     */
+    public function file(int $productId): void
+    {
+        $userId = (int)$_SESSION['user_id'];
+
+        // Lấy thông tin sản phẩm kèm seller_id
         $product = $this->productModel->getProductWithSeller($productId);
 
         if (!$product) {
-            die('Sản phẩm không tồn tại.');
+            setFlash('error', 'Sản phẩm không tồn tại.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
         }
 
-        // Kiểm tra quyền: Là chủ sản phẩm HOẶC đã mua thành công
-        if ($product->seller_id != $userId && !$this->orderModel->hasPurchased($userId, $productId)) {
-            die('Bạn không có quyền tải tài liệu này. Vui lòng mua sản phẩm trước.');
+        // Kiểm tra quyền: là chủ sản phẩm HOẶC đã mua thành công
+        $isOwner = (int)$product->seller_id === $userId;
+        $hasPurchased = $this->orderModel->hasPurchased($userId, $productId);
+
+        if (!$isOwner && !$hasPurchased) {
+            setFlash('error', 'Bạn không có quyền tải tài liệu này. Vui lòng mua sản phẩm trước.');
+            header('location: ' . URLROOT . '/products/detail/' . $productId);
+            exit();
         }
 
-        // Lấy link file từ DB
+        // Lấy file URL từ bảng documents
         $document = $this->productModel->getDocumentByProductId($productId);
 
         if ($document && !empty($document->file_url)) {
             // Ghi log download
-            $this->productModel->logDownload($userId, $productId, $_SERVER['REMOTE_ADDR']);
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+            $this->productModel->logDownload($userId, $productId, $ip);
 
-            // Chuyển hướng tới link tải file
-            header("Location: " . $document->file_url);
+            // Chuyển hướng đến file
+            header('Location: ' . $document->file_url);
             exit();
         } else {
-            die('Không tìm thấy file tài liệu để tải.');
+            setFlash('error', 'Không tìm thấy file tài liệu để tải.');
+            header('location: ' . URLROOT . '/products/detail/' . $productId);
+            exit();
         }
     }
 }

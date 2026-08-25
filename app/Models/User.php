@@ -1,12 +1,14 @@
 <?php
-class User extends BaseModel {
+class User extends BaseModel
+{
     // Định nghĩa bảng mà model này tương tác
     protected string $table = 'users';
 
     // Hàm kiểm tra Email đã tồn tại chưa
-    public function findByEmail(string $email): bool {
+    public function findByEmail(string $email): bool
+    {
         $this->db->query('SELECT * FROM users WHERE email = :email');
-        
+
         // Gán giá trị
         $this->db->bind(':email', $email);
 
@@ -21,15 +23,17 @@ class User extends BaseModel {
     }
 
     // Lấy toàn bộ thông tin User bằng Email
-    public function getUserByEmail(string $email): ?object {
+    public function getUserByEmail(string $email): ?object
+    {
         $this->db->query('SELECT * FROM users WHERE email = :email');
         $this->db->bind(':email', $email);
-        
+
         return $this->db->single();
     }
 
     // Đăng ký người dùng mới
-    public function register(array $data): bool {
+    public function register(array $data): bool
+    {
         // 1. Thêm vào bảng users (Bổ sung trường name, role = 1)
         $this->db->query('INSERT INTO users (name, email, password, role) VALUES (:name, :email, :password, 1)');
         $this->db->bind(':name', $data['name']);
@@ -51,9 +55,10 @@ class User extends BaseModel {
             return false;
         }
     }
-    
+
     // Xác thực người dùng (Kiểm tra Email và Mật khẩu)
-    public function login(string $email, string $password): object|false {
+    public function login(string $email, string $password): object|false
+    {
         $this->db->query("SELECT * FROM {$this->table} WHERE email = :email");
         $this->db->bind(':email', $email);
 
@@ -61,8 +66,8 @@ class User extends BaseModel {
 
         // Nếu email tồn tại, kiểm tra hash mật khẩu
         if ($row) {
-            $hashed_password = $row->password; 
-            
+            $hashed_password = $row->password;
+
             if (password_verify($password, $hashed_password)) {
                 return $row; // Trả về toàn bộ thông tin user nếu đúng mật khẩu
             } else {
@@ -74,7 +79,8 @@ class User extends BaseModel {
     }
 
     // Lấy user theo ID (kèm profile)
-    public function getUserWithProfile(int $id): ?object {
+    public function getUserWithProfile(int $id): ?object
+    {
         $this->db->query("SELECT u.id, u.name, u.email, u.role, 
                                 p.full_name, p.avatar_url, p.bio 
                         FROM {$this->table} u 
@@ -85,14 +91,16 @@ class User extends BaseModel {
     }
 
     // Cập nhật KYC status
-    public function updateKycStatus(int $user_id, int $status): bool {
+    public function updateKycStatus(int $user_id, int $status): bool
+    {
         $this->db->query("UPDATE {$this->table} SET kyc_status = :status WHERE id = :id");
-        $this->db->bind(':status',$status);
-        $this->db->bind(':id',$user_id);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $user_id);
         return $this->db->execute();
     }
 
-    public function changePassword(int $user_id, string $new_password): bool {
+    public function changePassword(int $user_id, string $new_password): bool
+    {
         $hash = password_hash($new_password, PASSWORD_DEFAULT);
         $this->db->query("UPDATE {$this->table} SET password = :hash WHERE id = :id");
         $this->db->bind(':hash', $hash);
@@ -101,7 +109,8 @@ class User extends BaseModel {
     }
 
     // Kiểm tra role
-    public function hasRole(int $user_id, int $role): bool {
+    public function hasRole(int $user_id, int $role): bool
+    {
         $this->db->query("SELECT id FROM {$this->table} WHERE id = :id AND role = :role");
         $this->db->bind(':id', $user_id);
         $this->db->bind(':role', $role);
@@ -109,16 +118,88 @@ class User extends BaseModel {
     }
 
     // Lấy tổng số lượng người dùng
-    public function getTotalUsers(): int {
+    public function getTotalUsers(): int
+    {
         $this->db->query("SELECT COUNT(*) as total FROM {$this->table}");
         $result = $this->db->single();
         return $result ? (int)$result->total : 0;
     }
 
     // Lấy tổng số lượng người bán (role = 2)
-    public function getTotalSellers(): int {
+    public function getTotalSellers(): int
+    {
         $this->db->query("SELECT COUNT(*) as total FROM {$this->table} WHERE role = 2");
         $result = $this->db->single();
         return $result ? (int)$result->total : 0;
+    }
+
+    /**
+     * Tạo token đặt lại mật khẩu và lưu vào bảng password_reset_tokens
+     * Thời hạn 15 phút
+     */
+    /**
+     * Tạo token đặt lại mật khẩu và lưu vào bảng password_reset_tokens
+     * Thời hạn 15 phút
+     */
+    public function createPasswordResetToken(string $email): string
+    {
+        // Lấy user_id từ email
+        $this->db->query("SELECT id FROM {$this->table} WHERE email = :email");
+        $this->db->bind(':email', $email);
+        $user = $this->db->single();
+        if (!$user) {
+            throw new Exception('Email không tồn tại');
+        }
+        $userId = (int)$user->id;
+
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+        // Xóa token cũ nếu có
+        $this->db->query("DELETE FROM password_reset_tokens WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $this->db->execute();
+
+        // Lưu token mới
+        $this->db->query("INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at)");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':token', $token);
+        $this->db->bind(':expires_at', $expiresAt);
+        $this->db->execute();
+
+        return $token;
+    }
+
+    /**
+     * Kiểm tra token có hợp lệ và chưa hết hạn không
+     * Trả về user_id nếu hợp lệ, ngược lại null
+     */
+    public function isValidPasswordResetToken(string $token): ?int
+    {
+        $this->db->query("SELECT user_id FROM password_reset_tokens WHERE token = :token AND expires_at > NOW() LIMIT 1");
+        $this->db->bind(':token', $token);
+        $result = $this->db->single();
+        return $result ? (int)$result->user_id : null;
+    }
+    /**
+     * Xóa token sau khi đã sử dụng thành công
+     */
+    public function deletePasswordResetToken(string $token): void
+    {
+        $this->db->query("DELETE FROM password_reset_tokens WHERE token = :token");
+        $this->db->bind(':token', $token);
+        $this->db->execute();
+    }
+
+    /**
+     * Cập nhật mật khẩu mới cho user theo user_id
+     */
+    public function updatePasswordById(int $user_id, string $newPassword): bool
+    {
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $this->db->query("UPDATE {$this->table} SET password = :password WHERE id = :id");
+        $this->db->bind(':password', $hash);
+        $this->db->bind(':id', $user_id);
+        return $this->db->execute();
     }
 }

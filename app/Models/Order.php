@@ -1,11 +1,13 @@
 <?php
-class Order extends BaseModel {
+class Order extends BaseModel
+{
     protected string $table = 'orders';
 
     /**
      * Lấy doanh thu của seller
      */
-    public function getSellerRevenue(int $user_id): float {
+    public function getSellerRevenue(int $user_id): float
+    {
         $this->db->query("
             SELECT COALESCE(SUM(o.seller_amount), 0) as total
             FROM {$this->table} o
@@ -21,7 +23,8 @@ class Order extends BaseModel {
     /**
      * Lấy số đơn hàng đang chờ của seller
      */
-    public function getSellerPendingOrdersCount(int $user_id): int {
+    public function getSellerPendingOrdersCount(int $user_id): int
+    {
         $this->db->query("
             SELECT COUNT(*) as total
             FROM {$this->table} o
@@ -37,33 +40,35 @@ class Order extends BaseModel {
     /**
      * Lấy danh sách đơn hàng gần đây của seller
      */
-    public function getSellerRecentOrders(int $user_id, int $limit = 5): array {
+    public function getSellerRecentOrders(int $user_id, int $limit = 5): array
+    {
         $this->db->query("
-            SELECT 
-                o.id,
-                o.total_amount as amount,
-                o.status,
-                o.created_at,
-                p.title as product_title,
-                CASE 
-                    WHEN o.status = 1 THEN 'Chờ xử lý'
-                    WHEN o.status = 2 THEN 'Hoàn thành'
-                    WHEN o.status = 3 THEN 'Đã hủy'
-                    ELSE 'Không xác định'
-                END as status_text
-            FROM {$this->table} o
-            JOIN products p ON o.product_id = p.id
-            JOIN stores s ON p.store_id = s.id
-            WHERE s.user_id = :user_id
-            ORDER BY o.created_at DESC
-            LIMIT :limit
-        ");
-        $this->db->bind(':user_id', $user_id);
-        $this->db->bind(':limit', $limit);
+        SELECT 
+            o.id,
+            o.total_amount as amount,
+            o.status,
+            o.created_at,
+            p.title as product_title,
+            CASE 
+                WHEN o.status = 1 THEN 'Chờ xử lý'
+                WHEN o.status = 2 THEN 'Hoàn thành'
+                WHEN o.status = 3 THEN 'Đã hủy'
+                ELSE 'Không xác định'
+            END as status_text
+        FROM {$this->table} o
+        JOIN products p ON o.product_id = p.id
+        JOIN stores s ON p.store_id = s.id
+        WHERE s.user_id = ?
+        ORDER BY o.created_at DESC
+        LIMIT ?
+    ");
+        $this->db->bind(1, $user_id);
+        $this->db->bind(2, $limit, PDO::PARAM_INT);
         return $this->db->resultSet();
     }
 
-    public function processPayment($buyerId, $sellerId, $productId, $productTitle, $price) {
+    public function processPayment(int $buyerId, int $sellerId, int $productId, string $productTitle, float $price)
+    {
         // phí nền tảng là 5%
         $platformFee = $price * 0.05;
         $sellerAmount = $price - $platformFee;
@@ -135,7 +140,6 @@ class Order extends BaseModel {
             // Hoàn tất giao dịch
             $this->db->commit();
             return true;
-
         } catch (Exception $e) {
             // Nếu có bất kỳ lỗi nào xảy ra quay ngược toàn bộ thao tác
             $this->db->rollBack();
@@ -144,7 +148,8 @@ class Order extends BaseModel {
     }
 
     // Hàm kiểm tra User đã mua Product chưa để cho phép Download
-    public function hasPurchased($userId, $productId) {
+    public function hasPurchased(int $userId, int $productId)
+    {
         $this->db->query("SELECT id FROM orders WHERE user_id = :user_id AND product_id = :product_id AND status = 2");
         $this->db->bind(':user_id', $userId);
         $this->db->bind(':product_id', $productId);

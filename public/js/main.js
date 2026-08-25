@@ -8,7 +8,7 @@
 
 // Import các module
 // Sử dụng IIFE để không làm ô nhiễm global scope
-(function() {
+(function () {
     'use strict';
 
     console.log('🚀 Creono project loaded with Vanilla JS!');
@@ -57,6 +57,12 @@
                 console.log('✅ AjaxFormModule initialized');
             }
 
+            // ====== MODULE BÁO CÁO VI PHẠM ======
+            if (typeof ReportModule !== 'undefined') {
+                ReportModule.init();
+                console.log('✅ ReportModule initialized');
+            }
+
             // Các tính năng bổ sung
             initNavbar();
             initNavbarScroll(); // THÊM MỚI: Hiệu ứng scroll cho navbar
@@ -77,53 +83,54 @@
         const navbar = document.querySelector('.navbar');
         if (!navbar) return;
 
-        // Kiểm tra xem đã có nút toggle chưa
-        let toggleBtn = document.querySelector('.navbar-toggle');
+        let toggleBtn = navbar.querySelector('.navbar-toggle');
         if (!toggleBtn) {
-            // Tạo nút toggle cho mobile
             toggleBtn = document.createElement('button');
             toggleBtn.className = 'navbar-toggle';
             toggleBtn.innerHTML = '☰';
             toggleBtn.setAttribute('aria-label', 'Toggle navigation');
-            toggleBtn.style.cssText = `
-                display: none;
-                background: none;
-                border: 1px solid #fff;
-                color: #fff;
-                padding: 8px 12px;
-                font-size: 20px;
-                border-radius: 4px;
-                cursor: pointer;
-            `;
-
+            toggleBtn.setAttribute('aria-expanded', 'false');
             const container = navbar.querySelector('.container');
-            if (container) {
-                container.appendChild(toggleBtn);
-            }
+            if (container) container.appendChild(toggleBtn);
         }
 
-        // Xử lý sự kiện click toggle
         const navLinks = document.querySelector('.nav-links');
-        toggleBtn.addEventListener('click', function() {
-            if (navLinks) {
-                const display = navLinks.style.display;
-                navLinks.style.display = display === 'flex' ? 'none' : 'flex';
-                navLinks.style.flexDirection = 'column';
-                navLinks.style.width = '100%';
+
+        // Toggle menu khi click nút
+        toggleBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!navLinks) return;
+            const isOpen = navLinks.classList.toggle('active');
+            toggleBtn.setAttribute('aria-expanded', isOpen);
+            toggleBtn.innerHTML = isOpen ? '✕' : '☰';
+        });
+
+        // Đóng menu khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            if (navLinks && navLinks.classList.contains('active')) {
+                if (!navbar.contains(e.target)) {
+                    navLinks.classList.remove('active');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                    toggleBtn.innerHTML = '☰';
+                }
             }
         });
 
-        // Responsive: hiển thị toggle trên mobile
+        // Xử lý resize: ẩn toggle trên desktop, hiển thị menu bình thường
         function handleResize() {
-            const isMobile = window.innerWidth <= 768;
+            const isMobile = window.innerWidth <= 735;
             toggleBtn.style.display = isMobile ? 'block' : 'none';
+
             if (!isMobile && navLinks) {
-                navLinks.style.display = 'flex';
-                navLinks.style.flexDirection = 'row';
+                navLinks.classList.remove('active');
+                navLinks.style.display = '';
+                navLinks.style.flexDirection = '';
+                navLinks.style.width = '';
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                toggleBtn.innerHTML = '☰';
             }
         }
 
-        // Khởi tạo và lắng nghe resize
         handleResize();
         window.addEventListener('resize', handleResize);
     }
@@ -135,39 +142,39 @@
     function initNavbarScroll() {
         const navbar = document.querySelector('.navbar');
         if (!navbar) return;
-        
+
         let ticking = false;
         let lastScrollY = 0;
-        
+
         function updateNavbar() {
             const scrollY = window.scrollY;
-            
+
             // Thêm class 'scrolled' khi scroll > 50px
             if (scrollY > 50) {
                 navbar.classList.add('scrolled');
             } else {
                 navbar.classList.remove('scrolled');
             }
-            
+
             // Cập nhật độ trong suốt dựa trên scroll (Apple style)
             const progress = Math.min(scrollY / 200, 1);
             const opacity = 0.72 + (progress * 0.13); // 0.72 -> 0.85
             navbar.style.setProperty('--nav-bg-opacity', opacity);
-            
+
             lastScrollY = scrollY;
             ticking = false;
         }
-        
-        window.addEventListener('scroll', function() {
+
+        window.addEventListener('scroll', function () {
             if (!ticking) {
-                window.requestAnimationFrame(function() {
+                window.requestAnimationFrame(function () {
                     updateNavbar();
                     ticking = false;
                 });
                 ticking = true;
             }
         }, { passive: true });
-        
+
         // Khởi tạo lần đầu
         updateNavbar();
     }
@@ -184,14 +191,14 @@
 
         if (navUser && dropdownMenu) {
             // Xử lý khi click vào tên user
-            navUser.addEventListener('click', function(e) {
+            navUser.addEventListener('click', function (e) {
                 e.preventDefault(); // Ngăn trình duyệt nhảy trang
                 dropdownMenu.classList.toggle('active');
                 navDropdown.classList.toggle('active'); // Để xoay cái mũi tên
             });
 
             // Xử lý bấm ra ngoài vùng menu thì tự động đóng lại
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!navDropdown.contains(e.target)) {
                     dropdownMenu.classList.remove('active');
                     navDropdown.classList.remove('active');
@@ -209,7 +216,7 @@
         backToTop.className = 'back-to-top';
         backToTop.innerHTML = '↑';
         backToTop.setAttribute('aria-label', 'Back to top');
-        
+
         // Apple style cho nút back to top
         backToTop.style.cssText = `
             position: fixed;
@@ -239,7 +246,7 @@
 
         // Xử lý scroll
         let isVisible = false;
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             const scrollY = window.scrollY;
             const shouldShow = scrollY > 300;
 
@@ -260,7 +267,7 @@
         }, { passive: true });
 
         // Xử lý click - smooth scroll
-        backToTop.addEventListener('click', function() {
+        backToTop.addEventListener('click', function () {
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
@@ -268,14 +275,14 @@
         });
 
         // Hover effect
-        backToTop.addEventListener('mouseenter', function() {
+        backToTop.addEventListener('mouseenter', function () {
             this.style.background = '#1d1d1f';
             this.style.color = '#ffffff';
             this.style.borderColor = '#1d1d1f';
             this.style.transform = 'scale(1.05)';
         });
-        
-        backToTop.addEventListener('mouseleave', function() {
+
+        backToTop.addEventListener('mouseleave', function () {
             this.style.background = '#ffffff';
             this.style.color = '#1d1d1f';
             this.style.borderColor = '#d2d2d7';
@@ -289,26 +296,26 @@
     function initFormLoading() {
         // Chỉ áp dụng cho các form không có data-ajax
         const forms = document.querySelectorAll('form:not([data-ajax])');
-        
-        forms.forEach(function(form) {
+
+        forms.forEach(function (form) {
             // Chỉ áp dụng cho form có action là các route quan trọng
             const action = form.getAttribute('action') || '';
             const importantActions = ['login', 'register', 'updateProfile', 'changePassword'];
-            
-            const isImportant = importantActions.some(function(keyword) {
+
+            const isImportant = importantActions.some(function (keyword) {
                 return action.includes(keyword);
             });
-            
+
             if (!isImportant) return;
-            
-            form.addEventListener('submit', function() {
+
+            form.addEventListener('submit', function () {
                 const submitBtn = this.querySelector('[type="submit"]');
-                
+
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.textContent = 'Đang xử lý...';
                 }
-                
+
                 if (typeof window.showLoading === 'function') {
                     window.showLoading(true);
                 }
@@ -319,9 +326,9 @@
     /**
      * Hàm tiện ích: show loading spinner (Apple Style)
      */
-    window.showLoading = function(show = true, message = 'Đang xử lý...') {
+    window.showLoading = function (show = true, message = 'Đang xử lý...') {
         let loader = document.querySelector('.loader-overlay');
-        
+
         if (show) {
             if (!loader) {
                 loader = document.createElement('div');
@@ -341,14 +348,14 @@
                     z-index: 99999;
                     transition: all 0.3s ease;
                 `;
-                
+
                 // Container cho spinner + text
                 const container = document.createElement('div');
                 container.style.cssText = `
                     text-align: center;
                     color: #1d1d1f;
                 `;
-                
+
                 // Spinner Apple style
                 const spinner = document.createElement('div');
                 spinner.className = 'loader-spinner';
@@ -361,7 +368,7 @@
                     animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
                     margin: 0 auto 16px;
                 `;
-                
+
                 // Text
                 const text = document.createElement('p');
                 text.className = 'loader-text';
@@ -373,7 +380,7 @@
                     letter-spacing: -0.016em;
                     font-family: inherit;
                 `;
-                
+
                 // Thêm keyframe animation
                 if (!document.querySelector('#loader-styles')) {
                     const style = document.createElement('style');
@@ -393,7 +400,7 @@
                     `;
                     document.head.appendChild(style);
                 }
-                
+
                 container.appendChild(spinner);
                 container.appendChild(text);
                 loader.appendChild(container);
@@ -411,7 +418,7 @@
         } else {
             if (loader) {
                 loader.style.opacity = '0';
-                setTimeout(function() {
+                setTimeout(function () {
                     loader.style.display = 'none';
                     loader.style.opacity = '1';
                 }, 300);

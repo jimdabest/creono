@@ -1,3 +1,4 @@
+<?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container mt-4 mb-5">
@@ -219,5 +220,196 @@
         </div>
     </div>
 </div>
+
+<!-- STYLES RESPONSIVE BỔ SUNG CHO ADMIN DASHBOARD -->
+<style>
+    /* === RESPONSIVE: TABLET & MOBILE === */
+
+    /* Tablet (max-width: 768px) */
+    @media (max-width: 768px) {
+        .admin-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+        }
+
+        .admin-actions {
+            width: 100% !important;
+        }
+
+        .admin-actions .btn-outline {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+
+        .admin-title {
+            font-size: 26px !important;
+        }
+
+        .admin-subtitle {
+            font-size: 14px !important;
+        }
+
+        .bento-stat {
+            padding: 18px !important;
+        }
+
+        .stat-info .stat-number {
+            font-size: 24px !important;
+        }
+
+        .stat-icon-wrapper {
+            width: 44px !important;
+            height: 44px !important;
+        }
+
+        .admin-card {
+            padding: 18px !important;
+        }
+
+        .card-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+        }
+
+        .card-header h3 {
+            font-size: 18px !important;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 10px 12px !important;
+            font-size: 13px !important;
+        }
+
+        .admin-table th {
+            font-size: 11px !important;
+        }
+
+        .quick-link-card {
+            padding: 16px !important;
+            gap: 12px !important;
+        }
+
+        .link-icon {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 20px !important;
+        }
+
+        .link-info h4 {
+            font-size: 14px !important;
+        }
+
+        .link-info p {
+            font-size: 12px !important;
+        }
+
+        .badge {
+            font-size: 11px !important;
+            padding: 3px 8px !important;
+        }
+    }
+
+    /* Điện thoại nhỏ (max-width: 480px) */
+    @media (max-width: 480px) {
+        .container {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        .admin-title {
+            font-size: 22px !important;
+        }
+
+        .admin-subtitle {
+            font-size: 13px !important;
+        }
+
+        .bento-stat {
+            padding: 14px !important;
+            gap: 12px !important;
+        }
+
+        .stat-info .stat-number {
+            font-size: 20px !important;
+        }
+
+        .stat-info .stat-label {
+            font-size: 12px !important;
+        }
+
+        .stat-info .stat-desc {
+            font-size: 11px !important;
+        }
+
+        .stat-icon-wrapper {
+            width: 38px !important;
+            height: 38px !important;
+        }
+
+        .stat-icon-wrapper svg {
+            width: 18px !important;
+            height: 18px !important;
+        }
+
+        .admin-card {
+            padding: 14px !important;
+            border-radius: 16px !important;
+        }
+
+        .card-header h3 {
+            font-size: 16px !important;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 8px 10px !important;
+            font-size: 12px !important;
+        }
+
+        .admin-table th {
+            font-size: 10px !important;
+        }
+
+        .quick-link-card {
+            padding: 14px !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .link-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 18px !important;
+        }
+
+        .link-info h4 {
+            font-size: 13px !important;
+        }
+
+        .link-info p {
+            font-size: 11px !important;
+        }
+
+        .link-arrow,
+        .link-badge,
+        .badge {
+            font-size: 11px !important;
+            padding: 2px 6px !important;
+        }
+
+        .btn-outline {
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+        }
+
+        .btn-outline svg {
+            width: 14px !important;
+            height: 14px !important;
+        }
+    }
+</style>
 
 <?php require APPROOT . '/Views/inc/footer.php'; ?>

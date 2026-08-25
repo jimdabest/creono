@@ -1,0 +1,155 @@
+/* ========== BACK TO TOP ========== */
+.back-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--apple-gray-border);
+    box-shadow: var(--apple-shadow-md);
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--apple-black);
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background: var(--apple-black);
+    color: #fff;
+    border-color: var(--apple-black);
+    transform: scale(1.05);
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--apple-gray);
+    grid-column: 1 / -1;
+    border: 1px dashed var(--apple-gray-border);
+    border-radius: var(--apple-radius-md);
+    background: #fff;
+}
+
+.empty-state p {
+    font-size: 17px;
+    margin-bottom: 0;
+}
+
+/* ========== LOADING ========== */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    animation: loaderFadeIn 0.3s ease;
+}
+
+@keyframes loaderFadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.loader-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--apple-gray-border);
+    border-top-color: var(--apple-blue);
+    border-radius: 50%;
+    animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loader-text {
+    font-size: 15px;
+    color: var(--apple-gray);
+    font-weight: 400;
+    letter-spacing: -0.016em;
+    text-align: center;
+}
+
+/* ========== MISC UTILITIES ========== */
+.text-center {
+    text-align: center;
+}
+
+.mt-2 {
+    margin-top: 16px;
+}
+
+.mt-4 {
+    margin-top: 28px;
+}
+
+/* ========== APPLE STORE SPECIFIC ========== */
+.interactive-hover {
+    transition: all 0.3s ease;
+}
+
+.interactive-hover:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+.badge-pill {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: var(--apple-radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    background: var(--apple-gray-bg);
+    color: var(--apple-gray);
+}
+
+.badge-pill.blue {
+    background: rgba(0, 113, 227, 0.12);
+    color: var(--apple-blue);
+}
+
+.badge-pill.green {
+    background: rgba(52, 199, 89, 0.12);
+    color: var(--apple-green);
+}
+
+.badge-pill.orange {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--apple-orange);
+}
+
+.badge-pill.red {
+    background: rgba(255, 59, 48, 0.12);
+    color: var(--apple-red);
+}
