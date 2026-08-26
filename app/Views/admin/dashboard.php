@@ -192,6 +192,15 @@
                 <span class="link-arrow">&rarr;</span>
             </a>
 
+            <a href="<?php echo URLROOT; ?>/adminProductController/index" class="quick-link-card">
+                <div class="link-icon">📦</div>
+                <div class="link-info">
+                    <h4>Quản lý Sản phẩm</h4>
+                    <p>CRUD, kiểm duyệt & giám sát tất cả sản phẩm</p>
+                </div>
+                <span class="link-arrow">&rarr;</span>
+            </a>
+
             <a href="<?php echo URLROOT; ?>/admin/approvals" class="quick-link-card">
                 <div class="link-icon">✅</div>
                 <div class="link-info">

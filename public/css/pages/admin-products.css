@@ -1,0 +1,650 @@
+/* =====================================================================
+   ADMIN PRODUCTS - Quản lý Sản phẩm (UC41)
+   Trang: /adminProductController/index, /create, /edit
+   ===================================================================== */
+
+/* === THỐNG KÊ NHANH === */
+.ap-stats-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.ap-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-lg);
+    padding: 14px 20px;
+    min-width: 160px;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.ap-stat-chip:hover {
+    box-shadow: var(--apple-shadow-sm);
+    transform: translateY(-1px);
+}
+
+.ap-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ap-stat-icon--total {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--apple-blue);
+}
+
+.ap-stat-icon--pending {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--apple-orange);
+}
+
+.ap-stat-icon--approved {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--apple-green);
+}
+
+.ap-stat-icon--rejected {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--apple-red);
+}
+
+.ap-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--apple-black);
+    line-height: 1;
+}
+
+.ap-stat-label {
+    font-size: 13px;
+    color: var(--apple-gray);
+    font-weight: 400;
+}
+
+/* === THANH TÌM KIẾM & LỌC === */
+.ap-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ap-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-full);
+    padding: 8px 16px;
+    flex: 1;
+    min-width: 240px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ap-search-box:focus-within {
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.ap-search-box svg {
+    color: var(--apple-gray);
+    flex-shrink: 0;
+}
+
+.ap-search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    width: 100%;
+    color: var(--apple-black);
+    font-family: inherit;
+}
+
+.ap-search-box input::placeholder {
+    color: var(--apple-gray-light);
+}
+
+.ap-filter-group {
+    display: flex;
+    gap: 8px;
+}
+
+.ap-select {
+    appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-full);
+    padding: 8px 32px 8px 14px;
+    font-size: 13px;
+    color: var(--apple-black);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.ap-select:hover,
+.ap-select:focus {
+    border-color: var(--apple-blue);
+    outline: none;
+}
+
+/* === BẢNG SẢN PHẨM === */
+.ap-product-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ap-product-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--apple-gray-border);
+}
+
+.ap-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--apple-gray-bg);
+    color: var(--apple-gray);
+}
+
+.ap-product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ap-product-info strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--apple-black);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.ap-product-info small {
+    font-size: 11px;
+}
+
+/* === TRẠNG THÁI BADGE === */
+.ap-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--apple-radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.ap-status--pending {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--apple-orange);
+}
+
+.ap-status--approved {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--apple-green);
+}
+
+.ap-status--rejected {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--apple-red);
+}
+
+/* === ACTION BUTTONS === */
+.ap-action-group {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.ap-btn-approve {
+    color: var(--apple-green) !important;
+    border-color: rgba(52, 199, 89, 0.3) !important;
+}
+
+.ap-btn-approve:hover {
+    background: rgba(52, 199, 89, 0.08) !important;
+}
+
+.ap-btn-reject {
+    color: var(--apple-orange) !important;
+    border-color: rgba(255, 149, 0, 0.3) !important;
+}
+
+.ap-btn-reject:hover {
+    background: rgba(255, 149, 0, 0.08) !important;
+}
+
+.ap-btn-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: wait;
+}
+
+/* === MODAL (Reject & Delete) === */
+.ap-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.ap-modal-overlay.ap-modal--visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ap-modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+    transform: scale(0.92) translateY(20px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+
+.ap-modal-overlay.ap-modal--visible .ap-modal {
+    transform: scale(1) translateY(0);
+}
+
+.ap-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 0;
+}
+
+.ap-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--apple-black);
+    margin: 0;
+}
+
+.ap-modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--apple-gray-bg);
+    border-radius: 50%;
+    font-size: 20px;
+    color: var(--apple-gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.ap-modal-close:hover {
+    background: var(--apple-gray-border);
+}
+
+.ap-modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.ap-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.ap-modal-icon--warning {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--apple-orange);
+}
+
+.ap-modal-icon--danger {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--apple-red);
+}
+
+.ap-modal-body p {
+    font-size: 15px;
+    color: var(--apple-gray);
+    margin: 0 0 4px;
+    line-height: 1.5;
+}
+
+.ap-modal-product-name {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: var(--apple-black) !important;
+    margin: 8px 0 16px !important;
+}
+
+.ap-modal-warning {
+    font-size: 13px !important;
+    color: var(--apple-red) !important;
+    background: rgba(255, 59, 48, 0.06);
+    padding: 10px 14px;
+    border-radius: var(--apple-radius-sm);
+    margin-top: 12px !important;
+}
+
+.ap-modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 0 24px 20px;
+}
+
+.ap-modal-footer .btn {
+    min-width: 100px;
+    font-size: 14px;
+}
+
+.ap-btn-reject-confirm {
+    background: var(--apple-orange);
+    color: #fff;
+    border: none;
+    border-radius: var(--apple-radius-full);
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ap-btn-reject-confirm:hover {
+    background: #e08600;
+    transform: scale(1.02);
+}
+
+/* === FORM STYLES (Create / Edit) === */
+.ap-form-card {
+    max-width: 720px;
+}
+
+.ap-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ap-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ap-form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--apple-black);
+}
+
+.ap-required {
+    color: var(--apple-red);
+}
+
+.ap-form-input,
+.ap-form-select,
+.ap-form-textarea {
+    padding: 10px 14px;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-sm);
+    font-size: 15px;
+    color: var(--apple-black);
+    background: #fff;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ap-form-input:focus,
+.ap-form-select:focus,
+.ap-form-textarea:focus {
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    outline: none;
+}
+
+.ap-form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.ap-form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.ap-form-group--error .ap-form-input,
+.ap-form-group--error .ap-form-select,
+.ap-form-group--error .ap-form-textarea {
+    border-color: var(--apple-red);
+    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.08);
+}
+
+.ap-form-error {
+    font-size: 13px;
+    color: var(--apple-red);
+    font-weight: 400;
+}
+
+.ap-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ap-form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--apple-gray-bg);
+}
+
+.ap-form-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* === THÔNG TIN HIỆN TẠI (Edit form) === */
+.ap-current-info {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ap-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--apple-gray-bg);
+    border-radius: var(--apple-radius-full);
+    font-size: 13px;
+}
+
+.ap-info-label {
+    color: var(--apple-gray);
+    font-weight: 400;
+}
+
+.ap-info-value {
+    font-weight: 600;
+    color: var(--apple-black);
+}
+
+/* === ROW HIDDEN (filter) === */
+.ap-row-hidden {
+    display: none !important;
+}
+
+/* === TOAST NOTIFICATION === */
+.ap-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 14px 20px;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10001;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ap-toast--visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.ap-toast--success {
+    background: linear-gradient(135deg, #34c759 0%, #2eab4f 100%);
+}
+
+.ap-toast--error {
+    background: linear-gradient(135deg, #ff3b30 0%, #d63027 100%);
+}
+
+.ap-toast--warning {
+    background: linear-gradient(135deg, #ff9500 0%, #e08600 100%);
+}
+
+.ap-toast-icon {
+    flex-shrink: 0;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .ap-stats-row {
+        flex-wrap: wrap;
+    }
+
+    .ap-stat-chip {
+        min-width: calc(50% - 7px);
+        flex: unset;
+    }
+
+    .ap-toolbar {
+        flex-direction: column;
+    }
+
+    .ap-search-box {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .ap-filter-group {
+        width: 100%;
+    }
+
+    .ap-select {
+        flex: 1;
+    }
+
+    .ap-action-group {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ap-form-card {
+        max-width: 100%;
+    }
+
+    .ap-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ap-form-actions {
+        flex-direction: column;
+    }
+
+    .ap-form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ap-current-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ap-modal {
+        width: 92%;
+        margin: 16px;
+    }
+
+    .ap-product-info strong {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ap-stat-chip {
+        min-width: 100%;
+    }
+
+    .ap-stat-value {
+        font-size: 18px;
+    }
+
+    .ap-stat-label {
+        font-size: 12px;
+    }
+
+    .ap-toast {
+        left: 12px;
+        right: 12px;
+        min-width: auto;
+    }
+}
