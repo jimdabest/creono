@@ -365,13 +365,19 @@ const AdminUsersModule = (function () {
      * @param {string} type - 'success' hoặc 'error'
      */
     function showToast(message, type) {
-        // Xóa toast cũ nếu có
+        // Ưu tiên sử dụng FlashModule chuẩn của hệ thống nếu có
+        if (typeof FlashModule !== 'undefined' && typeof FlashModule.show === 'function') {
+            var flashType = (type === 'error') ? 'danger' : type;
+            FlashModule.show(message, flashType, CONFIG.TOAST_DURATION);
+            return;
+        }
+
+        // Fallback toast tự sinh nếu FlashModule chưa được nạp
         var existingToast = document.querySelector('.au-toast');
         if (existingToast) {
             existingToast.remove();
         }
 
-        // Tạo toast mới
         var toast = document.createElement('div');
         toast.className = 'au-toast au-toast--' + type;
 
@@ -383,12 +389,10 @@ const AdminUsersModule = (function () {
 
         document.body.appendChild(toast);
 
-        // Trigger animation
         requestAnimationFrame(function () {
             toast.classList.add('au-toast--visible');
         });
 
-        // Tự động ẩn sau thời gian cấu hình
         setTimeout(function () {
             toast.classList.remove('au-toast--visible');
             setTimeout(function () {

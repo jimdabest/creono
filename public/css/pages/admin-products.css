@@ -458,15 +458,21 @@
 
 .ap-form-group--error .ap-form-input,
 .ap-form-group--error .ap-form-select,
-.ap-form-group--error .ap-form-textarea {
+.ap-form-group--error .ap-form-textarea,
+.ap-form-input.is-invalid,
+.ap-form-select.is-invalid,
+.ap-form-textarea.is-invalid {
     border-color: var(--apple-red);
     box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.08);
 }
 
-.ap-form-error {
+.ap-form-error,
+.ap-form-group .error-text {
     font-size: 13px;
     color: var(--apple-red);
     font-weight: 400;
+    margin-top: 4px;
+    display: block;
 }
 
 .ap-form-row {

@@ -496,6 +496,14 @@ const AdminProductsModule = (function () {
      * @param {string} type - 'success', 'error', hoặc 'warning'
      */
     function showToast(message, type) {
+        // Ưu tiên sử dụng FlashModule chuẩn của hệ thống nếu có
+        if (typeof FlashModule !== 'undefined' && typeof FlashModule.show === 'function') {
+            var flashType = (type === 'error') ? 'danger' : type;
+            FlashModule.show(message, flashType, CONFIG.TOAST_DURATION);
+            return;
+        }
+
+        // Fallback toast tự sinh nếu FlashModule chưa được nạp
         var existingToast = document.querySelector('.ap-toast');
         if (existingToast) existingToast.remove();
 
