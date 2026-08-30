@@ -280,4 +280,54 @@ class Order extends BaseModel
         $this->db->bind(':user_id', $userId);
         return $this->db->resultSet();
     }
+
+    /**
+     * Lấy thông tin chi tiết đơn hàng
+     */
+    public function getOrderById(int $orderId): ?object
+    {
+        $this->db->query("
+            SELECT o.*, 
+                   p.title as product_title,
+                   s.user_id as seller_id,
+                   s.name as store_name,
+                   u.name as buyer_name,
+                   u.email as buyer_email
+            FROM {$this->table} o
+            JOIN products p ON o.product_id = p.id
+            JOIN stores s ON p.store_id = s.id
+            JOIN users u ON o.user_id = u.id
+            WHERE o.id = :id
+        ");
+        $this->db->bind(':id', $orderId);
+        return $this->db->single() ?: null;
+    }
+
+    /**
+     * Lấy danh sách đơn hàng đã mua của Buyer
+     */
+    public function getUserPurchasedOrders(int $userId): array
+    {
+        $this->db->query("
+            SELECT o.*, p.title as product_title, p.preview_url, s.name as store_name
+            FROM {$this->table} o
+            JOIN products p ON o.product_id = p.id
+            JOIN stores s ON p.store_id = s.id
+            WHERE o.user_id = :user_id
+            ORDER BY o.created_at DESC
+        ");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Cập nhật trạng thái đơn hàng
+     */
+    public function updateStatus(int $orderId, int $status): bool
+    {
+        $this->db->query("UPDATE {$this->table} SET status = :status WHERE id = :id");
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $orderId);
+        return $this->db->execute();
+    }
 }
