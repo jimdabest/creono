@@ -62,7 +62,11 @@
                     <!-- Nhấp vào thân thẻ để xem chi tiết sản phẩm -->
                     <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; flex-grow: 1;">
                         <div class="product-image-wrapper" style="border-radius: 24px 24px 0 0;">
-                            <div class="product-placeholder">Preview</div>
+                            <?php if (!empty($product->preview_url)) : ?>
+                                <img src="<?php echo URLROOT . htmlspecialchars($product->preview_url); ?>" alt="<?php echo htmlspecialchars($product->title); ?>" class="product-thumb-img" style="width: 100%; height: 100%; object-fit: cover;">
+                            <?php else : ?>
+                                <div class="product-placeholder">Preview</div>
+                            <?php endif; ?>
                             <span class="product-badge"><?php echo htmlspecialchars($product->store_name); ?></span>
                             <?php if($product->rating > 0) : ?>
                                 <span class="product-rating">

@@ -5,7 +5,8 @@ define('DB_USER', 'root');        // Tên user MySQL của bạn
 define('DB_PASS', '');            
 define('DB_NAME', 'creono_db');  
 // Tự động lấy URL hiện tại
-$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://" . $host;
 define('URLROOT', $url . '/creono');
 define('APPROOT', dirname(dirname(__FILE__)) . '/app');
 // define('URLROOT', 'http://localhost/creono');

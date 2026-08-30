@@ -6,6 +6,7 @@ require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Middleware/RoleMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
+require_once '../app/Helpers/WatermarkService.php';
 
 class Products extends Controller
 {
@@ -15,6 +16,7 @@ class Products extends Controller
     private Cart $cartModel;
     private Category $categoryModel;
     private Order $orderModel;
+    private Store $storeModel;
 
     public function __construct()
     {
@@ -24,6 +26,7 @@ class Products extends Controller
         $this->cartModel     = $this->model('Cart');
         $this->categoryModel = $this->model('Category');
         $this->orderModel    = $this->model('Order');
+        $this->storeModel    = $this->model('Store');
     }
 
     // ===================== CÁC ACTION CŨ =====================
@@ -171,6 +174,23 @@ class Products extends Controller
                     setFlash('error', 'Bạn chưa có cửa hàng. Vui lòng liên hệ Admin.');
                     header('location: ' . URLROOT . '/products/index');
                     exit();
+                }
+
+                $store = $this->storeModel->findById($store_id);
+                $storeName = $store ? $store->name : 'Creono';
+
+                // ==== UC28: TỰ ĐỘNG ĐÓNG DẤU WATERMARK TRƯỚC KHI LƯU DB ====
+                if (!empty($preview_url)) {
+                    $physicalPreviewPath = '../public' . $preview_url;
+                    WatermarkService::processUpload($physicalPreviewPath, $storeName);
+                }
+
+                if (!empty($document_url)) {
+                    $physicalDocPath = '../public' . $document_url;
+                    $docExt = strtolower(pathinfo($document_url, PATHINFO_EXTENSION));
+                    if ($docExt === 'pdf') {
+                        WatermarkService::processUpload($physicalDocPath, $storeName);
+                    }
                 }
 
                 $productData = [
@@ -420,6 +440,10 @@ class Products extends Controller
                         }
                     }
                     $preview_url = $uploadResult['path'];
+                    $store_id = (int)$product->store_id;
+                    $store = $this->storeModel->findById($store_id);
+                    $storeName = $store ? $store->name : 'Creono';
+                    WatermarkService::processUpload('../public' . $preview_url, $storeName);
                 } else {
                     $errors['preview_err'] = $uploadResult['message'];
                 }
@@ -444,6 +468,13 @@ class Products extends Controller
                         }
                     }
                     $document_url = $uploadResult['path'];
+                    $docExt = strtolower(pathinfo($document_url, PATHINFO_EXTENSION));
+                    if ($docExt === 'pdf') {
+                        $store_id = (int)$product->store_id;
+                        $store = $this->storeModel->findById($store_id);
+                        $storeName = $store ? $store->name : 'Creono';
+                        WatermarkService::processUpload('../public' . $document_url, $storeName);
+                    }
                 } else {
                     $errors['document_err'] = $uploadResult['message'];
                 }

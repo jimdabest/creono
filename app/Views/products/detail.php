@@ -54,6 +54,16 @@
                 </div>
             </div>
 
+            <!-- Product Preview Showcase (UC28 Watermarked Preview) -->
+            <?php if (!empty($data['product']->preview_url)) : ?>
+                <div class="product-preview-container" style="margin-bottom: 28px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.08); position: relative; background: #0b0c10; text-align: center;">
+                    <img src="<?php echo URLROOT . htmlspecialchars($data['product']->preview_url); ?>" alt="<?php echo htmlspecialchars($data['product']->title); ?>" style="max-width: 100%; max-height: 450px; object-fit: contain; vertical-align: middle;">
+                    <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(4px);">
+                        🔒 Bản xem trước có đóng dấu bản quyền Creono
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <!-- Description -->
             <div class="product-description-box" style="line-height: 1.7; color: #333; font-size: 16px;">
                 <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #1d1d1f;">Mô tả tài liệu</h3>
