@@ -7,6 +7,7 @@ require_once '../app/Middleware/RoleMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
 require_once '../app/Helpers/WatermarkService.php';
+require_once '../app/Services/AiDetectionService.php';
 
 class Products extends Controller
 {
@@ -209,18 +210,18 @@ class Products extends Controller
                     if (!empty($document_url)) {
                         $documentModel = $this->model('Document');
                         $documentData = [
-                            'product_id' => $productId,
-                            'file_url'   => $document_url,
-                            'ai_score'   => null,
+                            'product_id'  => $productId,
+                            'file_url'    => $document_url,
+                            'ai_score'    => null,
                             'ai_label_id' => null
                         ];
                         $documentModel->create($documentData);
-                        //giả lập rating sau này thì chưa biết ;v
-                        $aiScore = mt_rand(10, 90) / 10; // 1.0 – 9.0
-                        $aiLabelId = $aiScore > 5 ? 2 : 1; // 1: Human, 2: AI Generated
+
+                        // UC25: Phân tích AI thực tế bằng AiDetectionService
+                        $aiResult  = AiDetectionService::detect((string)($description ?? ''), (string)($title ?? ''));
                         $documentModel->update($documentModel->getLastInsertId(), [
-                            'ai_score' => $aiScore,
-                            'ai_label_id' => $aiLabelId
+                            'ai_score'    => $aiResult['ai_score'],
+                            'ai_label_id' => $aiResult['ai_label_id']
                         ]);
                     }
                     setFlash('success', 'Đã tạo sản phẩm thành công! Vui lòng chờ Admin duyệt.');
@@ -494,20 +495,19 @@ class Products extends Controller
                     if (!empty($document_url)) {
                         $documentModel = $this->model('Document');
                         $documentData = [
-                            'product_id' => $productId,
-                            'file_url'   => $document_url,
-                            'ai_score'   => null,
+                            'product_id'  => $productId,
+                            'file_url'    => $document_url,
+                            'ai_score'    => null,
                             'ai_label_id' => null
                         ];
                         $documentModel->create($documentData);
 
-                        // ==== GIẢ LẬP AI LABEL ====
-                        $docId = $documentModel->getLastInsertId();
-                        $aiScore = mt_rand(10, 90) / 10; // 1.0 – 9.0
-                        $aiLabelId = $aiScore > 5 ? 2 : 1; // 1: Human Written, 2: AI Generated
+                        // UC25: Tái quét AI khi người bán cập nhật mô tả/tiêu đề
+                        $aiResult = AiDetectionService::detect((string)($description ?? ''), (string)($title ?? ''));
+                        $docId    = $documentModel->getLastInsertId();
                         $documentModel->update($docId, [
-                            'ai_score' => $aiScore,
-                            'ai_label_id' => $aiLabelId
+                            'ai_score'    => $aiResult['ai_score'],
+                            'ai_label_id' => $aiResult['ai_label_id']
                         ]);
                     }
                     setFlash('success', 'Cập nhật sản phẩm thành công!');
