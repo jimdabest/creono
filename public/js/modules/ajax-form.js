@@ -58,9 +58,12 @@ const AjaxFormModule = (function() {
         
         const formData = new FormData(form);
         const startTime = Date.now();
-        
-        fetch(form.action, {
-            method: form.method || 'POST',
+
+        const actionUrl = form.getAttribute('action') || window.location.href;
+        const methodType = form.getAttribute('method') || 'POST';
+
+        fetch(actionUrl, {
+            method: methodType,
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
