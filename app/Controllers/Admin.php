@@ -11,6 +11,7 @@ require_once '../app/Core/Validator.php';
 
 class Admin extends Controller
 {
+    private Wallet $walletModel;
     private StatModel $statModel;
     private Category $categoryModel;
     private Product $productModel;
@@ -33,11 +34,60 @@ class Admin extends Controller
         $this->aiAppealModel = $this->model('AiAppeal');
         $this->kycModel = $this->model('KycDocument');
         $this->userModel = $this->model('User');
+        $this->walletModel = $this->model('Wallet');
     }
 
     public function index(): void
     {
         $this->dashboard();
+    }
+
+    /**
+     * Giao diện Cấu hình hệ thống (UC45)
+     * URL: /admin/settings
+     */
+    public function settings(): void {
+        $settingModel = $this->model('Setting');
+        
+        $data = [
+            'title' => 'Cấu hình hệ thống',
+            'commission_rate' => $settingModel->getSetting('commission_rate', '5'),
+            'csrf_token' => generateCsrfToken()
+        ];
+        
+        $this->view('admin/settings/index', $data);
+    }
+
+    /**
+     * API Cập nhật cấu hình (Xử lý AJAX)
+     * URL: /admin/updateSettings
+     */
+    public function updateSettings(): void {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(false, 'Method không hợp lệ');
+        }
+
+        // Rule 3.3: Bảo mật CSRF
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            $this->jsonResponse(false, 'Lỗi bảo mật CSRF');
+        }
+
+        $rate = $_POST['commission_rate'] ?? '';
+        
+        // Unhappy Path: Validate bắt lỗi chữ đỏ
+        if (!is_numeric($rate) || (float)$rate < 0 || (float)$rate > 100) {
+            $this->jsonResponse(false, 'Dữ liệu không hợp lệ', [
+                'errors' => ['commission_rate_err' => 'Tỷ lệ hoa hồng phải là số từ 0 đến 100']
+            ]);
+        }
+
+        // Happy Path: Lưu DB
+        $settingModel = $this->model('Setting');
+        if ($settingModel->updateSetting('commission_rate', (string)$rate)) {
+            $this->jsonResponse(true, 'Đã cập nhật tỷ lệ phí nền tảng thành công!');
+        } else {
+            $this->jsonResponse(false, 'Lỗi hệ thống khi lưu Database');
+        }
     }
 
     // =========================================================================
@@ -155,6 +205,51 @@ class Admin extends Controller
 
             $this->view('admin/categories/create', $data);
         }
+    }
+
+    public function withdrawals(): void
+    {
+        $data = [
+            'title' => 'Phê duyệt rút tiền',
+            'requests' => $this->walletModel->getPendingWithdrawals(),
+            'csrf_token' => generateCsrfToken()
+        ];
+        $this->view('admin/withdrawals/index', $data);
+    }
+
+    public function processWithdrawal(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(false, 'Method không hợp lệ');
+        }
+
+        // Bảo mật Rule 3.3: Bắt buộc có CSRF
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            $this->jsonResponse(false, 'Lỗi bảo mật CSRF');
+        }
+
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        $action = strtoupper($_POST['action'] ?? ''); // Dữ liệu: APPROVE hoặc REJECT
+        $adminId = (int)$_SESSION['user_id'];
+
+        if ($requestId <= 0 || !in_array($action, ['APPROVE', 'REJECT'])) {
+            $this->jsonResponse(false, 'Dữ liệu không hợp lệ. Hành động bị từ chối.');
+        }
+
+        if ($this->walletModel->processWithdrawalAdmin($requestId, $adminId, $action)) {
+            $msg = $action === 'APPROVE' ? 'Đã duyệt yêu cầu rút tiền thành công!' : 'Đã từ chối và hoàn tiền về ví cho người bán.';
+            $this->jsonResponse(true, $msg, ['redirect' => URLROOT . '/admin/withdrawals']);
+        } else {
+            $this->jsonResponse(false, 'Lỗi hệ thống khi xử lý dòng tiền. Vui lòng kiểm tra lại.');
+        }
+    }
+
+    // Nếu bạn chưa có hàm jsonResponse trong Admin.php thì nhớ thêm hàm này:
+    private function jsonResponse(bool $success, string $message, array $data = []): void
+    {
+        header('Content-Type: application/json');
+        echo json_encode(array_merge(['success' => $success, 'message' => $message], $data));
+        exit();
     }
 
     /**
@@ -656,33 +751,141 @@ class Admin extends Controller
     private function slugify(string $text): string
     {
         $utf8Map = [
-            'à' => 'a', 'á' => 'a', 'ả' => 'a', 'ã' => 'a', 'ạ' => 'a',
-            'ă' => 'a', 'ằ' => 'a', 'ắ' => 'a', 'ẳ' => 'a', 'ẵ' => 'a', 'ặ' => 'a',
-            'â' => 'a', 'ầ' => 'a', 'ấ' => 'a', 'ẩ' => 'a', 'ẫ' => 'a', 'ậ' => 'a',
+            'à' => 'a',
+            'á' => 'a',
+            'ả' => 'a',
+            'ã' => 'a',
+            'ạ' => 'a',
+            'ă' => 'a',
+            'ằ' => 'a',
+            'ắ' => 'a',
+            'ẳ' => 'a',
+            'ẵ' => 'a',
+            'ặ' => 'a',
+            'â' => 'a',
+            'ầ' => 'a',
+            'ấ' => 'a',
+            'ẩ' => 'a',
+            'ẫ' => 'a',
+            'ậ' => 'a',
             'đ' => 'd',
-            'è' => 'e', 'é' => 'e', 'ẻ' => 'e', 'ẽ' => 'e', 'ẹ' => 'e',
-            'ê' => 'e', 'ề' => 'e', 'ế' => 'e', 'ể' => 'e', 'ễ' => 'e', 'ệ' => 'e',
-            'ì' => 'i', 'í' => 'i', 'ỉ' => 'i', 'ĩ' => 'i', 'ị' => 'i',
-            'ò' => 'o', 'ó' => 'o', 'ỏ' => 'o', 'õ' => 'o', 'ọ' => 'o',
-            'ô' => 'o', 'ồ' => 'o', 'ố' => 'o', 'ổ' => 'o', 'ỗ' => 'o', 'ộ' => 'o',
-            'ơ' => 'o', 'ờ' => 'o', 'ớ' => 'o', 'ở' => 'o', 'ỡ' => 'o', 'ợ' => 'o',
-            'ù' => 'u', 'ú' => 'u', 'ủ' => 'u', 'ũ' => 'u', 'ụ' => 'u',
-            'ư' => 'u', 'ừ' => 'u', 'ứ' => 'u', 'ử' => 'u', 'ữ' => 'u', 'ự' => 'u',
-            'ỳ' => 'y', 'ý' => 'y', 'ỷ' => 'y', 'ỹ' => 'y', 'ỵ' => 'y',
+            'è' => 'e',
+            'é' => 'e',
+            'ẻ' => 'e',
+            'ẽ' => 'e',
+            'ẹ' => 'e',
+            'ê' => 'e',
+            'ề' => 'e',
+            'ế' => 'e',
+            'ể' => 'e',
+            'ễ' => 'e',
+            'ệ' => 'e',
+            'ì' => 'i',
+            'í' => 'i',
+            'ỉ' => 'i',
+            'ĩ' => 'i',
+            'ị' => 'i',
+            'ò' => 'o',
+            'ó' => 'o',
+            'ỏ' => 'o',
+            'õ' => 'o',
+            'ọ' => 'o',
+            'ô' => 'o',
+            'ồ' => 'o',
+            'ố' => 'o',
+            'ổ' => 'o',
+            'ỗ' => 'o',
+            'ộ' => 'o',
+            'ơ' => 'o',
+            'ờ' => 'o',
+            'ớ' => 'o',
+            'ở' => 'o',
+            'ỡ' => 'o',
+            'ợ' => 'o',
+            'ù' => 'u',
+            'ú' => 'u',
+            'ủ' => 'u',
+            'ũ' => 'u',
+            'ụ' => 'u',
+            'ư' => 'u',
+            'ừ' => 'u',
+            'ứ' => 'u',
+            'ử' => 'u',
+            'ữ' => 'u',
+            'ự' => 'u',
+            'ỳ' => 'y',
+            'ý' => 'y',
+            'ỷ' => 'y',
+            'ỹ' => 'y',
+            'ỵ' => 'y',
             // Hoa
-            'À' => 'a', 'Á' => 'a', 'Ả' => 'a', 'Ã' => 'a', 'Ạ' => 'a',
-            'Ă' => 'a', 'Ằ' => 'a', 'Ắ' => 'a', 'Ẳ' => 'a', 'Ẵ' => 'a', 'Ặ' => 'a',
-            'Â' => 'a', 'Ầ' => 'a', 'Ấ' => 'a', 'Ẩ' => 'a', 'Ẫ' => 'a', 'Ậ' => 'a',
+            'À' => 'a',
+            'Á' => 'a',
+            'Ả' => 'a',
+            'Ã' => 'a',
+            'Ạ' => 'a',
+            'Ă' => 'a',
+            'Ằ' => 'a',
+            'Ắ' => 'a',
+            'Ẳ' => 'a',
+            'Ẵ' => 'a',
+            'Ặ' => 'a',
+            'Â' => 'a',
+            'Ầ' => 'a',
+            'Ấ' => 'a',
+            'Ẩ' => 'a',
+            'Ẫ' => 'a',
+            'Ậ' => 'a',
             'Đ' => 'd',
-            'È' => 'e', 'É' => 'e', 'Ẻ' => 'e', 'Ẽ' => 'e', 'Ẹ' => 'e',
-            'Ê' => 'e', 'Ề' => 'e', 'Ế' => 'e', 'Ể' => 'e', 'Ễ' => 'e', 'Ệ' => 'e',
-            'Ì' => 'i', 'Í' => 'i', 'Ỉ' => 'i', 'Ĩ' => 'i', 'Ị' => 'i',
-            'Ò' => 'o', 'Ó' => 'o', 'Ỏ' => 'o', 'Õ' => 'o', 'Ọ' => 'o',
-            'Ô' => 'o', 'Ồ' => 'o', 'Ố' => 'o', 'Ổ' => 'o', 'Ỗ' => 'o', 'Ộ' => 'o',
-            'Ơ' => 'o', 'Ờ' => 'o', 'Ớ' => 'o', 'Ở' => 'o', 'Ỡ' => 'o', 'Ợ' => 'o',
-            'Ù' => 'u', 'Ú' => 'u', 'Ủ' => 'u', 'Ũ' => 'u', 'Ụ' => 'u',
-            'Ư' => 'u', 'Ừ' => 'u', 'Ứ' => 'u', 'Ử' => 'u', 'Ữ' => 'u', 'Ự' => 'u',
-            'Ỳ' => 'y', 'Ý' => 'y', 'Ỷ' => 'y', 'Ỹ' => 'y', 'Ỵ' => 'y'
+            'È' => 'e',
+            'É' => 'e',
+            'Ẻ' => 'e',
+            'Ẽ' => 'e',
+            'Ẹ' => 'e',
+            'Ê' => 'e',
+            'Ề' => 'e',
+            'Ế' => 'e',
+            'Ể' => 'e',
+            'Ễ' => 'e',
+            'Ệ' => 'e',
+            'Ì' => 'i',
+            'Í' => 'i',
+            'Ỉ' => 'i',
+            'Ĩ' => 'i',
+            'Ị' => 'i',
+            'Ò' => 'o',
+            'Ó' => 'o',
+            'Ỏ' => 'o',
+            'Õ' => 'o',
+            'Ọ' => 'o',
+            'Ô' => 'o',
+            'Ồ' => 'o',
+            'Ố' => 'o',
+            'Ổ' => 'o',
+            'Ỗ' => 'o',
+            'Ộ' => 'o',
+            'Ơ' => 'o',
+            'Ờ' => 'o',
+            'Ớ' => 'o',
+            'Ở' => 'o',
+            'Ỡ' => 'o',
+            'Ợ' => 'o',
+            'Ù' => 'u',
+            'Ú' => 'u',
+            'Ủ' => 'u',
+            'Ũ' => 'u',
+            'Ụ' => 'u',
+            'Ư' => 'u',
+            'Ừ' => 'u',
+            'Ứ' => 'u',
+            'Ử' => 'u',
+            'Ữ' => 'u',
+            'Ự' => 'u',
+            'Ỳ' => 'y',
+            'Ý' => 'y',
+            'Ỷ' => 'y',
+            'Ỹ' => 'y',
+            'Ỵ' => 'y'
         ];
 
         $text = strtr($text, $utf8Map);

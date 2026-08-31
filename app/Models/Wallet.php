@@ -99,4 +99,81 @@ class Wallet
             return false;
         }
     }
+
+    /**
+     * Lấy danh sách yêu cầu rút tiền đang chờ duyệt (Sử dụng View có sẵn trong DB Final)
+     */
+    /**
+     * Lấy danh sách yêu cầu rút tiền đang chờ duyệt
+     */
+    public function getPendingWithdrawals(): array
+    {
+        // Truy vấn trực tiếp thay vì dùng View vw_pendingwithdrawals bị thiếu cột
+        $this->db->query("
+            SELECT w.id AS request_id, 
+                   u.email AS seller_email, 
+                   w.amount AS amount, 
+                   w.bank_name AS bank_name, 
+                   w.bank_account_number AS bank_account_number, 
+                   w.bank_account_name AS bank_account_name, 
+                   w.created_at AS created_at 
+            FROM withdraw_requests w 
+            JOIN wallets wal ON w.wallet_id = wal.id 
+            JOIN users u ON wal.user_id = u.id 
+            WHERE w.status = 1
+            ORDER BY w.created_at ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Xử lý Phê duyệt / Từ chối rút tiền
+     */
+    public function processWithdrawalAdmin(int $requestId, int $adminId, string $action): bool
+    {
+        if ($action === 'APPROVE') {
+            // Gọi Stored Procedure đã có sẵn trong DB Final
+            $this->db->query('CALL sp_ApproveWithdrawal(:req_id, :admin_id)');
+            $this->db->bind(':req_id', $requestId);
+            $this->db->bind(':admin_id', $adminId);
+            try {
+                return $this->db->execute();
+            } catch (Exception $e) {
+                error_log("Lỗi SP Duyệt rút tiền: " . $e->getMessage());
+                return false;
+            }
+        } elseif ($action === 'REJECT') {
+            // Viết Transaction để Từ chối: Hoàn lại tiền đang bị đóng băng (frozen_balance)
+            try {
+                $this->db->beginTransaction();
+                
+                $this->db->query("SELECT wallet_id, amount, status FROM withdraw_requests WHERE id = :id FOR UPDATE");
+                $this->db->bind(':id', $requestId);
+                $req = $this->db->single();
+
+                if ($req && $req->status == 1) {
+                    // Hoàn tiền từ frozen_balance về lại balance
+                    $this->db->query("UPDATE wallets SET balance = balance + :amount, frozen_balance = frozen_balance - :amount WHERE id = :wallet_id");
+                    $this->db->bind(':amount', $req->amount);
+                    $this->db->bind(':wallet_id', $req->wallet_id);
+                    $this->db->execute();
+
+                    // Cập nhật trạng thái thành Bị từ chối (3)
+                    $this->db->query("UPDATE withdraw_requests SET status = 3, processed_by = :admin_id WHERE id = :id");
+                    $this->db->bind(':admin_id', $adminId);
+                    $this->db->bind(':id', $requestId);
+                    $this->db->execute();
+
+                    $this->db->commit();
+                    return true;
+                }
+                $this->db->rollBack();
+                return false;
+            } catch (Exception $e) {
+                $this->db->rollBack();
+                return false;
+            }
+        }
+        return false;
+    }
 }
