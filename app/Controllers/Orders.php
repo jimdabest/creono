@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
+require_once '../app/Services/RefundService.php';
 
 class Orders extends Controller
 {
@@ -26,11 +27,17 @@ class Orders extends Controller
     }
 
     /**
+     * Hàm mặc định (fallback) khi truy cập sai URL
+     */
+    public function index(): void
+    {
+        header('location: ' . URLROOT . '/products/index');
+        exit();
+    }
+
+    /**
      * Hiển thị trang thanh toán cho 1 sản phẩm (GET)
      * URL: /orders/checkout/{productId}
-     *
-     * @param int|null $productId
-     * @return void
      */
     public function checkout(?int $productId = null): void
     {
@@ -74,10 +81,8 @@ class Orders extends Controller
     }
 
     /**
-     * Xử lý thanh toán (POST)
+     * Xử lý thanh toán 1 sản phẩm (POST)
      * URL: /orders/process
-     *
-     * @return void
      */
     public function process(): void
     {
@@ -137,12 +142,132 @@ class Orders extends Controller
             $cart = $this->cartModel->getOrCreateCart($userId);
             $this->cartModel->removeItem((int)$cart->id, $productId);
 
-            setFlash('success', 'Thanh toán thành công! Bạn có thể tải tài liệu ngay.');
-            header('location: ' . URLROOT . '/products/detail/' . $productId);
+            setFlash('success', 'Thanh toán thành công! Dưới đây là tài liệu của bạn.');
+            header('location: ' . URLROOT . '/orders/myPurchases');
         } else {
             setFlash('error', 'Thanh toán thất bại. Vui lòng thử lại hoặc liên hệ hỗ trợ.');
             header('location: ' . URLROOT . '/orders/checkout/' . $productId);
         }
+        exit();
+    }
+
+    /**
+     * Xử lý thanh toán toàn bộ giỏ hàng (POST)
+     * URL: /orders/processCart
+     */
+    public function processCart(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('location: ' . URLROOT . '/carts/index');
+            exit();
+        }
+
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            die('CSRF token validation failed');
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        
+        // 1. Lấy thông tin giỏ hàng hiện tại
+        $cart = $this->cartModel->getOrCreateCart($userId);
+        $cartItems = $this->cartModel->getCartItems((int)$cart->id);
+        $totalAmount = $this->cartModel->getCartTotal((int)$cart->id);
+
+        if (empty($cartItems)) {
+            setFlash('error', 'Giỏ hàng của bạn đang trống.');
+            header('location: ' . URLROOT . '/carts/index');
+            exit();
+        }
+
+        // 2. Kiểm tra ví người mua
+        $wallet = $this->walletModel->getWalletByUserId($userId);
+        if (!$wallet || (float)$wallet->balance < $totalAmount) {
+            setFlash('error', 'Số dư ví không đủ để thanh toán toàn bộ giỏ hàng. Vui lòng nạp thêm tiền.');
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        // 3. Tiến hành giao dịch
+        $isSuccess = $this->orderModel->processCartPayment($userId, $cartItems, $totalAmount);
+
+        if ($isSuccess) {
+            // Thanh toán thành công -> Xóa sạch giỏ hàng
+            $this->cartModel->clearCart((int)$cart->id);
+            
+            setFlash('success', 'Thanh toán thành công ' . count($cartItems) . ' tài liệu! Bạn có thể tải file về ngay bây giờ.');
+            header('location: ' . URLROOT . '/orders/myPurchases'); 
+        } else {
+            setFlash('error', 'Thanh toán thất bại. Vui lòng thử lại hoặc liên hệ hỗ trợ.');
+            header('location: ' . URLROOT . '/carts/index');
+        }
+        exit();
+    }
+
+    /**
+     * Trang danh sách tài liệu đã mua (Kho tài liệu của tôi)
+     * URL: /orders/myPurchases
+     */
+    public function myPurchases(): void
+    {
+        $userId = (int)$_SESSION['user_id'];
+        $purchases = $this->orderModel->getPurchasedProducts($userId);
+
+        $data = [
+            'title' => 'Kho tài liệu của tôi - Creono',
+            'purchases' => $purchases
+        ];
+
+        $this->view('orders/my_purchases', $data);
+    }
+
+    /**
+     * Yêu cầu hoàn tiền cho đơn hàng (UC32)
+     * URL: /orders/refund/{orderId}
+     *
+     * @param int|null $orderId
+     * @return void
+     */
+    public function refund(?int $orderId = null): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$orderId) {
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        // Kiểm tra CSRF
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            die('CSRF token validation failed');
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $userRole = (int)($_SESSION['user_role'] ?? 1);
+        $order = $this->orderModel->getOrderById($orderId);
+
+        if (!$order) {
+            setFlash('error', 'Không tìm thấy đơn hàng cần hoàn tiền.');
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        // Kiểm tra quyền: Người mua hoặc Admin
+        if ((int)$order->user_id !== $userId && $userRole !== 3) {
+            setFlash('error', 'Bạn không có quyền yêu cầu hoàn tiền cho đơn hàng này.');
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        $reason = trim((string)($_POST['reason'] ?? 'Người mua yêu cầu hoàn tiền'));
+        $isAdmin = ($userRole === 3);
+
+        $result = RefundService::processRefund($orderId, $reason, $isAdmin);
+
+        if ($result['success']) {
+            setFlash('success', $result['message']);
+        } else {
+            setFlash('error', $result['message']);
+        }
+
+        header('location: ' . URLROOT . '/wallets/index');
         exit();
     }
 }

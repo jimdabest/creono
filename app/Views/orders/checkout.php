@@ -49,8 +49,10 @@
                 Đến trang nạp tiền
             </a>
         <?php else: ?>
-            <form action="<?= URLROOT; ?>/orders/checkout/<?= $data['product']->id; ?>" method="POST">
+            <form action="<?= URLROOT; ?>/orders/process" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= $data['csrf_token']; ?>">
+                <input type="hidden" name="product_id" value="<?= $data['product']->id; ?>">
+                
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer;">
                     Xác nhận thanh toán ngay
                 </button>

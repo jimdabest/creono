@@ -54,6 +54,16 @@
                 </div>
             </div>
 
+            <!-- Product Preview Showcase (UC28 Watermarked Preview) -->
+            <?php if (!empty($data['product']->preview_url)) : ?>
+                <div class="product-preview-container" style="margin-bottom: 28px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.08); position: relative; background: #0b0c10; text-align: center;">
+                    <img src="<?php echo URLROOT . htmlspecialchars($data['product']->preview_url); ?>" alt="<?php echo htmlspecialchars($data['product']->title); ?>" style="max-width: 100%; max-height: 450px; object-fit: contain; vertical-align: middle;">
+                    <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(4px);">
+                        🔒 Bản xem trước có đóng dấu bản quyền Creono
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <!-- Description -->
             <div class="product-description-box" style="line-height: 1.7; color: #333; font-size: 16px;">
                 <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #1d1d1f;">Mô tả tài liệu</h3>
@@ -73,18 +83,34 @@
             </div>
 
             <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
-                <!-- Mua ngay (UC29) -->
-                <a href="<?= URLROOT; ?>/orders/checkout/<?= $data['product']->id; ?>"
-                    class="btn btn-primary btn-block"
-                    style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 14px; background: #27ae60; color: #fff; transition: all 0.2s ease;">
-                    <span>⚡ Mua ngay</span>
-                </a>
+                
+                <?php if (!empty($data['has_purchased']) || !empty($data['is_seller'])) : ?>
+                    <!-- NẾU ĐÃ MUA HOẶC LÀ NGƯỜI BÁN -> HIỆN NÚT TẢI XUỐNG -->
+                    <a href="<?= URLROOT; ?>/downloads/file/<?= $data['product']->id; ?>"
+                        class="btn btn-primary btn-block"
+                        style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 14px; background: #0071e3; color: #fff; transition: all 0.2s ease;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Tải tài liệu xuống</span>
+                    </a>
+                <?php else : ?>
+                    <!-- NẾU CHƯA MUA -> HIỆN NÚT MUA NGAY VÀ THÊM VÀO GIỎ -->
+                    <!-- Mua ngay (UC29) -->
+                    <a href="<?= URLROOT; ?>/orders/checkout/<?= $data['product']->id; ?>"
+                        class="btn btn-primary btn-block"
+                        style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 14px; background: #27ae60; color: #fff; transition: all 0.2s ease;">
+                        <span>Mua ngay</span>
+                    </a>
 
-                <!-- Add to Cart (UC18) -->
-                <button type="button" id="btnAddToCart" class="btn btn-primary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    <span><?php echo (!empty($data['in_cart'])) ? '✓ Đã có trong giỏ' : 'Thêm vào giỏ hàng'; ?></span>
-                </button>
+                    <!-- Add to Cart (UC18) -->
+                    <button type="button" id="btnAddToCart" class="btn btn-primary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span><?php echo (!empty($data['in_cart'])) ? '✓ Đã có trong giỏ' : 'Thêm vào giỏ hàng'; ?></span>
+                    </button>
+                <?php endif; ?>
 
                 <!-- Toggle Favorite (UC17) -->
                 <button type="button" id="btnToggleFavorite" class="btn btn-secondary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: #f5f5f7; border: 1px solid rgba(0,0,0,0.08); color: <?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : '#1d1d1f'; ?>; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
