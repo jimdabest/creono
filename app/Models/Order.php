@@ -67,6 +67,9 @@ class Order extends BaseModel
         return $this->db->resultSet();
     }
 
+    /**
+     * Xử lý thanh toán cho MỘT sản phẩm
+     */
     public function processPayment(int $buyerId, int $sellerId, int $productId, string $productTitle, float $price)
     {
         // phí nền tảng là 5%
@@ -147,6 +150,103 @@ class Order extends BaseModel
         }
     }
 
+    /**
+     * Xử lý thanh toán cho TOÀN BỘ giỏ hàng
+     */
+    public function processCartPayment(int $buyerId, array $cartItems, float $totalAmount): bool
+    {
+        try {
+            $this->db->beginTransaction();
+
+            // 1. Kiểm tra và khóa dòng ví người mua
+            $this->db->query("SELECT id, balance FROM wallets WHERE user_id = :user_id FOR UPDATE");
+            $this->db->bind(':user_id', $buyerId);
+            $buyerWallet = $this->db->single();
+
+            if (!$buyerWallet || $buyerWallet->balance < $totalAmount) {
+                throw new Exception("Số dư ví người mua không đủ.");
+            }
+
+            // 2. Trừ TỔNG TIỀN người mua & Ghi log 1 lần duy nhất
+            $this->db->query("UPDATE wallets SET balance = balance - :amount WHERE id = :id");
+            $this->db->bind(':amount', $totalAmount);
+            $this->db->bind(':id', $buyerWallet->id);
+            $this->db->execute();
+
+            $orderGroupNumber = 'GRP-' . date('Ymd') . '-' . time(); // Mã nhóm đơn hàng
+
+            $this->db->query("INSERT INTO transactions (wallet_id, type, amount, description) VALUES (:wallet_id, 3, :amount, :desc)");
+            $this->db->bind(':wallet_id', $buyerWallet->id);
+            $this->db->bind(':amount', -$totalAmount);
+            $this->db->bind(':desc', "Thanh toán giỏ hàng ($orderGroupNumber)");
+            $this->db->execute();
+
+            // 3. Vòng lặp: Xử lý giải ngân và tạo đơn cho TỪNG sản phẩm trong giỏ
+            foreach ($cartItems as $item) {
+                $price = (float)$item->price;
+                $platformFee = $price * 0.05; // Phí nền tảng 5%
+                $sellerAmount = $price - $platformFee;
+                $sellerId = (int)$item->seller_id;
+                $orderNumber = 'ORD-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
+
+                // Lấy và khóa dòng ví người bán
+                $this->db->query("SELECT id FROM wallets WHERE user_id = :user_id FOR UPDATE");
+                $this->db->bind(':user_id', $sellerId);
+                $sellerWallet = $this->db->single();
+
+                if (!$sellerWallet) {
+                    throw new Exception("Người bán (ID: $sellerId) chưa có ví.");
+                }
+
+                // Cộng tiền người bán
+                $this->db->query("UPDATE wallets SET balance = balance + :amount WHERE id = :id");
+                $this->db->bind(':amount', $sellerAmount);
+                $this->db->bind(':id', $sellerWallet->id);
+                $this->db->execute();
+
+                // Ghi log doanh thu người bán
+                $this->db->query("INSERT INTO transactions (wallet_id, type, amount, description) VALUES (:wallet_id, 5, :amount, :desc)");
+                $this->db->bind(':wallet_id', $sellerWallet->id);
+                $this->db->bind(':amount', $sellerAmount);
+                $this->db->bind(':desc', "Doanh thu từ đơn hàng $orderNumber");
+                $this->db->execute();
+
+                // Tạo Order (Bảng orders)
+                $this->db->query("INSERT INTO orders (order_number, user_id, product_id, total_amount, platform_fee, seller_amount, status) VALUES (:order_num, :user_id, :product_id, :total, :fee, :seller_amt, 2)");
+                $this->db->bind(':order_num', $orderNumber);
+                $this->db->bind(':user_id', $buyerId);
+                $this->db->bind(':product_id', $item->product_id);
+                $this->db->bind(':total', $price);
+                $this->db->bind(':fee', $platformFee);
+                $this->db->bind(':seller_amt', $sellerAmount);
+                $this->db->execute();
+                
+                $orderId = $this->db->lastInsertId();
+
+                // Tạo Order Items
+                $this->db->query("INSERT INTO order_items (order_id, product_id, product_name, unit_price, subtotal, platform_fee, seller_amount) VALUES (:order_id, :product_id, :name, :price, :subtotal, :fee, :seller_amt)");
+                $this->db->bind(':order_id', $orderId);
+                $this->db->bind(':product_id', $item->product_id);
+                $this->db->bind(':name', $item->title);
+                $this->db->bind(':price', $price);
+                $this->db->bind(':subtotal', $price);
+                $this->db->bind(':fee', $platformFee);
+                $this->db->bind(':seller_amt', $sellerAmount);
+                $this->db->execute();
+            }
+
+            // Mọi thứ hoàn hảo -> Xác nhận lưu Database
+            $this->db->commit();
+            return true;
+
+        } catch (\Throwable $e) {
+            // Có lỗi -> Hủy toàn bộ thao tác, không ai bị trừ tiền/cộng tiền sai
+            $this->db->rollBack();
+            error_log("Lỗi thanh toán giỏ hàng: " . $e->getMessage());
+            return false;
+        }
+    }
+
     // Hàm kiểm tra User đã mua Product chưa để cho phép Download
     public function hasPurchased(int $userId, int $productId)
     {
@@ -155,5 +255,29 @@ class Order extends BaseModel
         $this->db->bind(':product_id', $productId);
         $row = $this->db->single();
         return !empty($row);
+    }
+
+    /**
+     * Lấy danh sách tất cả các tài liệu đã mua của User
+     */
+    public function getPurchasedProducts(int $userId): array
+    {
+        $this->db->query("
+            SELECT o.id as order_id, 
+                   o.created_at as purchased_at, 
+                   p.id as product_id, 
+                   p.title, 
+                   p.price, 
+                   p.preview_url, 
+                   p.description,
+                   s.name as store_name
+            FROM {$this->table} o
+            JOIN products p ON o.product_id = p.id
+            JOIN stores s ON p.store_id = s.id
+            WHERE o.user_id = :user_id AND o.status = 2
+            ORDER BY o.created_at DESC
+        ");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->resultSet();
     }
 }

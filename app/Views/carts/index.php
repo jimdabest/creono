@@ -1,4 +1,6 @@
-<?php /** @var array $data */ ?>
+<?php
+
+/** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container page-container" style="margin-top: 40px; margin-bottom: 80px; max-width: 900px;">
@@ -41,17 +43,23 @@
                             </div>
                         </div>
 
-                        <!-- Price -->
-                        <div style="text-align: right; flex-shrink: 0;">
+                        <!-- Price & Actions -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
                             <div style="font-size: 18px; font-weight: 700; color: var(--apple-blue, #0071e3);">
                                 <?php echo number_format($item->price, 0, ',', '.'); ?> ₫
                             </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <!-- Nút Thanh toán lẻ -->
+                                <a href="<?php echo URLROOT; ?>/orders/checkout/<?php echo $item->product_id; ?>"
+                                    style="background: #27ae60; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; transition: background 0.2s;">
+                                    Thanh toán
+                                </a>
+                                <!-- Nút Xóa (Được thiết kế lại cho đồng bộ) -->
+                                <button class="btn-remove-cart-item" data-product-id="<?php echo $item->product_id; ?>" data-price="<?php echo $item->price; ?>" style="background: rgba(255, 59, 48, 0.1); border: none; color: #ff3b30; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.2s;" title="Xóa khỏi giỏ hàng">
+                                    Xóa
+                                </button>
+                            </div>
                         </div>
-
-                        <!-- Remove Button -->
-                        <button class="btn-remove-cart-item" data-product-id="<?php echo $item->product_id; ?>" data-price="<?php echo $item->price; ?>" style="background: none; border: none; color: #ff3b30; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;" title="Xóa khỏi giỏ hàng">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                        </button>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -77,9 +85,26 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; margin-top: 20px; transition: all 0.2s ease;">
-                    Thanh toán
-                </button>
+                <!-- Nút Thanh toán tổng -->
+                <?php if ($data['cart_count'] === 1): ?>
+                    <!-- Nếu chỉ có 1 sản phẩm -> Trỏ thẳng link sang trang Checkout chi tiết -->
+                    <a href="<?php echo URLROOT; ?>/orders/checkout/<?php echo $data['items'][0]->product_id; ?>"
+                        class="btn btn-primary"
+                        style="display: block; text-align: center; width: 100%; padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; text-decoration: none; margin-top: 20px; transition: all 0.2s ease;">
+                        Tiến hành thanh toán
+                    </a>
+                <?php else: ?>
+                    <!-- Form thanh toán toàn bộ giỏ hàng -->
+                    <form action="<?php echo URLROOT; ?>/orders/processCart" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?php echo $data['csrf_token']; ?>">
+                        <button type="submit"
+                            onclick="return confirm('Bạn có chắc chắn muốn thanh toán tổng cộng <?php echo number_format($data['total'], 0, ',', '.'); ?>đ cho toàn bộ giỏ hàng?');"
+                            class="btn btn-primary"
+                            style="width: 100%; padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; margin-top: 20px; transition: all 0.2s ease;">
+                            Thanh toán tất cả (<?php echo $data['cart_count']; ?>)
+                        </button>
+                    </form>
+                <?php endif; ?>
 
                 <a href="<?php echo URLROOT; ?>/products/index" style="display: block; text-align: center; margin-top: 12px; font-size: 14px; color: var(--apple-blue, #0071e3); text-decoration: none;">
                     ← Tiếp tục mua sắm
@@ -143,7 +168,7 @@
             margin-left: 0 !important;
         }
 
-        .cart-item-card > div:last-child {
+        .cart-item-card>div:last-child {
             font-size: 16px !important;
         }
 
@@ -172,7 +197,7 @@
             font-size: 28px !important;
         }
 
-        .page-container > p {
+        .page-container>p {
             font-size: 14px !important;
         }
     }
@@ -222,7 +247,7 @@
             flex-wrap: wrap !important;
         }
 
-        .cart-item-card > div:last-child {
+        .cart-item-card>div:last-child {
             font-size: 16px !important;
             text-align: left !important;
             flex: 1 !important;
@@ -286,74 +311,80 @@
 
 <!-- AJAX: Xóa item khỏi giỏ hàng -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+        'use strict';
 
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.btn-remove-cart-item');
-        if (!btn) return;
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-remove-cart-item');
+            if (!btn) return;
 
-        const productId = btn.getAttribute('data-product-id');
-        const itemCard = document.getElementById('cart-item-' + productId);
+            const productId = btn.getAttribute('data-product-id');
+            const itemCard = document.getElementById('cart-item-' + productId);
 
-        if (!confirm('Bạn muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
+            if (!confirm('Bạn muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
 
-        btn.disabled = true;
+            btn.disabled = true;
 
-        const formData = new FormData();
-        formData.append('product_id', productId);
+            const formData = new FormData();
+            formData.append('product_id', productId);
 
-        fetch('<?php echo URLROOT; ?>/carts/remove', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Animate remove
-                if (itemCard) {
-                    itemCard.style.opacity = '0';
-                    itemCard.style.transform = 'translateX(-20px)';
-                    setTimeout(function() { itemCard.remove(); }, 300);
-                }
+            fetch('<?php echo URLROOT; ?>/carts/remove', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Animate remove
+                        if (itemCard) {
+                            itemCard.style.opacity = '0';
+                            itemCard.style.transform = 'translateX(-20px)';
+                            setTimeout(function() {
+                                itemCard.remove();
+                            }, 300);
+                        }
 
-                // Update totals
-                const summaryCount = document.getElementById('summary-count');
-                const summaryTotal = document.getElementById('summary-total');
-                const itemCount = document.getElementById('cart-item-count');
+                        // Update totals
+                        const summaryCount = document.getElementById('summary-count');
+                        const summaryTotal = document.getElementById('summary-total');
+                        const itemCount = document.getElementById('cart-item-count');
 
-                if (summaryCount) summaryCount.textContent = data.cart_count;
-                if (summaryTotal) summaryTotal.textContent = data.formatted_total;
-                if (itemCount) itemCount.textContent = data.cart_count;
+                        if (summaryCount) summaryCount.textContent = data.cart_count;
+                        if (summaryTotal) summaryTotal.textContent = data.formatted_total;
+                        if (itemCount) itemCount.textContent = data.cart_count;
 
-                // Update navbar badge
-                updateNavCartBadge(data.cart_count);
+                        // Update navbar badge
+                        updateNavCartBadge(data.cart_count);
 
-                if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
-                }
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show('success', data.message);
+                        }
 
-                // If cart is empty, reload page to show empty state
-                if (data.cart_count === 0) {
-                    setTimeout(function() { location.reload(); }, 600);
-                }
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            console.error('Remove cart item error:', err);
+                        // If cart is empty, reload page to show empty state
+                        if (data.cart_count === 0) {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 600);
+                        }
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    console.error('Remove cart item error:', err);
+                });
         });
-    });
 
-    function updateNavCartBadge(count) {
-        const badge = document.getElementById('nav-cart-badge');
-        if (badge) {
-            badge.textContent = count;
-            badge.style.display = count > 0 ? 'flex' : 'none';
+        function updateNavCartBadge(count) {
+            const badge = document.getElementById('nav-cart-badge');
+            if (badge) {
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
+            }
         }
-    }
-});
+    });
 </script>
 
 <?php require APPROOT . '/Views/inc/footer.php'; ?>
