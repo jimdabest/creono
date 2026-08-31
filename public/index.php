@@ -6,6 +6,9 @@ require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
 require_once '../app/Helpers/error_helper.php';
 require_once '../app/Helpers/mail_helper.php';
+require_once '../app/Helpers/WatermarkService.php';
+require_once '../app/Services/AiDetectionService.php';
+require_once '../app/Services/RefundService.php';
 
 if (function_exists('handleException')) {
 	set_exception_handler('handleException');

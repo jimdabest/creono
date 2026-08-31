@@ -6,6 +6,8 @@ require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Middleware/RoleMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
+require_once '../app/Helpers/WatermarkService.php';
+require_once '../app/Services/AiDetectionService.php';
 
 class Products extends Controller
 {
@@ -15,6 +17,7 @@ class Products extends Controller
     private Cart $cartModel;
     private Category $categoryModel;
     private Order $orderModel;
+    private Store $storeModel;
 
     public function __construct()
     {
@@ -24,6 +27,7 @@ class Products extends Controller
         $this->cartModel     = $this->model('Cart');
         $this->categoryModel = $this->model('Category');
         $this->orderModel    = $this->model('Order');
+        $this->storeModel    = $this->model('Store');
     }
 
     // ===================== CÁC ACTION CŨ =====================
@@ -173,6 +177,23 @@ class Products extends Controller
                     exit();
                 }
 
+                $store = $this->storeModel->findById($store_id);
+                $storeName = $store ? $store->name : 'Creono';
+
+                // ==== UC28: TỰ ĐỘNG ĐÓNG DẤU WATERMARK TRƯỚC KHI LƯU DB ====
+                if (!empty($preview_url)) {
+                    $physicalPreviewPath = '../public' . $preview_url;
+                    WatermarkService::processUpload($physicalPreviewPath, $storeName);
+                }
+
+                if (!empty($document_url)) {
+                    $physicalDocPath = '../public' . $document_url;
+                    $docExt = strtolower(pathinfo($document_url, PATHINFO_EXTENSION));
+                    if ($docExt === 'pdf') {
+                        WatermarkService::processUpload($physicalDocPath, $storeName);
+                    }
+                }
+
                 $productData = [
                     'store_id'     => $store_id,
                     'category_id'  => $category_id,
@@ -189,18 +210,18 @@ class Products extends Controller
                     if (!empty($document_url)) {
                         $documentModel = $this->model('Document');
                         $documentData = [
-                            'product_id' => $productId,
-                            'file_url'   => $document_url,
-                            'ai_score'   => null,
+                            'product_id'  => $productId,
+                            'file_url'    => $document_url,
+                            'ai_score'    => null,
                             'ai_label_id' => null
                         ];
                         $documentModel->create($documentData);
-                        //giả lập rating sau này thì chưa biết ;v
-                        $aiScore = mt_rand(10, 90) / 10; // 1.0 – 9.0
-                        $aiLabelId = $aiScore > 5 ? 2 : 1; // 1: Human, 2: AI Generated
+
+                        // UC25: Phân tích AI thực tế bằng AiDetectionService
+                        $aiResult  = AiDetectionService::detect((string)($description ?? ''), (string)($title ?? ''));
                         $documentModel->update($documentModel->getLastInsertId(), [
-                            'ai_score' => $aiScore,
-                            'ai_label_id' => $aiLabelId
+                            'ai_score'    => $aiResult['ai_score'],
+                            'ai_label_id' => $aiResult['ai_label_id']
                         ]);
                     }
                     setFlash('success', 'Đã tạo sản phẩm thành công! Vui lòng chờ Admin duyệt.');
@@ -420,6 +441,10 @@ class Products extends Controller
                         }
                     }
                     $preview_url = $uploadResult['path'];
+                    $store_id = (int)$product->store_id;
+                    $store = $this->storeModel->findById($store_id);
+                    $storeName = $store ? $store->name : 'Creono';
+                    WatermarkService::processUpload('../public' . $preview_url, $storeName);
                 } else {
                     $errors['preview_err'] = $uploadResult['message'];
                 }
@@ -444,6 +469,13 @@ class Products extends Controller
                         }
                     }
                     $document_url = $uploadResult['path'];
+                    $docExt = strtolower(pathinfo($document_url, PATHINFO_EXTENSION));
+                    if ($docExt === 'pdf') {
+                        $store_id = (int)$product->store_id;
+                        $store = $this->storeModel->findById($store_id);
+                        $storeName = $store ? $store->name : 'Creono';
+                        WatermarkService::processUpload('../public' . $document_url, $storeName);
+                    }
                 } else {
                     $errors['document_err'] = $uploadResult['message'];
                 }
@@ -463,20 +495,19 @@ class Products extends Controller
                     if (!empty($document_url)) {
                         $documentModel = $this->model('Document');
                         $documentData = [
-                            'product_id' => $productId,
-                            'file_url'   => $document_url,
-                            'ai_score'   => null,
+                            'product_id'  => $productId,
+                            'file_url'    => $document_url,
+                            'ai_score'    => null,
                             'ai_label_id' => null
                         ];
                         $documentModel->create($documentData);
 
-                        // ==== GIẢ LẬP AI LABEL ====
-                        $docId = $documentModel->getLastInsertId();
-                        $aiScore = mt_rand(10, 90) / 10; // 1.0 – 9.0
-                        $aiLabelId = $aiScore > 5 ? 2 : 1; // 1: Human Written, 2: AI Generated
+                        // UC25: Tái quét AI khi người bán cập nhật mô tả/tiêu đề
+                        $aiResult = AiDetectionService::detect((string)($description ?? ''), (string)($title ?? ''));
+                        $docId    = $documentModel->getLastInsertId();
                         $documentModel->update($docId, [
-                            'ai_score' => $aiScore,
-                            'ai_label_id' => $aiLabelId
+                            'ai_score'    => $aiResult['ai_score'],
+                            'ai_label_id' => $aiResult['ai_label_id']
                         ]);
                     }
                     setFlash('success', 'Cập nhật sản phẩm thành công!');

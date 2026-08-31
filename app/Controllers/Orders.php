@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once '../app/Middleware/AuthMiddleware.php';
 require_once '../app/Helpers/csrf_helper.php';
 require_once '../app/Helpers/flash_helper.php';
+require_once '../app/Services/RefundService.php';
 
 class Orders extends Controller
 {
@@ -217,5 +218,56 @@ class Orders extends Controller
         ];
 
         $this->view('orders/my_purchases', $data);
+    }
+
+    /**
+     * Yêu cầu hoàn tiền cho đơn hàng (UC32)
+     * URL: /orders/refund/{orderId}
+     *
+     * @param int|null $orderId
+     * @return void
+     */
+    public function refund(?int $orderId = null): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$orderId) {
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        // Kiểm tra CSRF
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            die('CSRF token validation failed');
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $userRole = (int)($_SESSION['user_role'] ?? 1);
+        $order = $this->orderModel->getOrderById($orderId);
+
+        if (!$order) {
+            setFlash('error', 'Không tìm thấy đơn hàng cần hoàn tiền.');
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        // Kiểm tra quyền: Người mua hoặc Admin
+        if ((int)$order->user_id !== $userId && $userRole !== 3) {
+            setFlash('error', 'Bạn không có quyền yêu cầu hoàn tiền cho đơn hàng này.');
+            header('location: ' . URLROOT . '/wallets/index');
+            exit();
+        }
+
+        $reason = trim((string)($_POST['reason'] ?? 'Người mua yêu cầu hoàn tiền'));
+        $isAdmin = ($userRole === 3);
+
+        $result = RefundService::processRefund($orderId, $reason, $isAdmin);
+
+        if ($result['success']) {
+            setFlash('success', $result['message']);
+        } else {
+            setFlash('error', $result['message']);
+        }
+
+        header('location: ' . URLROOT . '/wallets/index');
+        exit();
     }
 }
