@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
+                    FlashModule.show(data.message, 'success');
                 }
 
                 if (data.count === 0) {
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.success) {
                 if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
+                    FlashModule.show(data.message, 'success');
                 } else {
                     alert(data.message);
                 }

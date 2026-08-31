@@ -4,6 +4,13 @@
 const ProductDetailModule = (function() {
     'use strict';
 
+    function getBaseUrl() {
+        if (typeof window.CREONO !== 'undefined' && window.CREONO.URLROOT) {
+            return window.CREONO.URLROOT;
+        }
+        return window.APP_URL || '';
+    }
+
     function init() {
         initStarRating();
         initReviewForm();
@@ -23,7 +30,7 @@ const ProductDetailModule = (function() {
             4: '4 sao - Tốt', 5: '5 sao - Rất tốt'
         };
 
-        if (starPicker) {
+        if (starPicker && ratingInput) {
             const stars = starPicker.querySelectorAll('.star-item');
 
             stars.forEach(function(star) {
@@ -62,14 +69,25 @@ const ProductDetailModule = (function() {
     function initReviewForm() {
         const reviewForm = document.getElementById('reviewForm');
         if (reviewForm) {
+            if (reviewForm.dataset.reviewInitialized === 'true') {
+                return;
+            }
+            reviewForm.dataset.reviewInitialized = 'true';
+
             reviewForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
+                const submitBtn = document.getElementById('btnSubmitReview');
+                if (submitBtn && submitBtn.disabled) {
+                    return;
+                }
+
                 const ratingInput = document.getElementById('ratingInput');
                 const ratingErr = document.getElementById('rating_err');
-                const commentVal = document.getElementById('reviewComment').value.trim();
+                const commentInput = document.getElementById('reviewComment');
+                const commentVal = commentInput ? commentInput.value.trim() : '';
                 const commentErr = document.getElementById('comment_err');
-                const selectedRating = parseInt(ratingInput.value) || 0;
+                const selectedRating = ratingInput ? (parseInt(ratingInput.value) || 0) : 0;
                 let hasErr = false;
 
                 if (ratingErr) ratingErr.textContent = '';
@@ -87,12 +105,14 @@ const ProductDetailModule = (function() {
 
                 if (hasErr) return;
 
-                const submitBtn = document.getElementById('btnSubmitReview');
-                const originalText = submitBtn.textContent;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Đang gửi...';
+                const originalText = submitBtn ? submitBtn.textContent : 'Gửi đánh giá';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Đang gửi...';
+                }
 
                 const formData = new FormData(reviewForm);
+                const baseUrl = getBaseUrl();
 
                 fetch(reviewForm.action, {
                     method: 'POST',
@@ -101,30 +121,45 @@ const ProductDetailModule = (function() {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                    }
 
                     if (data.success) {
-                        if (typeof FlashModule !== 'undefined') FlashModule.show('success', data.message);
-                        else alert(data.message);
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message || 'Đánh giá đã được gửi thành công!', 'success');
+                        } else {
+                            alert(data.message || 'Đánh giá đã được gửi thành công!');
+                        }
 
-                        reviewForm.parentElement.innerHTML = '<div class="review-notice notice-success">✅ Bạn đã gửi đánh giá cho sản phẩm này. Cảm ơn phản hồi của bạn!</div>';
+                        if (reviewForm.parentElement) {
+                            reviewForm.parentElement.innerHTML = '<div class="reviewed-notice" style="padding: 16px 20px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 14px; color: #0050b3; font-size: 14px;">✅ Bạn đã gửi đánh giá cho sản phẩm này. Cảm ơn phản hồi của bạn!</div>';
+                        }
 
                         if (data.review) appendNewReviewToDOM(data.review, selectedRating);
                         if (data.rating_stats) updateRatingStatsUI(data.rating_stats);
                     } else {
                         if (data.require_login) {
-                            window.location.href = window.APP_URL + '/users/login';
+                            window.location.href = baseUrl + '/users/login';
                             return;
                         }
-                        if (typeof FlashModule !== 'undefined') FlashModule.show('error', data.message);
-                        else alert(data.message);
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message || 'Đã xảy ra lỗi khi gửi đánh giá.', 'error');
+                        } else {
+                            alert(data.message || 'Đã xảy ra lỗi khi gửi đánh giá.');
+                        }
                     }
                 })
                 .catch(err => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                    }
                     console.error('Error submitting review:', err);
+                    if (typeof FlashModule !== 'undefined') {
+                        FlashModule.show('Lỗi kết nối server khi gửi đánh giá. Vui lòng thử lại.', 'error');
+                    }
                 });
             });
         }
@@ -151,14 +186,18 @@ const ProductDetailModule = (function() {
                 e.preventDefault();
                 const form = e.target;
                 const commentInput = form.querySelector('textarea[name="comment"]');
-                if (!commentInput.value.trim()) {
+                if (!commentInput || !commentInput.value.trim()) {
                     alert('Vui lòng nhập nội dung phản hồi');
                     return;
                 }
 
                 const submitBtn = form.querySelector('.btn-submit-reply');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Đang gửi...';
+                if (submitBtn && submitBtn.disabled) return;
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Đang gửi...';
+                }
 
                 const formData = new FormData(form);
 
@@ -169,23 +208,34 @@ const ProductDetailModule = (function() {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Gửi trả lời';
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Gửi trả lời';
+                    }
 
                     if (data.success) {
-                        if (typeof FlashModule !== 'undefined') FlashModule.show('success', data.message);
-                        commentInput.value = '';
-                        const parentId = form.querySelector('input[name="parent_id"]').value;
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message || 'Phản hồi đã được gửi!', 'success');
+                        }
+                        if (commentInput) commentInput.value = '';
+                        const parentIdInput = form.querySelector('input[name="parent_id"]');
+                        const parentId = parentIdInput ? parentIdInput.value : '';
                         const replyBox = document.getElementById('reply-form-' + parentId);
                         if (replyBox) replyBox.style.display = 'none';
-                        if (data.reply) appendReplyToDOM(parentId, data.reply);
+                        if (data.reply && parentId) appendReplyToDOM(parentId, data.reply);
                     } else {
-                        alert(data.message);
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message || 'Có lỗi xảy ra', 'error');
+                        } else {
+                            alert(data.message);
+                        }
                     }
                 })
                 .catch(err => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Gửi trả lời';
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Gửi trả lời';
+                    }
                     console.error('Reply error:', err);
                 });
             }
@@ -200,12 +250,14 @@ const ProductDetailModule = (function() {
                 const productId = this.getAttribute('data-product-id');
                 const originalHtml = this.innerHTML;
                 this.disabled = true;
-                this.querySelector('span').textContent = 'Đang thêm...';
+                const textSpan = this.querySelector('span');
+                if (textSpan) textSpan.textContent = 'Đang thêm...';
 
                 const formData = new FormData();
                 formData.append('product_id', productId);
+                const baseUrl = getBaseUrl();
 
-                fetch(window.APP_URL + '/carts/add', {
+                fetch(baseUrl + '/carts/add', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -214,14 +266,21 @@ const ProductDetailModule = (function() {
                 .then(data => {
                     this.disabled = false;
                     if (data.success) {
-                        this.querySelector('span').textContent = '✓ Đã có trong giỏ';
-                        if (typeof FlashModule !== 'undefined') FlashModule.show('success', data.message);
-                        else alert(data.message);
+                        if (textSpan) textSpan.textContent = '✓ Đã có trong giỏ';
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message || 'Đã thêm sản phẩm vào giỏ hàng!', 'success');
+                        } else {
+                            alert(data.message);
+                        }
                         const badges = document.querySelectorAll('#nav-cart-badge');
                         badges.forEach(b => { b.textContent = data.cart_count; b.style.display = 'flex'; });
                     } else {
                         this.innerHTML = originalHtml;
-                        alert(data.message);
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message || 'Có lỗi xảy ra', 'error');
+                        } else {
+                            alert(data.message);
+                        }
                     }
                 })
                 .catch(err => {
@@ -242,8 +301,9 @@ const ProductDetailModule = (function() {
 
                 const formData = new FormData();
                 formData.append('product_id', productId);
+                const baseUrl = getBaseUrl();
 
-                fetch(window.APP_URL + '/favorites/toggle', {
+                fetch(baseUrl + '/favorites/toggle', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -261,10 +321,16 @@ const ProductDetailModule = (function() {
                             if (favIcon) { favIcon.setAttribute('fill', 'none'); favIcon.setAttribute('stroke', 'currentColor'); }
                             if (favText) favText.textContent = 'Yêu thích';
                         }
-                        if (typeof FlashModule !== 'undefined') FlashModule.show('success', data.message);
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message, 'success');
+                        }
                     } else {
-                        if (data.require_login) { window.location.href = window.APP_URL + '/users/login'; return; }
-                        alert(data.message);
+                        if (data.require_login) { window.location.href = baseUrl + '/users/login'; return; }
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show(data.message, 'error');
+                        } else {
+                            alert(data.message);
+                        }
                     }
                 })
                 .catch(err => {
@@ -287,32 +353,39 @@ const ProductDetailModule = (function() {
         const initial = reviewData.user_name ? reviewData.user_name.charAt(0).toUpperCase() : 'U';
 
         const reviewCardHtml = `
-        <div class="review-item-card">
-            <div class="review-item-header">
-                <div class="review-user-group">
-                    <div class="seller-avatar-circle" style="width: 40px; height: 40px; font-size: 16px;">${initial}</div>
+        <div class="review-item-card" style="background: #ffffff; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.02); animation: fadeIn 0.4s ease;">
+            <div class="review-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div class="review-user-info" style="display: flex; align-items: center; gap: 12px;">
+                    <div class="user-avatar-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #0071e3; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">${initial}</div>
                     <div>
-                        <div class="review-user-name">${escapeHtml(reviewData.user_name)}</div>
-                        <div class="review-time">Vừa xong</div>
+                        <div style="font-weight: 600; font-size: 15px; color: #1d1d1f;">${escapeHtml(reviewData.user_name)}</div>
+                        <div style="font-size: 12px; color: #86868b;">Vừa xong</div>
                     </div>
                 </div>
-                <div class="review-stars">${starsHtml}</div>
+                <div class="review-stars" style="color: #ffb800; font-size: 16px;">${starsHtml}</div>
             </div>
-            <div class="review-body">${escapeHtml(reviewData.comment).replace(/\n/g, '<br>')}</div>
+            <div class="review-comment-body" style="font-size: 15px; color: #333; line-height: 1.6; margin-bottom: 16px;">${escapeHtml(reviewData.comment).replace(/\n/g, '<br>')}</div>
         </div>`;
         reviewsList.insertAdjacentHTML('afterbegin', reviewCardHtml);
+
+        const badge = document.getElementById('reviews-total-badge');
+        if (badge) {
+            const countMatch = badge.textContent.match(/\d+/);
+            const currentCount = countMatch ? parseInt(countMatch[0]) : 0;
+            badge.textContent = `(${currentCount + 1})`;
+        }
     }
 
     function appendReplyToDOM(parentId, replyData) {
         const repliesContainer = document.getElementById('replies-container-' + parentId);
         if (!repliesContainer) return;
         const replyHtml = `
-        <div class="reply-item">
-            <div class="reply-item-header">
-                <span class="reply-user-name">${escapeHtml(replyData.user_name)}</span>
-                <span class="reply-time">Vừa xong</span>
+        <div class="reply-item" style="margin-left: 36px; padding: 12px 16px; background: #f9f9fb; border-left: 3px solid var(--apple-blue, #0071e3); border-radius: 0 12px 12px 0; animation: fadeIn 0.3s ease;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-weight: 600; font-size: 14px; color: #1d1d1f;">${escapeHtml(replyData.user_name)}</span>
+                <span style="font-size: 11px; color: #86868b;">Vừa xong</span>
             </div>
-            <div class="reply-body">${escapeHtml(replyData.comment).replace(/\n/g, '<br>')}</div>
+            <div style="font-size: 14px; color: #444; line-height: 1.5;">${escapeHtml(replyData.comment).replace(/\n/g, '<br>')}</div>
         </div>`;
         repliesContainer.insertAdjacentHTML('beforeend', replyHtml);
     }
