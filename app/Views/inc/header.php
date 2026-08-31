@@ -7,62 +7,65 @@
 <!DOCTYPE html>
 <html lang="vi">
 <!-- Dán đoạn này ngay trước thẻ </head> -->
-    <style>
-        /* ============================================
+<style>
+    /* ============================================
            1. GIAO DIỆN DESKTOP (Màn hình lớn hơn 735px)
            ============================================ */
-        @media screen and (min-width: 736px) {
-            /* Ẩn chữ */
-            .nav-cart-link .cart-text-mobile,
-            .nav-fav-link .fav-text-mobile {
-                display: none !important;
-            }
-            
-            /* Hiện icon */
-            .nav-cart-link .cart-icon-desktop,
-            .nav-fav-link .fav-icon-desktop {
-                display: block !important;
-            }
+    @media screen and (min-width: 736px) {
+
+        /* Ẩn chữ */
+        .nav-cart-link .cart-text-mobile,
+        .nav-fav-link .fav-text-mobile {
+            display: none !important;
         }
 
-        /* ============================================
+        /* Hiện icon */
+        .nav-cart-link .cart-icon-desktop,
+        .nav-fav-link .fav-icon-desktop {
+            display: block !important;
+        }
+    }
+
+    /* ============================================
            2. GIAO DIỆN MOBILE (Màn hình từ 735px trở xuống)
            ============================================ */
-        @media screen and (max-width: 735px) {
-            /* Ẩn icon */
-            .nav-cart-link .cart-icon-desktop,
-            .nav-fav-link .fav-icon-desktop {
-                display: none !important;
-            }
-            
-            /* Hiện chữ */
-            .nav-cart-link .cart-text-mobile,
-            .nav-fav-link .fav-text-mobile {
-                display: inline-block !important;
-                font-size: 16px;
-                font-weight: 400;
-                color: var(--apple-gray);
-            }
+    @media screen and (max-width: 735px) {
 
-            /* Chỉnh lại form nút cho Mobile */
-            .nav-cart-link, 
-            .nav-fav-link {
-                padding: 10px 22px !important;
-                gap: 8px !important;
-                width: 100% !important;
-                justify-content: flex-start !important;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-            }
-
-            /* Fix vị trí badge số lượng trên Mobile */
-            .nav-cart-link #nav-cart-badge {
-                margin-left: auto !important;
-                position: relative !important;
-                top: auto !important;
-                right: auto !important;
-            }
+        /* Ẩn icon */
+        .nav-cart-link .cart-icon-desktop,
+        .nav-fav-link .fav-icon-desktop {
+            display: none !important;
         }
-    </style>
+
+        /* Hiện chữ */
+        .nav-cart-link .cart-text-mobile,
+        .nav-fav-link .fav-text-mobile {
+            display: inline-block !important;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--apple-gray);
+        }
+
+        /* Chỉnh lại form nút cho Mobile */
+        .nav-cart-link,
+        .nav-fav-link {
+            padding: 10px 22px !important;
+            gap: 8px !important;
+            width: 100% !important;
+            justify-content: flex-start !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        /* Fix vị trí badge số lượng trên Mobile */
+        .nav-cart-link #nav-cart-badge {
+            margin-left: auto !important;
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+        }
+    }
+</style>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -185,6 +188,7 @@
                         <ul class="dropdown-menu" role="menu">
                             <li role="none"><a href="<?php echo URLROOT; ?>/users/profile" role="menuitem">Hồ sơ</a></li>
                             <li role="none"><a href="<?php echo URLROOT; ?>/wallets/index" role="menuitem">Ví điện tử</a></li>
+                            <li role="none"><a href="<?php echo URLROOT; ?>/orders/myPurchases" role="menuitem">Kho tài liệu của tôi</a></li>
                             <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 2) : ?>
                                 <li role="none"><a href="<?php echo URLROOT; ?>/seller/dashboard" role="menuitem">Dashboard người bán</a></li>
                             <?php endif; ?>
