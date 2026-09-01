@@ -208,7 +208,7 @@
                     </div>
                 <?php else : ?>
                     <!-- Interactive Star Rating Form -->
-                    <form id="reviewForm" action="<?php echo URLROOT; ?>/reviews/store" method="POST" data-ajax="true" style="background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 20px; padding: 28px; transition: border-color 0.2s;">
+                    <form id="reviewForm" action="<?php echo URLROOT; ?>/reviews/store" method="POST" style="background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 20px; padding: 28px; transition: border-color 0.2s;">
                         <input type="hidden" name="csrf_token" value="<?php echo $data['csrf_token']; ?>">
                         <input type="hidden" name="product_id" value="<?php echo $data['product']->id; ?>">
                         <input type="hidden" name="rating" id="ratingInput" value="0">
@@ -547,10 +547,9 @@
     }
 </style>
 
-<?php require APPROOT . '/Views/inc/footer.php'; ?>
 <script>
     window.APP_URL = '<?php echo URLROOT; ?>';
 </script>
-<script src="<?php echo URLROOT; ?>/js/modules/product-detail.js"></script>
+<script src="<?php echo URLROOT; ?>/js/modules/product-detail.js?v=<?php echo time(); ?>"></script>
 
 <?php require APPROOT . '/Views/inc/footer.php'; ?>

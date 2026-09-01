@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.title = 'Yêu thích';
                 }
                 if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
+                    FlashModule.show(data.message, 'success');
                 }
             } else {
                 if (data.require_login) {
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
+                    FlashModule.show(data.message, 'success');
                 }
             } else {
                 alert(data.message);

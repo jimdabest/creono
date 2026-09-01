@@ -20,6 +20,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role TINYINT DEFAULT 1 COMMENT '1:Buyer, 2:Seller, 3:Admin, 4:Censor',
+    is_locked TINYINT DEFAULT 0 COMMENT '0:Active, 1:Locked',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -316,6 +317,8 @@ CREATE INDEX idx_pwd_reset_token ON password_reset_tokens(token);
 CREATE INDEX idx_reports_target ON reports(target_type, target_id);
 CREATE INDEX idx_reviews_product_rating ON reviews(product_id, rating);
 CREATE INDEX idx_order_product ON orders(product_id);
+CREATE INDEX idx_products_status_created ON products(status, created_at DESC);
+CREATE INDEX idx_products_store_status ON products(store_id, status);
 
 -- ==========================================
 -- PHẦN 3: TRIGGERS (TỰ ĐỘNG HÓA)
