@@ -1,5 +1,5 @@
 -- ==============================================================================
--- HỆ THỐNG CREONO - DATABASE FULL SCRIPT (BẢN CHUẨN FINAL)
+-- HỆ THỐNG CREONO - DATABASE FULL SCRIPT
 -- ==============================================================================
 
 SET NAMES utf8mb4;
@@ -299,6 +299,15 @@ CREATE TABLE product_approvals (
     CONSTRAINT fk_approval_censor FOREIGN KEY (censor_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- BẢNG CẤU HÌNH HỆ THỐNG
+CREATE TABLE settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(50) UNIQUE NOT NULL,
+    setting_value VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================
 -- PHẦN 2: CHỈ MỤC (INDEXES TỐI ƯU HÓA)
 -- ==========================================
@@ -543,5 +552,9 @@ INSERT INTO downloads (id, user_id, product_id, ip_address, downloaded_at) VALUE
 
 INSERT INTO withdraw_requests (id, wallet_id, amount, bank_name, bank_account_number, bank_account_name, status, admin_note, processed_by, created_at, updated_at) VALUES
 (1, 2, 2000000.0000, 'Vietcombank', '0123456789', 'SELLER ONE', 1, NULL, NULL, '2026-08-01 14:03:22', '2026-08-01 14:03:22');
+
+-- THÊM DỮ LIỆU CẤU HÌNH MẶC ĐỊNH
+INSERT INTO settings (setting_key, setting_value, description) VALUES
+('commission_rate', '5', 'Tỷ lệ phí nền tảng (%)');
 
 SET FOREIGN_KEY_CHECKS = 1;
