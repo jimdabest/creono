@@ -40,7 +40,7 @@ class Reports extends Controller
     }
 
     /**
-     * Hiển thị form báo cáo (GET)
+     * Hiển thị form báo cáo chung (GET) - Backward compatible
      * URL: /reports/create?target_type=PRODUCT&target_id=123
      */
     public function create(): void
@@ -84,8 +84,93 @@ class Reports extends Controller
     }
 
     /**
+     * UC37: Hiển thị form Khiếu nại (GET)
+     * URL: /reports/complaint?target_type=PRODUCT&target_id=123
+     */
+    public function complaint(): void
+    {
+        $targetType = isset($_GET['target_type']) ? strtoupper(trim($_GET['target_type'])) : '';
+        $targetId   = isset($_GET['target_id']) ? (int)$_GET['target_id'] : 0;
+
+        $allowedTypes = ['PRODUCT', 'STORE', 'USER', 'REVIEW'];
+        if (!in_array($targetType, $allowedTypes) || $targetId <= 0) {
+            setFlash('error', 'Đường dẫn khiếu nại không hợp lệ.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
+        }
+
+        $targetInfo = $this->getTargetInfo($targetType, $targetId);
+
+        if (!$targetInfo) {
+            setFlash('error', 'Đối tượng bạn muốn khiếu nại không tồn tại.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
+        }
+
+        if (isset($targetInfo->user_id) && (int)$targetInfo->user_id === (int)$_SESSION['user_id']) {
+            setFlash('error', 'Bạn không thể khiếu nại chính mình.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
+        }
+
+        $data = [
+            'title'       => 'Khiếu nại - Creono',
+            'target_type' => $targetType,
+            'target_id'   => $targetId,
+            'target_info' => $targetInfo,
+            'report_type' => 'COMPLAINT',
+            'csrf_token'  => generateCsrfToken()
+        ];
+
+        $this->view('reports/complaint', $data);
+    }
+
+    /**
+     * UC38: Hiển thị form Tố cáo đạo nhái (GET)
+     * URL: /reports/plagiarism?target_type=PRODUCT&target_id=123
+     */
+    public function plagiarism(): void
+    {
+        $targetType = isset($_GET['target_type']) ? strtoupper(trim($_GET['target_type'])) : '';
+        $targetId   = isset($_GET['target_id']) ? (int)$_GET['target_id'] : 0;
+
+        $allowedTypes = ['PRODUCT', 'STORE', 'USER', 'REVIEW'];
+        if (!in_array($targetType, $allowedTypes) || $targetId <= 0) {
+            setFlash('error', 'Đường dẫn tố cáo không hợp lệ.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
+        }
+
+        $targetInfo = $this->getTargetInfo($targetType, $targetId);
+
+        if (!$targetInfo) {
+            setFlash('error', 'Đối tượng bạn muốn tố cáo không tồn tại.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
+        }
+
+        if (isset($targetInfo->user_id) && (int)$targetInfo->user_id === (int)$_SESSION['user_id']) {
+            setFlash('error', 'Bạn không thể tố cáo chính mình.');
+            header('location: ' . URLROOT . '/products/index');
+            exit();
+        }
+
+        $data = [
+            'title'       => 'Tố cáo đạo nhái - Creono',
+            'target_type' => $targetType,
+            'target_id'   => $targetId,
+            'target_info' => $targetInfo,
+            'report_type' => 'PLAGIARISM',
+            'csrf_token'  => generateCsrfToken()
+        ];
+
+        $this->view('reports/plagiarism', $data);
+    }
+
+    /**
      * Xử lý gửi báo cáo (POST) – AJAX
      * URL: /reports/store
+     * Hỗ trợ cả form cũ (create) và form mới (complaint, plagiarism)
      */
     public function store(): void
     {
@@ -102,10 +187,11 @@ class Reports extends Controller
         // Lọc dữ liệu đầu vào
         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
-        $targetType = isset($_POST['target_type']) ? strtoupper(trim($_POST['target_type'])) : '';
-        $targetId   = isset($_POST['target_id']) ? (int)$_POST['target_id'] : 0;
-        $reason     = isset($_POST['reason']) ? trim($_POST['reason']) : '';
-        $details    = isset($_POST['details']) ? trim($_POST['details']) : '';
+        $targetType  = isset($_POST['target_type']) ? strtoupper(trim($_POST['target_type'])) : '';
+        $targetId    = isset($_POST['target_id']) ? (int)$_POST['target_id'] : 0;
+        $reason      = isset($_POST['reason']) ? trim($_POST['reason']) : '';
+        $details     = isset($_POST['details']) ? trim($_POST['details']) : '';
+        $reportType  = isset($_POST['report_type']) ? strtoupper(trim($_POST['report_type'])) : 'COMPLAINT';
 
         // Validate
         $errors = [];
@@ -115,8 +201,14 @@ class Reports extends Controller
             $errors['target_err'] = 'Đối tượng báo cáo không hợp lệ.';
         }
 
+        // Validate report_type
+        $allowedReportTypes = ['COMPLAINT', 'PLAGIARISM'];
+        if (!in_array($reportType, $allowedReportTypes)) {
+            $reportType = 'COMPLAINT'; // Fallback mặc định
+        }
+
         if (empty($reason)) {
-            $errors['reason_err'] = 'Vui lòng chọn lý do báo cáo.';
+            $errors['reason_err'] = 'Vui lòng chọn lý do.';
         }
 
         // Nếu target hợp lệ, kiểm tra tồn tại
@@ -133,10 +225,12 @@ class Reports extends Controller
         }
 
         if (empty($details)) {
-            $errors['details_err'] = 'Vui lòng nhập chi tiết báo cáo.';
+            $errors['details_err'] = 'Vui lòng nhập chi tiết.';
         } elseif (mb_strlen($details) > 1000) {
             $errors['details_err'] = 'Chi tiết không được vượt quá 1000 ký tự.';
         }
+
+
 
         if (!empty($errors)) {
             $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
@@ -144,18 +238,23 @@ class Reports extends Controller
 
         // Lưu báo cáo vào DB (status mặc định = 1: Pending)
         $reportData = [
-            'reporter_id' => (int)$_SESSION['user_id'],
-            'target_type' => $targetType,
-            'target_id'   => $targetId,
-            'reason'      => htmlspecialchars($reason, ENT_QUOTES, 'UTF-8'),
-            'details'     => htmlspecialchars($details, ENT_QUOTES, 'UTF-8'),
-            'status'      => 1 // Pending
+            'reporter_id'  => (int)$_SESSION['user_id'],
+            'report_type'  => $reportType,
+            'target_type'  => $targetType,
+            'target_id'    => $targetId,
+            'reason'       => htmlspecialchars($reason, ENT_QUOTES, 'UTF-8'),
+            'details'      => htmlspecialchars($details, ENT_QUOTES, 'UTF-8'),
+            'status'       => 1 // Pending
         ];
 
+        $successMessage = $reportType === 'PLAGIARISM'
+            ? 'Tố cáo đạo nhái của bạn đã được gửi thành công! Chúng tôi sẽ xem xét và xử lý.'
+            : 'Khiếu nại của bạn đã được gửi thành công! Chúng tôi sẽ xem xét và xử lý.';
+
         if ($this->reportModel->create($reportData)) {
-            $this->jsonResponse(true, 'Báo cáo của bạn đã được gửi thành công! Chúng tôi sẽ xem xét và xử lý.');
+            $this->jsonResponse(true, $successMessage);
         } else {
-            $this->jsonResponse(false, 'Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại.');
+            $this->jsonResponse(false, 'Đã xảy ra lỗi khi gửi. Vui lòng thử lại.');
         }
     }
 

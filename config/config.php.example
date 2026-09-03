@@ -30,3 +30,11 @@ if (APP_ENV === 'development') {
     ini_set('display_errors', 0);
 }
 ?>
+
+TransportFactory::setConfig('mailtrap', [
+  'host' => 'sandbox.smtp.mailtrap.io',
+  'port' => 2525,
+  'username' => '1880fecbd1097d',
+  'password' => 'b898e4ebeb33b6',
+  'className' => 'Smtp'
+]);
