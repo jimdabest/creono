@@ -203,14 +203,14 @@ class Users extends Controller
         $_SESSION['user_name'] = $user->name;
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_role'] = $user->role;
-        
+
         // Merge guest cart vào giỏ hàng của user
         $this->mergeGuestCart($user->id);
 
         $path = $this->getRedirectPath($user->role);
         $fullPath = URLROOT . $path;
 
-        if ($this->isAjaxRequest() || $_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($this->isAjaxRequest()) {
             $this->jsonResponse(true, $message, [
                 'redirect' => $fullPath
             ]);

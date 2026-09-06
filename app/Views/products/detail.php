@@ -1,4 +1,6 @@
-<?php /** @var array $data */ ?>
+<?php
+
+/** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container page-container" style="margin-top: 40px; margin-bottom: 80px;">
@@ -89,7 +91,7 @@
             </div>
 
             <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
-                
+
                 <?php if (!empty($data['has_purchased']) || !empty($data['is_seller'])) : ?>
                     <!-- NẾU ĐÃ MUA HOẶC LÀ NGƯỜI BÁN -> HIỆN NÚT TẢI XUỐNG -->
                     <a href="<?= URLROOT; ?>/downloads/file/<?= $data['product']->id; ?>"
@@ -113,23 +115,43 @@
 
                     <!-- Add to Cart (UC18) -->
                     <button type="button" id="btnAddToCart" class="btn btn-primary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: var(--apple-blue, #0071e3); border: none; color: #fff; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="21" r="1" />
+                            <circle cx="20" cy="21" r="1" />
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                        </svg>
                         <span><?php echo (!empty($data['in_cart'])) ? '✓ Đã có trong giỏ' : 'Thêm vào giỏ hàng'; ?></span>
                     </button>
                 <?php endif; ?>
 
                 <!-- Toggle Favorite (UC17) -->
                 <button type="button" id="btnToggleFavorite" class="btn btn-secondary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: #f5f5f7; border: 1px solid rgba(0,0,0,0.08); color: <?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : '#1d1d1f'; ?>; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <svg class="fav-icon" width="20" height="20" viewBox="0 0 24 24" fill="<?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : 'none'; ?>" stroke="<?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : 'currentColor'; ?>" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <svg class="fav-icon" width="20" height="20" viewBox="0 0 24 24" fill="<?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : 'none'; ?>" stroke="<?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : 'currentColor'; ?>" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
                     <span id="favText"><?php echo (!empty($data['is_favorited'])) ? 'Đã yêu thích' : 'Yêu thích'; ?></span>
                 </button>
-
                 <!-- View Cart Link -->
                 <a href="<?php echo URLROOT; ?>/carts/index" class="btn-view-cart-link" style="display: block; text-align: center; font-size: 14px; color: var(--apple-blue, #0071e3); text-decoration: none; padding: 4px 0;">
                     Xem giỏ hàng →
                 </a>
+                <!-- Nút Báo cáo / Khiếu nại sản phẩm -->
+                <?php if (empty($data['is_seller'])) : ?>
+                    <div style="margin-top: 8px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,0.08); display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 13px;">
+                        <a href="<?php echo URLROOT; ?>/reports/create?target_type=PRODUCT&target_id=<?php echo $data['product']->id; ?>"
+                            style="color: var(--apple-gray, #86868b); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
+                            title="Báo cáo vi phạm chung">
+                            Báo cáo
+                        </a>
+                        <span style="color: #d2d2d7;">•</span>
+                        <a href="<?php echo URLROOT; ?>/reports/plagiarism?target_type=PRODUCT&target_id=<?php echo $data['product']->id; ?>"
+                            style="color: var(--apple-red, #ff3b30); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
+                            title="Tố cáo tài liệu này sao chép / đạo nhái">
+                            Tố cáo đạo nhái
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
-
             <div class="seller-info-mini" style="padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px;">
                 <div class="seller-avatar" style="width: 44px; height: 44px; border-radius: 50%; background: #0071e3; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px;">
                     <?php echo mb_substr($data['product']->seller_name ?? 'S', 0, 1); ?>
@@ -514,6 +536,7 @@
         .rating-bar-row span:first-child {
             width: 40px !important;
         }
+
         .rating-bar-row span:last-child {
             width: 30px !important;
         }
