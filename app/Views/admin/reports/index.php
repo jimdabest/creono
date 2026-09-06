@@ -37,6 +37,7 @@
                     <thead>
                         <tr>
                             <th style="width: 50px;">ID</th>
+                            <th>Phân loại</th>
                             <th>Người báo cáo</th>
                             <th>Loại & Đối tượng</th>
                             <th>Lý do vi phạm</th>
@@ -51,6 +52,16 @@
                             <?php foreach ($data['reports'] as $rep) : ?>
                                 <tr>
                                     <td><span class="text-muted">#<?php echo $rep->id; ?></span></td>
+                                    <td>
+                                        <?php
+                                            $rt = $rep->report_type ?? 'COMPLAINT';
+                                            if ($rt === 'PLAGIARISM') {
+                                                echo '<span class="badge badge-danger">🚨 Tố cáo đạo nhái</span>';
+                                            } else {
+                                                echo '<span class="badge badge-warning">📋 Khiếu nại</span>';
+                                            }
+                                        ?>
+                                    </td>
                                     <td>
                                         <strong class="font-medium text-dark"><?php echo htmlspecialchars($rep->reporter_name); ?></strong><br>
                                         <span class="font-sm text-muted"><?php echo htmlspecialchars($rep->reporter_email); ?></span>
@@ -101,7 +112,7 @@
                             <?php endforeach; ?>
                         <?php else : ?>
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Chưa có báo cáo vi phạm nào!</td>
+                                <td colspan="9" class="text-center text-muted py-4">Chưa có báo cáo vi phạm nào!</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
