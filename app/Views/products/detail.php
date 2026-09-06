@@ -19,9 +19,15 @@
         <!-- Left: Product Showcase & Description -->
         <div class="product-main-card" style="background: var(--apple-card-bg, #fff); border-radius: 24px; padding: 36px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 24px rgba(0,0,0,0.04);">
             <div class="product-header-badge" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <span class="store-badge" style="background: rgba(0, 113, 227, 0.08); color: var(--apple-blue, #0071e3); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px;">
-                    🏪 <?php echo htmlspecialchars($data['product']->store_name); ?>
-                </span>
+                <?php if (!empty($data['product']->store_slug)): ?>
+                    <a href="<?php echo URLROOT; ?>/storefront/<?php echo $data['product']->store_slug; ?>" class="store-badge" style="background: rgba(0, 113, 227, 0.08); color: var(--apple-blue, #0071e3); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px; text-decoration: none;">
+                        🏪 <?php echo htmlspecialchars($data['product']->store_name); ?>
+                    </a>
+                <?php else: ?>
+                    <span class="store-badge" style="background: rgba(0, 113, 227, 0.08); color: var(--apple-blue, #0071e3); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px;">
+                        🏪 <?php echo htmlspecialchars($data['product']->store_name); ?>
+                    </span>
+                <?php endif; ?>
                 <span class="category-tag" style="background: rgba(0,0,0,0.05); font-size: 13px; padding: 6px 14px; border-radius: 20px; color: #666;">
                     📂 <?php echo htmlspecialchars($data['product']->category_name ?? 'Chung'); ?>
                 </span>

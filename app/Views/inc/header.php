@@ -189,12 +189,17 @@
                             <li role="none"><a href="<?php echo URLROOT; ?>/users/profile" role="menuitem">Hồ sơ</a></li>
                             <li role="none"><a href="<?php echo URLROOT; ?>/wallets/index" role="menuitem">Ví điện tử</a></li>
                             <li role="none"><a href="<?php echo URLROOT; ?>/orders/myPurchases" role="menuitem">Kho tài liệu của tôi</a></li>
-                            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 2) : ?>
-                                <li role="none"><a href="<?php echo URLROOT; ?>/seller/dashboard" role="menuitem">Dashboard người bán</a></li>
+
+                            <?php if (isset($_SESSION['user_role'])) : ?>
+                                <?php if ($_SESSION['user_role'] == 1) : ?>
+                                    <li role="none"><a href="<?php echo URLROOT; ?>/stores/create" role="menuitem">Đăng ký bán hàng</a></li>
+                                <?php elseif ($_SESSION['user_role'] == 2) : ?>
+                                    <li role="none"><a href="<?php echo URLROOT; ?>/seller/dashboard" role="menuitem">Dashboard người bán</a></li>
+                                <?php elseif ($_SESSION['user_role'] == 3) : ?>
+                                    <li role="none"><a href="<?php echo URLROOT; ?>/admin/dashboard" role="menuitem">Admin Panel</a></li>
+                                <?php endif; ?>
                             <?php endif; ?>
-                            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 3) : ?>
-                                <li role="none"><a href="<?php echo URLROOT; ?>/admin/dashboard" role="menuitem">Admin Panel</a></li>
-                            <?php endif; ?>
+
                             <li role="none" class="dropdown-divider"></li>
                             <li role="none"><a href="<?php echo URLROOT; ?>/users/logout" role="menuitem" class="logout-link">Đăng xuất</a></li>
                         </ul>

@@ -36,7 +36,13 @@
                                 </a>
                             </h3>
                             <div style="font-size: 13px; color: #86868b; display: flex; gap: 12px; align-items: center;">
-                                <span>🏪 <?php echo htmlspecialchars($item->store_name); ?></span>
+                                <span>🏪 
+                                    <?php if (!empty($item->store_slug)): ?>
+                                        <a href="<?php echo URLROOT; ?>/storefront/<?php echo $item->store_slug; ?>" style="color: inherit; text-decoration: none;"><strong><?php echo htmlspecialchars($item->store_name); ?></strong></a>
+                                    <?php else: ?>
+                                        <strong><?php echo htmlspecialchars($item->store_name); ?></strong>
+                                    <?php endif; ?>
+                                </span>
                                 <?php if ($item->rating > 0) : ?>
                                     <span style="color: #ffb800;">★ <?php echo number_format($item->rating, 1); ?></span>
                                 <?php endif; ?>

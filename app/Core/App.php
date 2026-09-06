@@ -17,8 +17,9 @@ class App {
         $this->currentController = new $this->currentController;
 
         // Kiểm tra method có tồn tại trong Controller không
+        // Ngăn chặn gọi trực tiếp các hàm base như view(), model()
         if (isset($url[1])) {
-            if (method_exists($this->currentController, $url[1])) {
+            if (!in_array(strtolower($url[1]), ['view', 'model']) && method_exists($this->currentController, $url[1])) {
                 $this->currentMethod = $url[1];
                 unset($url[1]);
             }

@@ -170,7 +170,7 @@ class Products extends Controller
             }
 
             if (empty($errors)) {
-                $store_id = $this->getStoreIdByUserId($_SESSION['user_id']);
+                $store_id = $this->getStoreIdByUserId((int)$_SESSION['user_id']);
                 if (!$store_id) {
                     setFlash('error', 'Bạn chưa có cửa hàng. Vui lòng liên hệ Admin.');
                     header('location: ' . URLROOT . '/products/index');
@@ -650,5 +650,57 @@ class Products extends Controller
     {
         $storeModel = $this->model('Store');
         return $storeModel->getStoreIdByUserId($userId);
+    }
+
+    // // Thêm vào class Products
+    // public function manage(): void
+    // {
+    //     RoleMiddleware::check([2]); // Chỉ Seller
+
+    //     $userId = (int)$_SESSION['user_id'];
+    //     $storeId = $this->getStoreIdByUserId($userId);
+    //     if (!$storeId) {
+    //         setFlash('error', 'Bạn chưa có cửa hàng.');
+    //         header('location: ' . URLROOT . '/seller/dashboard');
+    //         exit();
+    //     }
+
+    //     $products = $this->productModel->getProductsByStoreId($storeId);
+
+    //     $data = [
+    //         'title' => 'Quản lý sản phẩm',
+    //         'products' => $products,
+    //         'csrf_token' => generateCsrfToken()
+    //     ];
+    //     $this->view('products/manage', $data);
+    // }
+    public function manage(): void
+    {
+        RoleMiddleware::check([2]); // Chỉ Seller
+
+        $userId = (int)$_SESSION['user_id'];
+        $storeId = $this->getStoreIdByUserId($userId);
+        if (!$storeId) {
+            setFlash('error', 'Bạn chưa có cửa hàng.');
+            header('location: ' . URLROOT . '/seller/dashboard');
+            exit();
+        }
+
+        // Gọi hàm mới với tham số phù hợp
+        $products = $this->productModel->getProductsByStoreId(
+            $storeId,
+            null,
+            0,
+            'p.created_at DESC',
+            '',
+            false
+        );
+
+        $data = [
+            'title' => 'Quản lý sản phẩm',
+            'products' => $products,
+            'csrf_token' => generateCsrfToken()
+        ];
+        $this->view('products/manage', $data);
     }
 }

@@ -9,7 +9,7 @@
                 <h1 class="dashboard-title">Tổng quan cửa hàng</h1>
                 <p class="dashboard-subtitle">Quản lý sản phẩm, theo dõi doanh thu và phát triển kinh doanh của bạn.</p>
             </div>
-            <a href="#" class="btn btn-primary btn-create">
+            <a href="<?php echo URLROOT; ?>/products/create" class="btn btn-primary btn-create">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 5v14M5 12h14"/>
                 </svg>
@@ -52,7 +52,7 @@
                 </div>
                 <div class="stat-info">
                     <span class="stat-label">Đánh giá</span>
-                    <span class="stat-value">⭐ <?php echo number_format($data['avg_rating'] ?? 0, 1); ?></span>
+                    <span class="stat-value"><?php echo number_format($data['avg_rating'] ?? 0, 1); ?></span>
                     <span class="stat-change">(<?php echo $data['total_reviews'] ?? 0; ?> đánh giá)</span>
                 </div>
             </div>
@@ -148,7 +148,7 @@
         <div class="quick-actions">
             <h3>Tiện ích nhanh</h3>
             <div class="action-grid">
-                <a href="#" class="action-card">
+                <a href="<?php echo URLROOT; ?>/products/create" class="action-card">
                     <div class="action-icon" style="background: rgba(0, 113, 227, 0.08);">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--apple-blue)" stroke-width="1.5">
                             <path d="M12 5v14M5 12h14"/>
@@ -156,7 +156,7 @@
                     </div>
                     <span>Đăng sản phẩm mới</span>
                 </a>
-                <a href="#" class="action-card">
+                <a href="<?php echo URLROOT; ?>/products/manage" class="action-card">
                     <div class="action-icon" style="background: rgba(52, 199, 89, 0.08);">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--apple-green)" stroke-width="1.5">
                             <path d="M12 2v4M12 22v-4M4 12H2M6 12H4M20 12h-2M22 12h-2M19.07 4.93l-2.83 2.83M4.93 19.07l2.83-2.83M19.07 19.07l-2.83-2.83M4.93 4.93l2.83 2.83"/>
@@ -164,7 +164,18 @@
                     </div>
                     <span>Quản lý sản phẩm</span>
                 </a>
-                <a href="#" class="action-card">
+                <?php if (!empty($data['store']->slug)): ?>
+                <a href="<?php echo URLROOT; ?>/storefront/<?php echo $data['store']->slug; ?>" class="action-card" target="_blank">
+                    <div class="action-icon" style="background: rgba(0, 113, 227, 0.08); color: var(--apple-blue);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </div>
+                    <span>Xem cửa hàng của tôi</span>
+                </a>
+                <?php endif; ?>
+                <a href="<?php echo URLROOT; ?>/stores/edit" class="action-card">
                     <div class="action-icon" style="background: rgba(255, 149, 0, 0.08);">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--apple-orange)" stroke-width="1.5">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -173,7 +184,7 @@
                     </div>
                     <span>Hồ sơ cửa hàng</span>
                 </a>
-                <a href="#" class="action-card">
+                <a href="<?php echo URLROOT; ?>/seller/stats" class="action-card">
                     <div class="action-icon" style="background: rgba(255, 59, 48, 0.08);">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--apple-red)" stroke-width="1.5">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
