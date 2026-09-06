@@ -16,6 +16,10 @@
 /.settings/
 /*.iml
 
+/__pycache__
+/.pytest_cache
+/repomix.config.js
+/*.py
 # ==========================================
 # 2. LOGS VÀ CACHE
 # ==========================================

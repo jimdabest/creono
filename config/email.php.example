@@ -1,0 +1,11 @@
+<?php
+// config/email.php
+// Cấu hình SMTP để gửi email – cần tùy chỉnh theo nhà cung cấp email của bạn
+
+define('SMTP_HOST', 'sandbox.smtp.mailtrap.io');          // Ví dụ với Gmail
+define('SMTP_PORT', 2525);
+define('SMTP_USERNAME', 'user@example.com'); // Thay bằng email thật
+define('SMTP_PASSWORD', 'password');    // Mật khẩu ứng dụng (nếu dùng Gmail)
+define('SMTP_FROM_EMAIL', 'no-reply@creono.com');
+define('SMTP_FROM_NAME', 'Creono Support');
+define('SMTP_ENCRYPTION', 'tls');                // 'tls' hoặc 'ssl'
