@@ -25,7 +25,12 @@
                             <?php echo htmlspecialchars($item->title); ?>
                         </h3>
                         <div style="font-size: 13px; color: #86868b; margin-bottom: 4px;">
-                            🏪 Tác giả: <strong><?php echo htmlspecialchars($item->store_name); ?></strong>
+                            🏪 Tác giả: 
+                            <?php if (!empty($item->store_slug)): ?>
+                                <a href="<?php echo URLROOT; ?>/storefront/<?php echo $item->store_slug; ?>" style="color: inherit; text-decoration: none;"><strong><?php echo htmlspecialchars($item->store_name); ?></strong></a>
+                            <?php else: ?>
+                                <strong><?php echo htmlspecialchars($item->store_name); ?></strong>
+                            <?php endif; ?>
                         </div>
                         <div style="font-size: 12px; color: #86868b;">
                             📅 Ngày mua: <?php echo date('d/m/Y H:i', strtotime($item->purchased_at)); ?>

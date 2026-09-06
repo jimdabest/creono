@@ -1,4 +1,6 @@
-<?php /** @var array $data */ ?>
+<?php
+
+/** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <div class="container page-container" style="margin-top: 60px;">
@@ -7,16 +9,16 @@
     <!-- ============================== -->
     <div class="market-header text-center" style="margin-bottom: 40px; max-width: 700px; margin-left: auto; margin-right: auto;">
         <h2 style="font-size: 44px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 24px;">Khám phá kho tài liệu.</h2>
-        
+
         <div class="spotlight-search">
             <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
             </svg>
             <input type="text" placeholder="Tìm kiếm mã nguồn, đồ án, template...">
             <button class="btn-search-clear" aria-label="Xóa">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M18 6L6 18M6 6l12 12"/>
+                    <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
             </button>
         </div>
@@ -48,55 +50,80 @@
     <!-- ============================== -->
     <!-- PRODUCT GRID -->
     <!-- ============================== -->
+<!-- ============================== -->
+    <!-- PRODUCT GRID -->
+    <!-- ============================== -->
     <div class="product-grid">
-        <?php if(!empty($data['products'])) : ?>
-            <?php foreach($data['products'] as $product) : ?>
+        <?php if (!empty($data['products'])) : ?>
+            <?php foreach ($data['products'] as $product) : ?>
                 <?php $isFav = isset($data['favorite_ids']) && in_array((int)$product->id, $data['favorite_ids']); ?>
-                <div class="product-card interactive-hover" style="border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; position: relative;">
-                    
+                <div class="product-card interactive-hover" style="border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; position: relative; background: #fff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+
                     <!-- Favorite Heart Button (UC17) -->
-                    <button type="button" class="btn-fav-toggle" data-product-id="<?php echo $product->id; ?>" style="position: absolute; top: 12px; right: 12px; z-index: 10; background: rgba(255,255,255,0.85); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s ease;" title="<?php echo $isFav ? 'Bỏ yêu thích' : 'Yêu thích'; ?>">
-                        <svg class="fav-heart-icon" width="18" height="18" viewBox="0 0 24 24" fill="<?php echo $isFav ? '#ff3b30' : 'none'; ?>" stroke="<?php echo $isFav ? '#ff3b30' : '#666'; ?>" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <button type="button" class="btn-fav-toggle" data-product-id="<?php echo $product->id; ?>" style="position: absolute; top: 12px; right: 12px; z-index: 10; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s ease;" title="<?php echo $isFav ? 'Bỏ yêu thích' : 'Yêu thích'; ?>">
+                        <svg class="fav-heart-icon" width="16" height="16" viewBox="0 0 24 24" fill="<?php echo $isFav ? '#ff3b30' : 'none'; ?>" stroke="<?php echo $isFav ? '#ff3b30' : '#666'; ?>" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
                     </button>
 
                     <!-- Nhấp vào thân thẻ để xem chi tiết sản phẩm -->
                     <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; flex-grow: 1;">
-                        <div class="product-image-wrapper" style="border-radius: 24px 24px 0 0;">
+                        
+                        <!-- FIX 1: Bổ sung position: relative, height 180px, và display: flex để làm mốc định vị -->
+                        <div class="product-image-wrapper" style="position: relative; height: 180px; background: #f5f5f7; display: flex; align-items: center; justify-content: center; border-radius: 24px 24px 0 0; overflow: hidden;">
                             <?php if (!empty($product->preview_url)) : ?>
                                 <img src="<?php echo URLROOT . htmlspecialchars($product->preview_url); ?>" alt="<?php echo htmlspecialchars($product->title); ?>" class="product-thumb-img" style="width: 100%; height: 100%; object-fit: cover;">
                             <?php else : ?>
-                                <div class="product-placeholder">Preview</div>
+                                <div class="product-placeholder" style="color: #86868b; font-size: 14px; font-weight: 500;">Preview</div>
                             <?php endif; ?>
-                            <span class="product-badge"><?php echo htmlspecialchars($product->store_name); ?></span>
-                            <?php if($product->rating > 0) : ?>
-                                <span class="product-rating">
+                            
+                            <!-- Bổ sung position: absolute, bottom: 12px, left: 12px để ghim nhãn cửa hàng -->
+                            <?php if (!empty($product->store_slug)): ?>
+                                <span style="position: absolute; bottom: 12px; left: 12px; z-index: 2;">
+                                    <a href="<?php echo URLROOT; ?>/storefront/<?php echo $product->store_slug; ?>" class="product-badge" style="text-decoration: none; color: #fff; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 500;">
+                                        <?php echo htmlspecialchars($product->store_name); ?>
+                                    </a>
+                                </span>
+                            <?php else: ?>
+                                <span class="product-badge" style="position: absolute; bottom: 12px; left: 12px; z-index: 2; text-decoration: none; color: #fff; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 500;">
+                                    <?php echo htmlspecialchars($product->store_name); ?>
+                                </span>
+                            <?php endif; ?>
+
+                            <!-- Bổ sung position: absolute, bottom: 12px, right: 12px để ghim điểm số đánh giá -->
+                            <?php if ($product->rating > 0) : ?>
+                                <span class="product-rating" style="position: absolute; bottom: 12px; right: 12px; z-index: 2; background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #1d1d1f; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                     ★ <?php echo number_format($product->rating, 1); ?>
                                 </span>
                             <?php endif; ?>
                         </div>
-                        
-                        <div class="product-content" style="flex-grow: 1;">
-                            <h3 class="product-title"><?php echo htmlspecialchars($product->title); ?></h3>
-                            <p class="product-desc"><?php echo htmlspecialchars($product->description ?? 'Tài liệu số chất lượng cao được kiểm duyệt trên Creono.'); ?></p>
+
+                        <div class="product-content" style="flex-grow: 1; padding: 16px;">
+                            <h3 class="product-title" style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: #1d1d1f; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo htmlspecialchars($product->title); ?></h3>
+                            <p class="product-desc" style="font-size: 13px; color: #86868b; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo htmlspecialchars($product->description ?? 'Tài liệu số chất lượng cao được kiểm duyệt trên Creono.'); ?></p>
                         </div>
                     </a>
 
                     <!-- Khu vực giá & Các nút hành động -->
-                    <div class="product-footer" style="padding: 12px 18px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                        <span class="product-price" style="font-size: 15px; font-weight: 700; color: #2c3e50; white-space: nowrap; flex-shrink: 0;">
+                    <div class="product-footer" style="padding: 12px 16px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span class="product-price" style="font-size: 16px; font-weight: 700; color: #2c3e50; white-space: nowrap; flex-shrink: 0;">
                             <?php echo number_format($product->price, 0, ',', '.'); ?>&nbsp;₫
                         </span>
-                        
+
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <!-- Add to Cart Mini Button (UC18) -->
-                            <button type="button" class="btn-cart-add-mini" data-product-id="<?php echo $product->id; ?>" style="background: var(--apple-blue, #0071e3); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.15s ease;" title="Thêm vào giỏ hàng">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            <!-- FIX 2: Thêm padding: 0; để xoá khoảng đệm mặc định, giúp thẻ SVG nằm cân giữa tuyệt đối -->
+                            <button type="button" class="btn-cart-add-mini" data-product-id="<?php echo $product->id; ?>" style="background: var(--apple-blue, #0071e3); border: none; color: #fff; width: 32px; height: 32px; padding: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.15s ease;" title="Thêm vào giỏ hàng">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <circle cx="9" cy="21" r="1" />
+                                    <circle cx="20" cy="21" r="1" />
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                                </svg>
                             </button>
 
                             <!-- Nút Mua ngay ôm sát chữ -->
-                            <a href="<?php echo URLROOT; ?>/orders/checkout/<?php echo $product->id; ?>" 
-                               class="btn btn-primary" 
-                               style="width: fit-content; min-width: auto; padding: 6px 12px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 980px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; flex-shrink: 0; line-height: 1.2;">
+                            <a href="<?php echo URLROOT; ?>/orders/checkout/<?php echo $product->id; ?>"
+                                class="btn btn-primary"
+                                style="width: fit-content; min-width: auto; padding: 8px 16px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 980px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; flex-shrink: 0; line-height: 1.2;">
                                 Mua ngay
                             </a>
                         </div>
@@ -116,114 +143,122 @@
 
 <!-- AJAX: Favorite Toggle & Add to Cart on Product Listing -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+        'use strict';
 
-    // Favorite Toggle on cards
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.btn-fav-toggle');
-        if (!btn) return;
+        // Favorite Toggle on cards
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-fav-toggle');
+            if (!btn) return;
 
-        const productId = btn.getAttribute('data-product-id');
-        const icon = btn.querySelector('.fav-heart-icon');
+            const productId = btn.getAttribute('data-product-id');
+            const icon = btn.querySelector('.fav-heart-icon');
 
-        btn.disabled = true;
-        btn.style.transform = 'scale(1.2)';
+            btn.disabled = true;
+            btn.style.transform = 'scale(1.2)';
 
-        const formData = new FormData();
-        formData.append('product_id', productId);
+            const formData = new FormData();
+            formData.append('product_id', productId);
 
-        fetch('<?php echo URLROOT; ?>/favorites/toggle', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.disabled = false;
-            setTimeout(function() { btn.style.transform = ''; }, 200);
+            fetch('<?php echo URLROOT; ?>/favorites/toggle', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    setTimeout(function() {
+                        btn.style.transform = '';
+                    }, 200);
 
-            if (data.success) {
-                if (data.is_favorited) {
-                    icon.setAttribute('fill', '#ff3b30');
-                    icon.setAttribute('stroke', '#ff3b30');
-                    btn.title = 'Bỏ yêu thích';
-                } else {
-                    icon.setAttribute('fill', 'none');
-                    icon.setAttribute('stroke', '#666');
-                    btn.title = 'Yêu thích';
-                }
-                if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
-                }
-            } else {
-                if (data.require_login) {
-                    window.location.href = '<?php echo URLROOT; ?>/users/login';
-                    return;
-                }
-                alert(data.message);
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            btn.style.transform = '';
-            console.error('Favorite error:', err);
-        });
-    });
-
-    // Add to Cart mini button on cards
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.btn-cart-add-mini');
-        if (!btn) return;
-
-        const productId = btn.getAttribute('data-product-id');
-        btn.disabled = true;
-        btn.style.transform = 'scale(0.9)';
-
-        const formData = new FormData();
-        formData.append('product_id', productId);
-
-        fetch('<?php echo URLROOT; ?>/carts/add', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.disabled = false;
-            setTimeout(function() { btn.style.transform = ''; }, 200);
-
-            if (data.success) {
-                // Change to checkmark briefly
-                btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-                btn.style.background = '#34c759';
-
-                setTimeout(function() {
-                    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
-                    btn.style.background = 'var(--apple-blue, #0071e3)';
-                }, 1500);
-
-                // Update navbar badge
-                const badges = document.querySelectorAll('#nav-cart-badge');
-                badges.forEach(b => {
-                    b.textContent = data.cart_count;
-                    b.style.display = 'flex';
+                    if (data.success) {
+                        if (data.is_favorited) {
+                            icon.setAttribute('fill', '#ff3b30');
+                            icon.setAttribute('stroke', '#ff3b30');
+                            btn.title = 'Bỏ yêu thích';
+                        } else {
+                            icon.setAttribute('fill', 'none');
+                            icon.setAttribute('stroke', '#666');
+                            btn.title = 'Yêu thích';
+                        }
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show('success', data.message);
+                        }
+                    } else {
+                        if (data.require_login) {
+                            window.location.href = '<?php echo URLROOT; ?>/users/login';
+                            return;
+                        }
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.style.transform = '';
+                    console.error('Favorite error:', err);
                 });
+        });
 
-                if (typeof FlashModule !== 'undefined') {
-                    FlashModule.show('success', data.message);
-                }
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            btn.style.transform = '';
-            console.error('Add cart error:', err);
+        // Add to Cart mini button on cards
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-cart-add-mini');
+            if (!btn) return;
+
+            const productId = btn.getAttribute('data-product-id');
+            btn.disabled = true;
+            btn.style.transform = 'scale(0.9)';
+
+            const formData = new FormData();
+            formData.append('product_id', productId);
+
+            fetch('<?php echo URLROOT; ?>/carts/add', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    setTimeout(function() {
+                        btn.style.transform = '';
+                    }, 200);
+
+                    if (data.success) {
+                        // Change to checkmark briefly
+                        btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+                        btn.style.background = '#34c759';
+
+                        setTimeout(function() {
+                            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+                            btn.style.background = 'var(--apple-blue, #0071e3)';
+                        }, 1500);
+
+                        // Update navbar badge
+                        const badges = document.querySelectorAll('#nav-cart-badge');
+                        badges.forEach(b => {
+                            b.textContent = data.cart_count;
+                            b.style.display = 'flex';
+                        });
+
+                        if (typeof FlashModule !== 'undefined') {
+                            FlashModule.show('success', data.message);
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.style.transform = '';
+                    console.error('Add cart error:', err);
+                });
         });
     });
-});
 </script>
 
 <!-- Responsive Media Queries (giữ nguyên mọi style cũ) -->
@@ -234,13 +269,16 @@ document.addEventListener('DOMContentLoaded', function() {
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 20px !important;
         }
+
         .market-header h2 {
             font-size: 36px !important;
         }
+
         .categories-flex {
             justify-content: flex-start !important;
             gap: 10px !important;
         }
+
         .category-pill {
             font-size: 13px !important;
             padding: 6px 16px !important;
@@ -252,51 +290,65 @@ document.addEventListener('DOMContentLoaded', function() {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 16px !important;
         }
+
         .market-header h2 {
             font-size: 28px !important;
         }
+
         .spotlight-search input {
             font-size: 15px !important;
             padding: 12px 16px 12px 42px !important;
         }
+
         .spotlight-search .search-icon {
             width: 18px !important;
             height: 18px !important;
             left: 14px !important;
         }
+
         .categories-flex {
             gap: 8px !important;
         }
+
         .category-pill {
             font-size: 12px !important;
             padding: 6px 14px !important;
         }
+
         .product-card {
             border-radius: 20px !important;
         }
+
         .product-image-wrapper {
             height: 140px !important;
         }
+
         .product-title {
             font-size: 15px !important;
         }
+
         .product-desc {
             font-size: 13px !important;
         }
+
         .product-price {
             font-size: 15px !important;
         }
+
         .product-footer {
             padding: 10px 14px !important;
         }
+
         .btn-cart-add-mini {
             width: 28px !important;
             height: 28px !important;
         }
+
         .btn-cart-add-mini svg {
             width: 13px !important;
             height: 13px !important;
         }
+
         .btn-primary {
             font-size: 11px !important;
             padding: 4px 10px !important;
@@ -308,84 +360,104 @@ document.addEventListener('DOMContentLoaded', function() {
             padding-left: 12px !important;
             padding-right: 12px !important;
         }
+
         .product-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 12px !important;
         }
+
         .market-header h2 {
             font-size: 24px !important;
             margin-bottom: 16px !important;
         }
+
         .spotlight-search input {
             font-size: 14px !important;
             padding: 10px 12px 10px 36px !important;
             border-radius: 40px !important;
         }
+
         .spotlight-search .search-icon {
             left: 12px !important;
             width: 16px !important;
             height: 16px !important;
         }
+
         .category-pill {
             font-size: 11px !important;
             padding: 4px 12px !important;
         }
+
         .product-image-wrapper {
             height: 110px !important;
         }
+
         .product-content {
             padding: 12px 12px 6px !important;
         }
+
         .product-title {
             font-size: 13px !important;
             white-space: normal !important;
             line-height: 1.3 !important;
         }
+
         .product-desc {
             font-size: 12px !important;
             -webkit-line-clamp: 1 !important;
         }
+
         .product-footer {
             padding: 8px 12px !important;
             flex-wrap: nowrap !important;
         }
+
         .product-price {
             font-size: 14px !important;
         }
+
         .btn-cart-add-mini {
             width: 26px !important;
             height: 26px !important;
             border-radius: 6px !important;
         }
+
         .btn-cart-add-mini svg {
             width: 12px !important;
             height: 12px !important;
         }
+
         .btn-primary {
             font-size: 10px !important;
             padding: 4px 8px !important;
         }
+
         .btn-fav-toggle {
             width: 30px !important;
             height: 30px !important;
             top: 8px !important;
             right: 8px !important;
         }
+
         .btn-fav-toggle svg {
             width: 15px !important;
             height: 15px !important;
         }
+
         .product-badge,
         .product-rating {
             font-size: 10px !important;
             padding: 2px 8px !important;
         }
+
         .empty-state {
             padding: 40px 16px !important;
         }
+
         .empty-state h3 {
             font-size: 18px !important;
         }
+
         .empty-state p {
             font-size: 14px !important;
         }

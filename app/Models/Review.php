@@ -1,12 +1,14 @@
 <?php
-class Review extends BaseModel {
+class Review extends BaseModel
+{
     protected string $table = 'reviews';
 
     /**
      * Lấy tất cả đánh giá của một sản phẩm (kèm thông tin user, avatar)
      * Chỉ lấy review gốc (parent_id IS NULL), sắp xếp mới nhất trước
      */
-    public function getReviewsByProductId(int $productId): array {
+    public function getReviewsByProductId(int $productId): array
+    {
         $this->db->query("
             SELECT r.*, 
                    u.name as user_name,
@@ -26,7 +28,23 @@ class Review extends BaseModel {
     /**
      * Lấy các reply (bình luận con) của một review
      */
-    public function getRepliesByReviewId(int $reviewId): array {
+    // public function getRepliesByReviewId(int $reviewId): array {
+    //     $this->db->query("
+    //         SELECT r.*, 
+    //                u.name as user_name,
+    //                up.avatar_url as user_avatar
+    //         FROM {$this->table} r
+    //         JOIN users u ON r.user_id = u.id
+    //         LEFT JOIN user_profiles up ON r.user_id = up.user_id
+    //         WHERE r.parent_id = :parent_id
+    //           AND r.status = 1
+    //         ORDER BY r.created_at ASC
+    //     ");
+    //     $this->db->bind(':parent_id', $reviewId);
+    //     return $this->db->resultSet();
+    // }
+    public function getRepliesByReviewId(int|string $reviewId): array
+    {
         $this->db->query("
             SELECT r.*, 
                    u.name as user_name,
@@ -38,14 +56,15 @@ class Review extends BaseModel {
               AND r.status = 1
             ORDER BY r.created_at ASC
         ");
-        $this->db->bind(':parent_id', $reviewId);
+        $this->db->bind(':parent_id', (int)$reviewId);
         return $this->db->resultSet();
     }
 
     /**
      * Tạo đánh giá mới (rating + comment)
      */
-    public function createReview(array $data): bool {
+    public function createReview(array $data): bool
+    {
         $this->db->query("
             INSERT INTO {$this->table} (product_id, user_id, parent_id, rating, comment)
             VALUES (:product_id, :user_id, :parent_id, :rating, :comment)
@@ -62,7 +81,8 @@ class Review extends BaseModel {
      * Kiểm tra user đã đánh giá sản phẩm này chưa
      * (Mỗi user chỉ được đánh giá 1 lần cho mỗi sản phẩm - review gốc)
      */
-    public function hasUserReviewed(int $productId, int $userId): bool {
+    public function hasUserReviewed(int $productId, int $userId): bool
+    {
         $this->db->query("
             SELECT COUNT(*) as total 
             FROM {$this->table} 
@@ -80,10 +100,16 @@ class Review extends BaseModel {
     /**
      * Lấy thống kê rating (phân bổ số sao) của sản phẩm
      */
-    public function getRatingStats(int $productId): array {
+    public function getRatingStats(int $productId): array
+    {
         $stats = [
-            '5' => 0, '4' => 0, '3' => 0, '2' => 0, '1' => 0,
-            'total' => 0, 'average' => 0
+            '5' => 0,
+            '4' => 0,
+            '3' => 0,
+            '2' => 0,
+            '1' => 0,
+            'total' => 0,
+            'average' => 0
         ];
 
         $this->db->query("
@@ -116,7 +142,8 @@ class Review extends BaseModel {
     /**
      * Đếm tổng số đánh giá (review gốc) của sản phẩm
      */
-    public function getReviewCount(int $productId): int {
+    public function getReviewCount(int $productId): int
+    {
         $this->db->query("
             SELECT COUNT(*) as total 
             FROM {$this->table} 
@@ -132,7 +159,8 @@ class Review extends BaseModel {
     /**
      * Đếm số reply của một review
      */
-    public function getReplyCount(int $reviewId): int {
+    public function getReplyCount(int $reviewId): int
+    {
         $this->db->query("
             SELECT COUNT(*) as total 
             FROM {$this->table} 
@@ -142,5 +170,19 @@ class Review extends BaseModel {
         $this->db->bind(':parent_id', $reviewId);
         $result = $this->db->single();
         return $result ? (int)$result->total : 0;
+    }
+
+
+    public function getStoreAvgRating(int $storeId): float
+    {
+        $this->db->query("
+        SELECT COALESCE(AVG(r.rating), 0) as avg_rating
+        FROM reviews r
+        JOIN products p ON r.product_id = p.id
+        WHERE p.store_id = :store_id AND r.rating IS NOT NULL AND r.parent_id IS NULL AND r.status = 1
+    ");
+        $this->db->bind(':store_id', $storeId);
+        $result = $this->db->single();
+        return $result ? (float)$result->avg_rating : 0.0;
     }
 }

@@ -79,7 +79,7 @@ class Order extends BaseModel
             $this->db->query("SELECT setting_value FROM settings WHERE setting_key = 'commission_rate'");
             $setting = $this->db->single();
             $rate = $setting ? (float)$setting->setting_value : 5.0; // Mặc định 5% nếu lỗi
-            
+
             // Tính toán tiền phí và tiền nhận được
             $platformFee = $price * ($rate / 100);
             $sellerAmount = $price - $platformFee;
@@ -132,7 +132,7 @@ class Order extends BaseModel
             $this->db->bind(':fee', $platformFee);
             $this->db->bind(':seller_amt', $sellerAmount);
             $this->db->execute();
-            
+
             $orderId = $this->db->lastInsertId();
 
             // 7. Tạo Order Items
@@ -194,11 +194,11 @@ class Order extends BaseModel
             // 3. Vòng lặp: Tính tiền và tạo đơn cho TỪNG sản phẩm
             foreach ($cartItems as $item) {
                 $price = (float)$item->price;
-                
+
                 // Áp dụng Tỷ lệ động tại đây:
                 $platformFee = $price * $commissionMultiplier;
                 $sellerAmount = $price - $platformFee;
-                
+
                 $sellerId = (int)$item->seller_id;
                 $orderNumber = 'ORD-' . date('YmdHis') . '-' . mt_rand(1000, 9999);
 
@@ -232,7 +232,7 @@ class Order extends BaseModel
                 $this->db->bind(':fee', $platformFee);
                 $this->db->bind(':seller_amt', $sellerAmount);
                 $this->db->execute();
-                
+
                 $orderId = $this->db->lastInsertId();
 
                 // Lưu dữ liệu vào order_items
@@ -249,7 +249,6 @@ class Order extends BaseModel
 
             $this->db->commit();
             return true;
-
         } catch (\Throwable $e) {
             $this->db->rollBack();
             error_log("Lỗi thanh toán giỏ hàng: " . $e->getMessage());
@@ -280,7 +279,7 @@ class Order extends BaseModel
                    p.price, 
                    p.preview_url, 
                    p.description,
-                   s.name as store_name
+                   s.name as store_name, s.slug as store_slug
             FROM {$this->table} o
             JOIN products p ON o.product_id = p.id
             JOIN stores s ON p.store_id = s.id
@@ -319,7 +318,7 @@ class Order extends BaseModel
     public function getUserPurchasedOrders(int $userId): array
     {
         $this->db->query("
-            SELECT o.*, p.title as product_title, p.preview_url, s.name as store_name
+            SELECT o.*, p.title as product_title, p.preview_url, s.name as store_name, s.slug as store_slug
             FROM {$this->table} o
             JOIN products p ON o.product_id = p.id
             JOIN stores s ON p.store_id = s.id
@@ -339,5 +338,19 @@ class Order extends BaseModel
         $this->db->bind(':status', $status);
         $this->db->bind(':id', $orderId);
         return $this->db->execute();
+    }
+
+    public function getStoreTotalDownloads(int $storeId): int
+    {
+        $this->db->query("
+        SELECT COALESCE(SUM(oi.quantity), 0) as total_downloads
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.store_id = :store_id AND o.status = 2
+    ");
+        $this->db->bind(':store_id', $storeId);
+        $result = $this->db->single();
+        return $result ? (int)$result->total_downloads : 0;
     }
 }

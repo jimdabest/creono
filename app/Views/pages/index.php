@@ -91,7 +91,15 @@
                 <div class="product-card interactive-hover">
                     <div class="product-image-wrapper">
                         <div class="product-placeholder">Preview</div>
-                        <span class="product-badge"><?php echo htmlspecialchars($product->store_name); ?></span>
+                        <?php if (!empty($product->store_slug)): ?>
+                            <a href="<?php echo URLROOT; ?>/storefront/<?php echo $product->store_slug; ?>" class="product-badge" style="text-decoration: none; color: inherit;">
+                                <?php echo htmlspecialchars($product->store_name); ?>
+                            </a>
+                        <?php else: ?>
+                            <span class="product-badge" style="text-decoration: none; color: inherit;">
+                                <?php echo htmlspecialchars($product->store_name); ?>
+                            </span>
+                        <?php endif; ?>
                         <?php if($product->rating > 0) : ?>
                             <span class="product-rating">
                                 ★ <?php echo number_format($product->rating, 1); ?>

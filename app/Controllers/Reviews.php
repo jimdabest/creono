@@ -82,7 +82,7 @@ class Reviews extends Controller {
         }
 
         // Kiểm tra đã đánh giá chưa
-        if ($this->reviewModel->hasUserReviewed($productId, $_SESSION['user_id'])) {
+        if ($this->reviewModel->hasUserReviewed($productId, (int)$_SESSION['user_id'])) {
             $this->jsonResponse(false, 'Bạn đã đánh giá sản phẩm này rồi');
         }
 

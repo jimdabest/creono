@@ -13,7 +13,7 @@ class Product extends BaseModel
     public function getProducts(): array
     {
         $this->db->query("
-            SELECT products.*, stores.name as store_name 
+            SELECT products.*, stores.name as store_name, stores.slug as store_slug 
             FROM {$this->table} 
             JOIN stores ON products.store_id = stores.id 
             WHERE products.status = 2 
@@ -109,6 +109,7 @@ class Product extends BaseModel
         $this->db->query("
             SELECT p.*, 
                    s.name as store_name, 
+                   s.slug as store_slug,
                    c.name as category_name,
                    d.file_url, d.ai_score,
                    al.name as ai_label_name
@@ -152,6 +153,7 @@ class Product extends BaseModel
         $this->db->query("
             SELECT p.*, 
                    s.name as store_name, 
+                   s.slug as store_slug,
                    s.user_id as seller_id,
                    u.name as seller_name,
                    c.name as category_name,
@@ -214,7 +216,7 @@ class Product extends BaseModel
         float $maxPrice,
         string $sort
     ): array {
-        $sql = "SELECT p.*, s.name as store_name 
+        $sql = "SELECT p.*, s.name as store_name, s.slug as store_slug 
                 FROM {$this->table} p
                 JOIN stores s ON p.store_id = s.id
                 WHERE p.status = 2 AND p.deleted_at IS NULL";
@@ -256,5 +258,70 @@ class Product extends BaseModel
             $this->db->bind($key, $val);
         }
         return $this->db->resultSet();
+    }
+    // public function getProductsByStoreId(int $storeId): array
+    // {
+    //     $this->db->query("SELECT * FROM {$this->table} WHERE store_id = :store_id AND deleted_at IS NULL ORDER BY created_at DESC");
+    //     $this->db->bind(':store_id', $storeId);
+    //     return $this->db->resultSet();
+    // }
+    public function getProductsByStoreId(
+        int $storeId,
+        ?int $limit = null,
+        int $offset = 0,
+        string $orderBy = 'p.created_at DESC',
+        string $categorySlug = '',
+        bool $onlyApproved = true
+    ): array {
+        $sql = "SELECT p.*, s.name as store_name, s.slug as store_slug 
+            FROM {$this->table} p
+            JOIN stores s ON p.store_id = s.id
+            WHERE p.store_id = :store_id AND p.deleted_at IS NULL";
+
+        // Kiểm soát hiển thị sản phẩm chưa duyệt
+        if ($onlyApproved) {
+            $sql .= " AND p.status = 2";
+        }
+
+        // Lọc theo danh mục
+        if ($categorySlug !== '') {
+            $sql .= " AND p.category_id = (SELECT id FROM categories WHERE slug = :category)";
+        }
+
+        // Sắp xếp (có thể tùy chỉnh)
+        $sql .= " ORDER BY $orderBy";
+
+        // Phân trang
+        if ($limit !== null) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+        }
+
+        $this->db->query($sql);
+        $this->db->bind(':store_id', $storeId);
+
+        if ($categorySlug !== '') {
+            $this->db->bind(':category', $categorySlug);
+        }
+
+        if ($limit !== null) {
+            $this->db->bind(':limit', $limit, PDO::PARAM_INT);
+            $this->db->bind(':offset', $offset, PDO::PARAM_INT);
+        }
+
+        return $this->db->resultSet();
+    }
+    public function countProductsByStoreId(int $storeId, string $categorySlug = ''): int
+    {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE store_id = :store_id AND status = 2 AND deleted_at IS NULL";
+        if ($categorySlug !== '') {
+            $sql .= " AND category_id = (SELECT id FROM categories WHERE slug = :category)";
+        }
+        $this->db->query($sql);
+        $this->db->bind(':store_id', $storeId);
+        if ($categorySlug !== '') {
+            $this->db->bind(':category', $categorySlug);
+        }
+        $result = $this->db->single();
+        return $result ? (int)$result->total : 0;
     }
 }

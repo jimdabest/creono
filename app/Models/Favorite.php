@@ -51,7 +51,7 @@ class Favorite extends BaseModel {
             SELECT f.created_at as favorited_at,
                    p.id, p.title, p.price, p.rating, p.review_count,
                    p.preview_url, p.description,
-                   s.name as store_name
+                   s.name as store_name, s.slug as store_slug
             FROM {$this->table} f
             JOIN products p ON f.product_id = p.id
             JOIN stores s ON p.store_id = s.id
