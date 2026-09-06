@@ -109,13 +109,13 @@
     </script>
 
     <!-- JavaScript Modules -->
-    <script src="<?php echo URLROOT; ?>/js/modules/utils.js"></script>
-    <script src="<?php echo URLROOT; ?>/js/modules/flash.js"></script>
-    <script src="<?php echo URLROOT; ?>/js/modules/validation.js"></script>
-    <script src="<?php echo URLROOT; ?>/js/modules/auth.js"></script>
-    <script src="<?php echo URLROOT; ?>/js/modules/profile.js"></script>
-    <script src="<?php echo URLROOT; ?>/js/modules/ajax-form.js"></script>
-    <script src="<?php echo URLROOT; ?>/js/main.js"></script>
+    <script src="<?php echo URLROOT; ?>/js/modules/utils.js?v=<?php echo time(); ?>"></script>
+    <script src="<?php echo URLROOT; ?>/js/modules/flash.js?v=<?php echo time(); ?>"></script>
+    <script src="<?php echo URLROOT; ?>/js/modules/validation.js?v=<?php echo time(); ?>"></script>
+    <script src="<?php echo URLROOT; ?>/js/modules/auth.js?v=<?php echo time(); ?>"></script>
+    <script src="<?php echo URLROOT; ?>/js/modules/profile.js?v=<?php echo time(); ?>"></script>
+    <script src="<?php echo URLROOT; ?>/js/modules/ajax-form.js?v=<?php echo time(); ?>"></script>
+    <script src="<?php echo URLROOT; ?>/js/main.js?v=<?php echo time(); ?>"></script>
 </head>
 
 <body>

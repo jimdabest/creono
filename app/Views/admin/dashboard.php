@@ -185,14 +185,23 @@
                 <span class="link-arrow">&rarr;</span>
             </a>
 
-            <div class="quick-link-card disabled">
+            <a href="<?php echo URLROOT; ?>/adminUserController/index" class="quick-link-card">
                 <div class="link-icon">👥</div>
                 <div class="link-info">
                     <h4>Quản lý Người dùng</h4>
                     <p>Quản lý tài khoản Buyer, Seller & Phân quyền</p>
                 </div>
-                <span class="link-badge">Sắp ra mắt</span>
-            </div>
+                <span class="link-arrow">&rarr;</span>
+            </a>
+
+            <a href="<?php echo URLROOT; ?>/adminProductController/index" class="quick-link-card">
+                <div class="link-icon">📦</div>
+                <div class="link-info">
+                    <h4>Quản lý Sản phẩm</h4>
+                    <p>CRUD, kiểm duyệt & giám sát tất cả sản phẩm</p>
+                </div>
+                <span class="link-arrow">&rarr;</span>
+            </a>
 
             <a href="<?php echo URLROOT; ?>/admin/approvals" class="quick-link-card">
                 <div class="link-icon">✅</div>

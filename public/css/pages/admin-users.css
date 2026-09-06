@@ -1,0 +1,620 @@
+/* =====================================================================
+   ADMIN USERS - Quản lý Người dùng (UC40)
+   Trang: /adminUserController/index, /create, /edit
+   ===================================================================== */
+
+/* === THỐNG KÊ NHANH === */
+.au-stats-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.au-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-lg);
+    padding: 14px 20px;
+    min-width: 180px;
+    transition: all 0.3s ease;
+}
+
+.au-stat-chip:hover {
+    box-shadow: var(--apple-shadow-sm);
+    transform: translateY(-1px);
+}
+
+.au-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.au-stat-icon--total {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--apple-blue);
+}
+
+.au-stat-icon--locked {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--apple-red);
+}
+
+.au-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--apple-black);
+    line-height: 1;
+}
+
+.au-stat-label {
+    font-size: 13px;
+    color: var(--apple-gray);
+    font-weight: 400;
+}
+
+/* === THANH TÌM KIẾM & LỌC === */
+.au-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.au-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-full);
+    padding: 8px 16px;
+    flex: 1;
+    min-width: 240px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.au-search-box:focus-within {
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.au-search-box svg {
+    color: var(--apple-gray);
+    flex-shrink: 0;
+}
+
+.au-search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    width: 100%;
+    color: var(--apple-black);
+    font-family: inherit;
+}
+
+.au-search-box input::placeholder {
+    color: var(--apple-gray-light);
+}
+
+.au-filter-group {
+    display: flex;
+    gap: 8px;
+}
+
+.au-select {
+    appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-full);
+    padding: 8px 32px 8px 14px;
+    font-size: 13px;
+    color: var(--apple-black);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.au-select:hover,
+.au-select:focus {
+    border-color: var(--apple-blue);
+    outline: none;
+}
+
+/* === BẢNG NGƯỜI DÙNG === */
+.au-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.au-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.au-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.au-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.au-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.au-user-info strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--apple-black);
+}
+
+.au-user-info small {
+    font-size: 12px;
+}
+
+.au-email {
+    font-size: 13px;
+    color: var(--apple-gray);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: -0.01em;
+}
+
+/* === TRẠNG THÁI BADGE === */
+.au-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--apple-radius-full);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.au-status--active {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--apple-green);
+}
+
+.au-status--locked {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--apple-red);
+}
+
+/* === ACTION BUTTONS === */
+.au-action-group {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-action-lock {
+    color: var(--apple-orange) !important;
+    border-color: rgba(255, 149, 0, 0.3) !important;
+}
+
+.btn-action-lock:hover {
+    background: rgba(255, 149, 0, 0.08) !important;
+}
+
+.btn-action-unlock {
+    color: var(--apple-green) !important;
+    border-color: rgba(52, 199, 89, 0.3) !important;
+}
+
+.btn-action-unlock:hover {
+    background: rgba(52, 199, 89, 0.08) !important;
+}
+
+/* Trạng thái loading cho nút AJAX */
+.au-btn-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: wait;
+}
+
+/* === MODAL XÁC NHẬN XÓA === */
+.au-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.au-modal-overlay.au-modal--visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.au-modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+    transform: scale(0.92) translateY(20px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+
+.au-modal-overlay.au-modal--visible .au-modal {
+    transform: scale(1) translateY(0);
+}
+
+.au-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 0;
+}
+
+.au-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--apple-black);
+    margin: 0;
+}
+
+.au-modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--apple-gray-bg);
+    border-radius: 50%;
+    font-size: 20px;
+    color: var(--apple-gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.au-modal-close:hover {
+    background: var(--apple-gray-border);
+}
+
+.au-modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.au-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.au-modal-icon--danger {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--apple-red);
+}
+
+.au-modal-body p {
+    font-size: 15px;
+    color: var(--apple-gray);
+    margin: 0 0 4px;
+    line-height: 1.5;
+}
+
+.au-modal-username {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: var(--apple-black) !important;
+    margin: 8px 0 12px !important;
+}
+
+.au-modal-warning {
+    font-size: 13px !important;
+    color: var(--apple-red) !important;
+    background: rgba(255, 59, 48, 0.06);
+    padding: 10px 14px;
+    border-radius: var(--apple-radius-sm);
+    margin-top: 12px !important;
+}
+
+.au-modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 0 24px 20px;
+}
+
+.au-modal-footer .btn {
+    min-width: 100px;
+    font-size: 14px;
+}
+
+.btn-danger {
+    background: var(--apple-red);
+    color: #fff;
+    border: none;
+    border-radius: var(--apple-radius-full);
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background: #e0342d;
+    transform: scale(1.02);
+}
+
+/* === FORM STYLES (Create / Edit) === */
+.au-form-card {
+    max-width: 640px;
+}
+
+.au-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.au-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.au-form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--apple-black);
+}
+
+.au-required {
+    color: var(--apple-red);
+}
+
+.au-form-input,
+.au-form-select {
+    padding: 10px 14px;
+    border: 1px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-sm);
+    font-size: 15px;
+    color: var(--apple-black);
+    background: #fff;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.au-form-input:focus,
+.au-form-select:focus {
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    outline: none;
+}
+
+.au-form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.au-form-group--error .au-form-input,
+.au-form-group--error .au-form-select,
+.au-form-input.is-invalid,
+.au-form-select.is-invalid {
+    border-color: var(--apple-red);
+    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.08);
+}
+
+.au-form-error,
+.au-form-group .error-text {
+    font-size: 13px;
+    color: var(--apple-red);
+    font-weight: 400;
+    margin-top: 4px;
+    display: block;
+}
+
+.au-form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid var(--apple-gray-bg);
+}
+
+.au-form-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* === THÔNG TIN HIỆN TẠI (Edit form) === */
+.au-current-info {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.au-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--apple-gray-bg);
+    border-radius: var(--apple-radius-full);
+    font-size: 13px;
+}
+
+.au-info-label {
+    color: var(--apple-gray);
+    font-weight: 400;
+}
+
+.au-info-value {
+    font-weight: 600;
+    color: var(--apple-black);
+}
+
+/* === DÒNG ẨN KHI FILTER (animation) === */
+.au-row-hidden {
+    display: none !important;
+}
+
+/* === TOAST NOTIFICATION (cho AJAX feedback) === */
+.au-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 14px 20px;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10001;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.au-toast--visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.au-toast--success {
+    background: linear-gradient(135deg, #34c759 0%, #2eab4f 100%);
+}
+
+.au-toast--error {
+    background: linear-gradient(135deg, #ff3b30 0%, #d63027 100%);
+}
+
+.au-toast-icon {
+    flex-shrink: 0;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .au-stats-row {
+        flex-direction: column;
+    }
+
+    .au-stat-chip {
+        min-width: auto;
+    }
+
+    .au-toolbar {
+        flex-direction: column;
+    }
+
+    .au-search-box {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .au-filter-group {
+        width: 100%;
+    }
+
+    .au-select {
+        flex: 1;
+    }
+
+    .au-action-group {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .au-form-card {
+        max-width: 100%;
+    }
+
+    .au-form-actions {
+        flex-direction: column;
+    }
+
+    .au-form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .au-current-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .au-modal {
+        width: 92%;
+        margin: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .au-stat-value {
+        font-size: 18px;
+    }
+
+    .au-stat-label {
+        font-size: 12px;
+    }
+
+    .au-email {
+        font-size: 11px;
+    }
+
+    .au-toast {
+        left: 12px;
+        right: 12px;
+        min-width: auto;
+    }
+}

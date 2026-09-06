@@ -83,8 +83,21 @@ const FlashModule = (function() {
 
     /**
      * Hiển thị flash message mới (Dùng cho form AJAX)
+     * Hỗ trợ linh hoạt cả show(message, type) và show(type, message)
      */
-    function show(message, type = 'success', duration = 5000) {
+    function show(arg1, arg2 = 'success', duration = 5000) {
+        let message = arg1 || '';
+        let type = arg2 || 'success';
+        const knownTypes = ['success', 'error', 'info', 'warning', 'danger'];
+
+        // Tự động nhận diện nếu gọi theo kiểu show('success', 'Nội dung thông báo')
+        if (knownTypes.includes(arg1) && typeof arg2 === 'string' && !knownTypes.includes(arg2)) {
+            type = arg1 === 'danger' ? 'error' : arg1;
+            message = arg2;
+        } else if (type === 'danger') {
+            type = 'error';
+        }
+
         let container = document.getElementById('toast-container');
         if (!container) {
             container = document.createElement('div');

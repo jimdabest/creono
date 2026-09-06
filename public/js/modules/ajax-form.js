@@ -18,9 +18,12 @@ const AjaxFormModule = (function() {
      * Khởi tạo xử lý form bằng AJAX
      */
     function init() {
-        const forms = document.querySelectorAll('form[data-ajax]');
+        const forms = document.querySelectorAll('form[data-ajax="true"]');
         
         forms.forEach(function(form) {
+            if (form.getAttribute('data-ajax') === 'false' || form.dataset.ajax === 'false') {
+                return;
+            }
             if (form.dataset.ajaxInitialized === 'true') {
                 return;
             }

@@ -366,7 +366,7 @@
                         updateNavCartBadge(data.cart_count);
 
                         if (typeof FlashModule !== 'undefined') {
-                            FlashModule.show('success', data.message);
+                            FlashModule.show(data.message, 'success');
                         }
 
                         // If cart is empty, reload page to show empty state
