@@ -28,7 +28,8 @@ class User extends BaseModel
         $this->db->query('SELECT * FROM users WHERE email = :email');
         $this->db->bind(':email', $email);
 
-        return $this->db->single();
+        $row = $this->db->single();
+        return $row ?: null;
     }
 
     // Đăng ký người dùng mới
@@ -87,7 +88,8 @@ class User extends BaseModel
                         LEFT JOIN user_profiles p ON u.id = p.user_id 
                         WHERE u.id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        $row = $this->db->single();
+        return $row ?: null;
     }
 
     // Cập nhật KYC status

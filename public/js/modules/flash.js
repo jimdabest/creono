@@ -106,7 +106,8 @@ const FlashModule = (function() {
         }
 
         const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
+        const alertClass = (type === 'error' || type === 'danger') ? 'alert-danger alert-error' : `alert-${type}`;
+        alert.className = `alert ${alertClass}`;
         alert.setAttribute('data-auto-dismiss', duration.toString());
         
         const icon = document.createElement('span');

@@ -968,7 +968,8 @@ a:hover {
     border-bottom: 2px solid var(--apple-green);
 }
 
-.alert-danger {
+.alert-danger,
+.alert-error {
     border-bottom: 2px solid var(--apple-red);
 }
 

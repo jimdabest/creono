@@ -1,9 +1,9 @@
 <?php
-require_once '../app/Middleware/AuthMiddleware.php';
-require_once '../app/Middleware/GuestMiddleware.php';
-require_once '../app/Helpers/csrf_helper.php';
-require_once '../app/Helpers/flash_helper.php';
-require_once '../app/Helpers/mail_helper.php';
+require_once dirname(__DIR__) . '/Middleware/AuthMiddleware.php';
+require_once dirname(__DIR__) . '/Middleware/GuestMiddleware.php';
+require_once dirname(__DIR__) . '/Helpers/csrf_helper.php';
+require_once dirname(__DIR__) . '/Helpers/flash_helper.php';
+require_once dirname(__DIR__) . '/Helpers/mail_helper.php';
 
 class Users extends Controller
 {
@@ -69,7 +69,7 @@ class Users extends Controller
                 $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS) ?? $_POST ?? [];
 
             $data = [
                 'name' => trim($_POST['name'] ?? ''),
@@ -149,7 +149,7 @@ class Users extends Controller
                 $this->jsonResponse(false, 'CSRF token validation failed');
             }
 
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS) ?? $_POST ?? [];
 
             $data = [
                 'email' => $_POST['email'] ?? '',
@@ -163,12 +163,14 @@ class Users extends Controller
             ]);
 
             if ($validator->passes()) {
-                if (!$this->userModel->findByEmail($data['email'])) {
+                $user = $this->userModel->getUserByEmail($data['email']);
+                if (!$user) {
                     $errors['email_err'] = 'Email không tồn tại trong hệ thống';
+                } elseif (!empty($user->is_locked) && (int)$user->is_locked === 1) {
+                    $errors['email_err'] = 'Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.';
                 } else {
-                    $loggedInUser = $this->userModel->login($data['email'], $data['password']);
-                    if ($loggedInUser) {
-                        $this->createUserSession($loggedInUser, 'Đăng nhập thành công!');
+                    if (password_verify($data['password'], $user->password)) {
+                        $this->createUserSession($user, 'Đăng nhập thành công!');
                         return;
                     } else {
                         $errors['password_err'] = 'Mật khẩu không chính xác';
@@ -177,7 +179,17 @@ class Users extends Controller
             }
 
             if (!empty($errors)) {
-                $this->jsonResponse(false, 'Vui lòng kiểm tra lại thông tin', ['errors' => $errors]);
+                $errorMsg = $errors['email_err'] ?? $errors['password_err'] ?? 'Vui lòng kiểm tra lại thông tin';
+                if ($this->isAjaxRequest()) {
+                    $this->jsonResponse(false, $errorMsg, ['errors' => $errors]);
+                } else {
+                    if (function_exists('setFlash')) {
+                        setFlash('error', $errorMsg, 'error');
+                    }
+                    $data['errors'] = $errors;
+                    $this->view('users/login', $data);
+                    return;
+                }
             }
         } else {
             $data = [
@@ -203,6 +215,7 @@ class Users extends Controller
         $_SESSION['user_name'] = $user->name;
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_role'] = $user->role;
+        $_SESSION['is_locked'] = (int)($user->is_locked ?? 0);
 
         // Merge guest cart vào giỏ hàng của user
         $this->mergeGuestCart($user->id);

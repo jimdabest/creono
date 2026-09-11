@@ -18,7 +18,7 @@ const AjaxFormModule = (function() {
      * Khởi tạo xử lý form bằng AJAX
      */
     function init() {
-        const forms = document.querySelectorAll('form[data-ajax="true"]');
+        const forms = document.querySelectorAll('form[data-ajax="true"], form[data-ajax]');
         
         forms.forEach(function(form) {
             if (form.getAttribute('data-ajax') === 'false' || form.dataset.ajax === 'false') {
@@ -69,7 +69,8 @@ const AjaxFormModule = (function() {
             method: methodType,
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         })
         .then(response => {

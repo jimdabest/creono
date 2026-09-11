@@ -8,27 +8,27 @@
         <h2>Đăng nhập</h2>
         <p class="subtitle">Mừng bạn quay trở lại Creono.</p>
 
-        <form action="<?php echo URLROOT; ?>/users/login" method="POST" id="loginForm" data-ajax>
+        <form action="<?php echo URLROOT; ?>/users/login" method="POST" id="loginForm" data-ajax="true">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($data['csrf_token'] ?? generateCsrfToken()); ?>">
 
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" name="email" id="email"
-                    class="form-control"
+                    class="form-control <?php echo !empty($data['errors']['email_err']) ? 'is-invalid' : ''; ?>"
                     value="<?php echo htmlspecialchars($data['email'] ?? ''); ?>"
                     placeholder="name@example.com"
                     required>
-                <span class="error-text" id="email_err"></span>
+                <span class="error-text" id="email_err" <?php echo !empty($data['errors']['email_err']) ? 'style="display: block;"' : ''; ?>><?php echo htmlspecialchars($data['errors']['email_err'] ?? ''); ?></span>
             </div>
 
             <div class="form-group">
                 <label for="password">Mật khẩu</label>
                 <input type="password" name="password" id="password"
-                    class="form-control"
+                    class="form-control <?php echo !empty($data['errors']['password_err']) ? 'is-invalid' : ''; ?>"
                     value="<?php echo htmlspecialchars($data['password'] ?? ''); ?>"
                     placeholder="Nhập mật khẩu"
                     required>
-                <span class="error-text" id="password_err"></span>
+                <span class="error-text" id="password_err" <?php echo !empty($data['errors']['password_err']) ? 'style="display: block;"' : ''; ?>><?php echo htmlspecialchars($data['errors']['password_err'] ?? ''); ?></span>
             </div>
 
             <button type="submit" class="btn btn-submit" id="loginBtn">Đăng nhập</button>

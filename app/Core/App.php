@@ -5,6 +5,25 @@ class App {
     protected $params = [];
 
     public function __construct() {
+        // Tự động kiểm tra và thu hồi phiên nếu tài khoản đã bị khóa trong Database (UC40)
+        if (isset($_SESSION['user_id']) && class_exists('Database')) {
+            try {
+                $db = new Database();
+                $db->query("SELECT is_locked FROM users WHERE id = :id");
+                $db->bind(':id', (int)$_SESSION['user_id']);
+                $currentUser = $db->single();
+                if ($currentUser && !empty($currentUser->is_locked) && (int)$currentUser->is_locked === 1) {
+                    unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['user_role'], $_SESSION['is_locked']);
+                    session_regenerate_id(true);
+                    if (function_exists('setFlash')) {
+                        setFlash('error', 'Tài khoản của bạn đã bị khóa bởi Quản trị viên.', 'error');
+                    }
+                }
+            } catch (Exception $e) {
+                // Tiếp tục nếu có sự cố tạm thời
+            }
+        }
+
         $url = $this->getUrl();
         // echo "Đang gọi: " . $this->currentController . "/" . $this->currentMethod; // Debug
         // Kiểm tra xem file Controller có tồn tại không

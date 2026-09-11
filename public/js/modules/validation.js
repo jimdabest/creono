@@ -75,7 +75,8 @@ const ValidationModule = (function() {
         const errorMessages = form.querySelectorAll('.error-text');
         if (isValid) {
             errorMessages.forEach(function(msg) {
-                msg.remove();
+                msg.textContent = '';
+                msg.style.display = 'none';
             });
         }
 
@@ -183,6 +184,7 @@ const ValidationModule = (function() {
             input.parentElement.appendChild(errorSpan);
         }
         errorSpan.textContent = message;
+        errorSpan.style.display = 'block';
     }
 
     /**
@@ -192,7 +194,8 @@ const ValidationModule = (function() {
         input.classList.remove('is-invalid');
         const errorSpan = input.parentElement.querySelector('.error-text');
         if (errorSpan) {
-            errorSpan.remove();
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
         }
     }
 
