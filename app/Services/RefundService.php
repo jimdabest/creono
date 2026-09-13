@@ -20,6 +20,7 @@ class RefundService
     public const ORDER_STATUS_PAID      = 2;
     public const ORDER_STATUS_CANCELLED = 3;
     public const ORDER_STATUS_REFUNDED  = 4;
+    public const ORDER_STATUS_RECEIVED  = 5;
 
     /**
      * Loại giao dịch trong bảng transactions
@@ -68,6 +69,14 @@ class RefundService
             ];
         }
 
+        if ((int)$order->status === self::ORDER_STATUS_RECEIVED) {
+            return [
+                'eligible' => false,
+                'message'  => 'Đơn hàng đã được bạn xác nhận "Đã nhận & Tải xuống". Tính năng hoàn tiền đã bị khóa vĩnh viễn cho tài liệu này.',
+                'order'    => $order
+            ];
+        }
+
         if ((int)$order->status !== self::ORDER_STATUS_PAID) {
             $statusName = match ((int)$order->status) {
                 self::ORDER_STATUS_PENDING => 'Đang chờ thanh toán (Pending)',
@@ -76,7 +85,7 @@ class RefundService
             };
             return [
                 'eligible' => false,
-                'message'  => "Chỉ có thể hoàn tiền cho đơn hàng đã thanh toán thành công. Trạng thái hiện tại: {$statusName}.",
+                'message'  => "Chỉ có thể hoàn tiền cho đơn hàng đã thanh toán đang chờ xác nhận nhận hàng. Trạng thái hiện tại: {$statusName}.",
                 'order'    => $order
             ];
         }

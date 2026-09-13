@@ -3,6 +3,12 @@ class Order extends BaseModel
 {
     protected string $table = 'orders';
 
+    public const STATUS_PENDING   = 1;
+    public const STATUS_PAID      = 2;
+    public const STATUS_CANCELLED = 3;
+    public const STATUS_REFUNDED  = 4;
+    public const STATUS_RECEIVED  = 5;
+
     /**
      * Lấy doanh thu của seller
      */
@@ -13,7 +19,7 @@ class Order extends BaseModel
             FROM {$this->table} o
             JOIN products p ON o.product_id = p.id
             JOIN stores s ON p.store_id = s.id
-            WHERE s.user_id = :user_id AND o.status = 2
+            WHERE s.user_id = :user_id AND o.status IN (2, 5)
         ");
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->single();
@@ -51,8 +57,10 @@ class Order extends BaseModel
             p.title as product_title,
             CASE 
                 WHEN o.status = 1 THEN 'Chờ xử lý'
-                WHEN o.status = 2 THEN 'Hoàn thành'
+                WHEN o.status = 2 THEN 'Đã thanh toán'
                 WHEN o.status = 3 THEN 'Đã hủy'
+                WHEN o.status = 4 THEN 'Đã hoàn tiền'
+                WHEN o.status = 5 THEN 'Đã nhận (Hoàn tất)'
                 ELSE 'Không xác định'
             END as status_text
         FROM {$this->table} o
@@ -256,23 +264,70 @@ class Order extends BaseModel
         }
     }
 
-    // Hàm kiểm tra User đã mua Product chưa để cho phép Download
-    public function hasPurchased(int $userId, int $productId)
+    // Hàm kiểm tra User đã mua Product chưa (chưa bị hủy hoặc hoàn tiền)
+    public function hasPurchased(int $userId, int $productId): bool
     {
-        $this->db->query("SELECT id FROM orders WHERE user_id = :user_id AND product_id = :product_id AND status = 2");
+        $this->db->query("SELECT id FROM orders WHERE user_id = :user_id AND product_id = :product_id AND status IN (2, 5) LIMIT 1");
         $this->db->bind(':user_id', $userId);
         $this->db->bind(':product_id', $productId);
         $row = $this->db->single();
         return !empty($row);
     }
 
+    // Kiểm tra User đã bấm 'Chấp nhận & Tải xuống' (status = 5) để cho phép download trực tiếp
+    public function hasConfirmedPurchase(int $userId, int $productId): bool
+    {
+        $this->db->query("SELECT id FROM orders WHERE user_id = :user_id AND product_id = :product_id AND status = :status LIMIT 1");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':product_id', $productId);
+        $this->db->bind(':status', self::STATUS_RECEIVED);
+        $row = $this->db->single();
+        return !empty($row);
+    }
+
+    // Lấy đơn hàng mới nhất của User cho một sản phẩm cụ thể (ưu tiên trạng thái Đã nhận và Đã thanh toán)
+    public function getOrderByUserAndProduct(int $userId, int $productId): ?object
+    {
+        $this->db->query("
+            SELECT * FROM {$this->table} 
+            WHERE user_id = :user_id AND product_id = :product_id 
+            ORDER BY CASE 
+                WHEN status = 5 THEN 1 
+                WHEN status = 2 THEN 2 
+                ELSE 3 
+            END, id DESC 
+            LIMIT 1
+        ");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':product_id', $productId);
+        return $this->db->single() ?: null;
+    }
+
+    // Xác nhận đã nhận tài liệu & chốt giao dịch vĩnh viễn (Status 2 -> Status 5)
+    public function confirmReceived(int $orderId, int $userId): bool
+    {
+        $this->db->query("
+            UPDATE {$this->table} 
+            SET status = :new_status 
+            WHERE id = :id AND user_id = :user_id AND status = :old_status
+        ");
+        $this->db->bind(':new_status', self::STATUS_RECEIVED);
+        $this->db->bind(':id', $orderId);
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':old_status', self::STATUS_PAID);
+        return $this->db->execute();
+    }
+
     /**
-     * Lấy danh sách tất cả các tài liệu đã mua của User
+     * Lấy danh sách tất cả các tài liệu đã mua của User (bao gồm Chờ xác nhận, Đã nhận, Đã hoàn tiền)
      */
     public function getPurchasedProducts(int $userId): array
     {
         $this->db->query("
             SELECT o.id as order_id, 
+                   o.order_number,
+                   o.status as order_status,
+                   o.total_amount,
                    o.created_at as purchased_at, 
                    p.id as product_id, 
                    p.title, 
@@ -283,7 +338,7 @@ class Order extends BaseModel
             FROM {$this->table} o
             JOIN products p ON o.product_id = p.id
             JOIN stores s ON p.store_id = s.id
-            WHERE o.user_id = :user_id AND o.status = 2
+            WHERE o.user_id = :user_id AND o.status IN (2, 4, 5)
             ORDER BY o.created_at DESC
         ");
         $this->db->bind(':user_id', $userId);
@@ -347,7 +402,7 @@ class Order extends BaseModel
         FROM order_items oi
         JOIN orders o ON oi.order_id = o.id
         JOIN products p ON oi.product_id = p.id
-        WHERE p.store_id = :store_id AND o.status = 2
+        WHERE p.store_id = :store_id AND o.status IN (2, 5)
     ");
         $this->db->bind(':store_id', $storeId);
         $result = $this->db->single();

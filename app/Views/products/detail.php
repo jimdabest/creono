@@ -92,8 +92,8 @@
 
             <div class="action-buttons" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
 
-                <?php if (!empty($data['has_purchased']) || !empty($data['is_seller'])) : ?>
-                    <!-- NẾU ĐÃ MUA HOẶC LÀ NGƯỜI BÁN -> HIỆN NÚT TẢI XUỐNG -->
+                <?php if (!empty($data['is_seller']) || (!empty($data['has_purchased']) && (int)($data['buyer_order_status'] ?? 0) === 5)) : ?>
+                    <!-- NẾU LÀ NGƯỜI BÁN HOẶC BUYER ĐÃ BẤM 'ĐÃ NHẬN' -> HIỆN NÚT TẢI XUỐNG -->
                     <a href="<?= URLROOT; ?>/downloads/file/<?= $data['product']->id; ?>"
                         class="btn btn-primary btn-block"
                         style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 14px; background: #0071e3; color: #fff; transition: all 0.2s ease;">
@@ -103,6 +103,13 @@
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
                         <span>Tải tài liệu xuống</span>
+                    </a>
+                <?php elseif (!empty($data['has_purchased']) && (int)($data['buyer_order_status'] ?? 0) === 2) : ?>
+                    <!-- NẾU ĐÃ MUA NHƯNG CHƯA BẤM CHẤP NHẬN -> HƯỚNG DẪN VÀO KHO TÀI LIỆU -->
+                    <a href="<?= URLROOT; ?>/orders/myPurchases"
+                        class="btn btn-primary btn-block"
+                        style="display: flex; align-items: center; justify-content: center; padding: 14px; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 14px; background: #d97706; color: #fff; transition: all 0.2s ease;">
+                        <span>Đã mua - Vào Kho để nhận & tải file</span>
                     </a>
                 <?php else : ?>
                     <!-- NẾU CHƯA MUA -> HIỆN NÚT MUA NGAY VÀ THÊM VÀO GIỎ -->

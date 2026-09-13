@@ -83,13 +83,20 @@ class Products extends Controller
         $isFavorited = false;
         $inCart = false;
         $hasPurchased = false;
+        $orderStatus = null;
         if (isset($_SESSION['user_id'])) {
             $userId = (int)$_SESSION['user_id'];
             $hasReviewed = $this->reviewModel->hasUserReviewed($productId, $userId);
             $isFavorited = $this->favoriteModel->isFavorited($userId, $productId);
             $cart = $this->cartModel->getOrCreateCart($userId);
             $inCart = $this->cartModel->hasItem((int)$cart->id, $productId);
-            $hasPurchased = $this->orderModel->hasPurchased($userId, $productId);
+            $order = $this->orderModel->getOrderByUserAndProduct($userId, $productId);
+            if ($order) {
+                $orderStatus = (int)$order->status;
+                if (in_array($orderStatus, [Order::STATUS_PAID, Order::STATUS_RECEIVED])) {
+                    $hasPurchased = true;
+                }
+            }
         } else {
             $inCart = isset($_SESSION['guest_cart']) && in_array($productId, $_SESSION['guest_cart']);
         }
@@ -97,17 +104,18 @@ class Products extends Controller
             isset($product->seller_id) &&
             (int)$product->seller_id === (int)$_SESSION['user_id'];
         $data = [
-            'title' => htmlspecialchars($product->title) . ' - Creono',
-            'description' => htmlspecialchars(substr($product->description ?? '', 0, 150)),
-            'product' => $product,
-            'reviews' => $reviews,
-            'rating_stats' => $ratingStats,
-            'has_reviewed' => $hasReviewed,
-            'is_favorited' => $isFavorited,
-            'in_cart' => $inCart,
-            'is_seller' => $isSeller,
-            'has_purchased' => $hasPurchased,
-            'csrf_token' => generateCsrfToken()
+            'title'              => htmlspecialchars($product->title) . ' - Creono',
+            'description'        => htmlspecialchars(substr($product->description ?? '', 0, 150)),
+            'product'            => $product,
+            'reviews'            => $reviews,
+            'rating_stats'       => $ratingStats,
+            'has_reviewed'       => $hasReviewed,
+            'is_favorited'       => $isFavorited,
+            'in_cart'            => $inCart,
+            'is_seller'          => $isSeller,
+            'has_purchased'      => $hasPurchased,
+            'buyer_order_status' => $orderStatus,
+            'csrf_token'         => generateCsrfToken()
         ];
         $this->view('products/detail', $data);
     }

@@ -213,11 +213,113 @@ class Orders extends Controller
         $purchases = $this->orderModel->getPurchasedProducts($userId);
 
         $data = [
-            'title' => 'Kho tài liệu của tôi - Creono',
-            'purchases' => $purchases
+            'title'      => 'Kho tài liệu của tôi - Creono',
+            'purchases'  => $purchases,
+            'csrf_token' => generateCsrfToken()
         ];
 
         $this->view('orders/my_purchases', $data);
+    }
+
+    /**
+     * Chấp nhận nhận tài liệu & Tải xuống (Chốt giao dịch vĩnh viễn, khóa hoàn tiền)
+     * URL: /orders/acceptAndDownload/{orderId}
+     */
+    public function acceptAndDownload(?int $orderId = null): void
+    {
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+               || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))
+               || (isset($_POST['is_ajax']) && (string)$_POST['is_ajax'] === '1');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$orderId) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => 'Yêu cầu không hợp lệ.']);
+                exit();
+            }
+            header('location: ' . URLROOT . '/orders/myPurchases');
+            exit();
+        }
+
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => 'Xác thực CSRF token không hợp lệ.']);
+                exit();
+            }
+            die('CSRF token validation failed');
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $order = $this->orderModel->getOrderById($orderId);
+
+        if (!$order || (int)$order->user_id !== $userId) {
+            $msg = 'Đơn hàng không hợp lệ hoặc bạn không có quyền thao tác.';
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit();
+            }
+            setFlash('error', $msg);
+            header('location: ' . URLROOT . '/orders/myPurchases');
+            exit();
+        }
+
+        $downloadUrl = URLROOT . '/downloads/file/' . $order->product_id;
+
+        if ((int)$order->status === Order::STATUS_RECEIVED) {
+            $msg = 'Xác nhận nhận tài liệu thành công! Giao dịch đã được chốt hoàn tất.';
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success'      => true,
+                    'download_url' => $downloadUrl,
+                    'message'      => $msg
+                ]);
+                exit();
+            }
+            header('location: ' . $downloadUrl);
+            exit();
+        }
+
+        if ((int)$order->status !== Order::STATUS_PAID) {
+            $msg = 'Đơn hàng không ở trạng thái hợp lệ để xác nhận nhận hàng.';
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit();
+            }
+            setFlash('error', $msg);
+            header('location: ' . URLROOT . '/orders/myPurchases');
+            exit();
+        }
+
+        $success = $this->orderModel->confirmReceived($orderId, $userId);
+
+        if ($success) {
+            $msg = 'Xác nhận nhận tài liệu thành công! Giao dịch đã được chốt hoàn tất.';
+            setFlash('success', $msg);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success'      => true,
+                    'download_url' => $downloadUrl,
+                    'message'      => $msg
+                ]);
+                exit();
+            }
+            header('location: ' . $downloadUrl);
+        } else {
+            $msg = 'Không thể xác nhận nhận tài liệu. Vui lòng thử lại.';
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => $msg]);
+                exit();
+            }
+            setFlash('error', $msg);
+            header('location: ' . URLROOT . '/orders/myPurchases');
+        }
+        exit();
     }
 
     /**
@@ -230,7 +332,7 @@ class Orders extends Controller
     public function refund(?int $orderId = null): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$orderId) {
-            header('location: ' . URLROOT . '/wallets/index');
+            header('location: ' . URLROOT . '/orders/myPurchases');
             exit();
         }
 
@@ -245,29 +347,33 @@ class Orders extends Controller
 
         if (!$order) {
             setFlash('error', 'Không tìm thấy đơn hàng cần hoàn tiền.');
-            header('location: ' . URLROOT . '/wallets/index');
+            header('location: ' . URLROOT . '/orders/myPurchases');
             exit();
         }
 
         // Kiểm tra quyền: Người mua hoặc Admin
         if ((int)$order->user_id !== $userId && $userRole !== 3) {
             setFlash('error', 'Bạn không có quyền yêu cầu hoàn tiền cho đơn hàng này.');
-            header('location: ' . URLROOT . '/wallets/index');
+            header('location: ' . URLROOT . '/orders/myPurchases');
             exit();
         }
 
-        $reason = trim((string)($_POST['reason'] ?? 'Người mua yêu cầu hoàn tiền'));
+        $reason = trim((string)($_POST['reason'] ?? ''));
+        if ($reason === '') {
+            $reason = 'Người mua yêu cầu hoàn tiền';
+        }
         $isAdmin = ($userRole === 3);
 
         $result = RefundService::processRefund($orderId, $reason, $isAdmin);
 
         if ($result['success']) {
-            setFlash('success', $result['message']);
+            setFlash('success', 'Hoàn tiền thành công! Tiền đã được hoàn về ví của bạn và quyền truy cập tài liệu đã bị hủy.');
         } else {
             setFlash('error', $result['message']);
         }
 
-        header('location: ' . URLROOT . '/wallets/index');
+        $redirectUrl = !empty($_POST['redirect_to']) ? $_POST['redirect_to'] : URLROOT . '/orders/myPurchases';
+        header('location: ' . $redirectUrl);
         exit();
     }
 }
