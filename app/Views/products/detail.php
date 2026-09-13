@@ -58,7 +58,7 @@
                     <span><?php echo number_format($data['product']->download_count); ?> lượt tải</span>
                 </div>
                 <div class="created-date" style="color: #86868b; font-size: 14px;">
-                    📅 <?php echo date('d/m/Y', strtotime($data['product']->created_at)); ?>
+                    <?php echo date('d/m/Y', strtotime($data['product']->created_at)); ?>
                 </div>
             </div>
 
@@ -67,7 +67,7 @@
                 <div class="product-preview-container" style="margin-bottom: 28px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.08); position: relative; background: #0b0c10; text-align: center;">
                     <img src="<?php echo URLROOT . htmlspecialchars($data['product']->preview_url); ?>" alt="<?php echo htmlspecialchars($data['product']->title); ?>" style="max-width: 100%; max-height: 450px; object-fit: contain; vertical-align: middle;">
                     <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(4px);">
-                        🔒 Bản xem trước có đóng dấu bản quyền Creono
+                        Bản xem trước có đóng dấu bản quyền Creono
                     </div>
                 </div>
             <?php endif; ?>
@@ -130,6 +130,15 @@
                         <span><?php echo (!empty($data['in_cart'])) ? '✓ Đã có trong giỏ' : 'Thêm vào giỏ hàng'; ?></span>
                     </button>
                 <?php endif; ?>
+
+                <!-- Nút Xem trước (UC28 - Watermarked Preview) -->
+                <button type="button" id="btnOpenDocPreview" class="btn btn-secondary btn-block" style="padding: 14px; font-size: 15px; font-weight: 600; border-radius: 14px; background: #ffffff; border: 1.5px solid #0071e3; color: #0071e3; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Xem trước tài liệu</span>
+                </button>
 
                 <!-- Toggle Favorite (UC17) -->
                 <button type="button" id="btnToggleFavorite" class="btn btn-secondary btn-block" data-product-id="<?php echo $data['product']->id; ?>" style="padding: 14px; font-size: 16px; font-weight: 600; border-radius: 14px; background: #f5f5f7; border: 1px solid rgba(0,0,0,0.08); color: <?php echo (!empty($data['is_favorited'])) ? '#ff3b30' : '#1d1d1f'; ?>; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -583,8 +592,111 @@
     }
 </style>
 
+<!-- ============================================================================== -->
+<!-- UC28: MODAL XEM TRƯỚC TÀI LIỆU CÓ ĐÓNG DẤU WATERMARK & CHỐNG SAO CHÉP -->
+<!-- ============================================================================== -->
+<div id="modalDocPreview" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #ffffff; width: 100%; max-width: 960px; height: 90vh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.1);">
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #0071e3;"></div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;">
+                        Bản xem trước tài liệu có đóng dấu Watermark
+                    </h4>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">
+                        <?php echo htmlspecialchars($data['product']->title); ?> • Giới hạn 2 trang đầu
+                    </p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 12px; background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-weight: 500;">
+                    Chống in ấn & sao chép
+                </span>
+                <button type="button" id="btnCloseDocPreview" style="background: #e2e8f0; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #475569; font-weight: bold; font-size: 16px; transition: background 0.2s;">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body (Viewer) -->
+        <div id="previewViewerContainer" style="flex: 1; position: relative; background: #525659; overflow: hidden; user-select: none; -webkit-user-select: none;" oncontextmenu="return false;" ondragstart="return false;">
+            <!-- Secure Watermarked Iframe/Embed -->
+            <iframe id="docPreviewIframe" src="" style="width: 100%; height: 100%; border: none; background: #525659;"></iframe>
+
+            <!-- Anti-capture Overlay Watermark Floating Bar -->
+            <div style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.88); color: #f8fafc; font-size: 13px; font-weight: 500; padding: 8px 18px; border-radius: 30px; backdrop-filter: blur(6px); pointer-events: none; letter-spacing: 0.02em; border: 1px solid rgba(255,255,255,0.15);">
+                Bản xem trước trực tuyến • Đã nhúng bản quyền CRENO.VN SHOP
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13px; color: #64748b;">
+                Muốn xem toàn bộ nội dung và nhận file định dạng gốc?
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="document.getElementById('btnCloseDocPreview').click()" style="padding: 9px 16px; border-radius: 10px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 14px; font-weight: 600; color: #475569; cursor: pointer;">
+                    Đóng
+                </button>
+                <?php if (empty($data['has_purchased'])) : ?>
+                    <a href="<?= URLROOT; ?>/orders/checkout/<?= $data['product']->id; ?>" style="padding: 9px 20px; border-radius: 10px; background: #0071e3; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-block;">
+                        Mua tài liệu ngay (<?= number_format($data['product']->price, 0, ',', '.'); ?> ₫)
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.APP_URL = '<?php echo URLROOT; ?>';
+
+    // UC28: Script điều khiển Modal Xem trước có Watermark và Chống sao chép
+    (function() {
+        const btnOpen = document.getElementById('btnOpenDocPreview');
+        const modal = document.getElementById('modalDocPreview');
+        const btnClose = document.getElementById('btnCloseDocPreview');
+        const iframe = document.getElementById('docPreviewIframe');
+        const productId = <?= (int)$data['product']->id; ?>;
+
+        if (btnOpen && modal && btnClose && iframe) {
+            btnOpen.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Ẩn toolbar và navpanes của viewer PDF
+                iframe.src = window.APP_URL + '/products/preview/' + productId + '#toolbar=0&navpanes=0&scrollbar=1';
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+
+            const closeModal = function() {
+                modal.style.display = 'none';
+                iframe.src = '';
+                document.body.style.overflow = '';
+            };
+
+            btnClose.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Chặn phím tắt in và lưu (Ctrl+P, Ctrl+S) khi đang mở xem trước
+            window.addEventListener('keydown', function(e) {
+                if (modal.style.display === 'flex') {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                    }
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        }
+    })();
 </script>
 <script src="<?php echo URLROOT; ?>/js/modules/product-detail.js?v=<?php echo time(); ?>"></script>
 

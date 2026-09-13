@@ -711,4 +711,166 @@ class Products extends Controller
         ];
         $this->view('products/manage', $data);
     }
+
+    // ===================== UC28: XEM TRƯỚC (PREVIEW) =====================
+
+    /**
+     * Preview tài liệu/ảnh đã được nhúng Watermark dành cho Buyer hoặc bất kỳ ai xem sản phẩm
+     * Giới hạn trang, chống sao chép và chặn lưu file gốc
+     */
+    public function preview(?int $productId = null): void
+    {
+        if (!$productId) {
+            http_response_code(404);
+            die('Không tìm thấy tài liệu xem trước.');
+        }
+
+        $product = $this->productModel->getProductDetail($productId);
+        if (!$product) {
+            http_response_code(404);
+            die('Tài liệu không tồn tại.');
+        }
+
+        $document = $this->productModel->getDocumentByProductId($productId);
+
+        // Lấy hoặc sinh file preview (PDF/ảnh) đã nhúng Watermark
+        $previewData = WatermarkService::getOrGeneratePreview($productId, $product, $document, 2);
+
+        if (!$previewData || !file_exists($previewData['path'])) {
+            http_response_code(404);
+            die('Chưa tạo được bản xem trước cho tài liệu này.');
+        }
+
+        $filePath = $previewData['path'];
+        $mimeType = $previewData['mime'];
+        $filename = 'creono_preview_' . $productId . '.' . ($previewData['type'] === 'pdf' ? 'pdf' : pathinfo($filePath, PATHINFO_EXTENSION));
+
+        // Thiết lập header bảo mật: Xem trực tiếp (inline), cấm cache, chặn copy/download tự do
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: inline; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+        header('X-Content-Type-Options: nosniff');
+
+        readfile($filePath);
+        exit();
+    }
+
+    /**
+     * Seller xem trước Watermark trực tiếp khi đang Upload file tài liệu PDF trước khi lưu.
+     * Chỉ hoạt động với file PDF (document_file). Ảnh đại diện không được đóng dấu xem trước tại đây.
+     * Trả về JSON chứa preview_url tạm thời để hiển thị trực tiếp trong Modal.
+     */
+    public function previewUpload(): void
+    {
+        RoleMiddleware::check([2]);
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        $userId = (int)$_SESSION['user_id'];
+        $storeId = $this->getStoreIdByUserId($userId);
+        $store = $storeId ? $this->storeModel->findById($storeId) : null;
+        $storeName = $store ? $store->name : 'Creono';
+
+        $cacheDir = (defined('FCPATH') ? FCPATH : dirname(__DIR__, 2) . '/public/') . 'uploads/cache/seller_previews/';
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+
+        // Chỉ xử lý file tài liệu PDF (document_file) - KHÔNG xử lý ảnh đại diện tại đây
+        if (!isset($_FILES['document_file']) || $_FILES['document_file']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Vui lòng chọn file tài liệu PDF trước khi bấm Xem trước Watermark.',
+                'hint'    => 'Tính năng xem trước chỉ hỗ trợ định dạng PDF. Để xem trước ảnh đại diện, hãy chọn file PDF tài liệu.'
+            ]);
+            exit();
+        }
+
+        $file = $_FILES['document_file'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        // Chỉ chấp nhận file PDF
+        if ($ext !== 'pdf') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'File tài liệu định dạng "' . strtoupper($ext) . '" không hỗ trợ xem trước trực quan.',
+                'hint'    => 'Tính năng xem trước Watermark chỉ hoạt động với file PDF. File ZIP, RAR sẽ không hiển thị được nội dung xem trước.'
+            ]);
+            exit();
+        }
+
+        // Xác minh MIME type thực tế của file
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $realMime = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if ($realMime !== 'application/pdf') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'File tải lên không phải là PDF hợp lệ (MIME: ' . $realMime . ').'
+            ]);
+            exit();
+        }
+
+        // Tạo file xem trước: Đóng dấu Watermark, giới hạn 2 trang + trang khóa nội dung
+        $tempId  = 'seller_' . $userId . '_' . time();
+        $rawPdf  = $cacheDir . 'raw_' . $tempId . '.pdf';
+        @copy($file['tmp_name'], $rawPdf);
+
+        $watermarkText = 'CRENO.VN SHOP';
+
+        // Tạo ảnh GD fallback (2 trang đầu + trang khóa) phòng trường hợp PDF bị nén hoặc FPDI thiếu
+        $gdImages = WatermarkService::generateGdPreviewPages(
+            $cacheDir,
+            'gd_' . $tempId,
+            'Bản xem trước tài liệu',
+            $watermarkText,
+            2
+        );
+
+        $gdImageUrls = [
+            URLROOT . '/uploads/cache/seller_previews/gd_' . $tempId . '_p1.png',
+            URLROOT . '/uploads/cache/seller_previews/gd_' . $tempId . '_p2.png',
+            URLROOT . '/uploads/cache/seller_previews/gd_' . $tempId . '_locked.png'
+        ];
+
+        $destPdf = $cacheDir . $tempId . '.pdf';
+        $success = WatermarkService::applyPdfWatermark(
+            $file['tmp_name'],
+            $destPdf,
+            $watermarkText,
+            [
+                'subText'        => '',
+                'maxPages'       => 2,   // Chỉ hiển thị 2 trang đầu
+                'fontSize'       => 28,
+                'angle'          => 45.0,
+                'footerText'     => 'Tai lieu duoc bao ve ban quyen tai Creono.vn - Chi dung cho muc dich xem truoc.',
+            ]
+        );
+
+        if ($success && file_exists($destPdf)) {
+            echo json_encode([
+                'success'        => true,
+                'mode'           => 'server_pdf',
+                'type'           => 'pdf',
+                'preview_url'    => URLROOT . '/uploads/cache/seller_previews/' . $tempId . '.pdf',
+                'watermark_text' => $watermarkText,
+                'message'        => 'Đã tạo bản xem trước Watermark thành công!'
+            ]);
+        } else {
+            // Chế độ fallback Canvas / GD khi thiếu FPDI hoặc PDF mã hóa cao
+            echo json_encode([
+                'success'        => true,
+                'mode'           => 'canvas_fallback',
+                'type'           => 'canvas',
+                'pdf_url'        => URLROOT . '/uploads/cache/seller_previews/raw_' . $tempId . '.pdf',
+                'preview_images' => $gdImageUrls,
+                'watermark_text' => $watermarkText,
+                'message'        => 'Đã tạo bản xem trước 2 trang đầu thành công!'
+            ]);
+        }
+        exit();
+    }
 }
