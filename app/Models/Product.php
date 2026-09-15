@@ -171,7 +171,7 @@ class Product extends BaseModel
     public function getProductWithSeller(int $productId): ?object
     {
         $this->db->query("
-            SELECT p.*, s.user_id as seller_id 
+            SELECT p.*, s.user_id as seller_id, s.name as store_name
             FROM products p 
             JOIN stores s ON p.store_id = s.id 
             WHERE p.id = :id

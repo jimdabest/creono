@@ -65,6 +65,7 @@ if (php_sapi_name() === 'cli') {
             2 => 'Paid (Đã thanh toán)',
             3 => 'Cancelled (Đã hủy)',
             4 => 'Refunded (Đã hoàn tiền)',
+            5 => 'Received (Đã nhận - Khóa hoàn tiền)',
             default => 'Unknown'
         };
         echo "   - [ID: {$o->id}] {$o->order_number} | {$o->product_title} | " . number_format((float)$o->total_amount, 0, ',', '.') . " đ | Status: {$statusStr}\n";
@@ -89,6 +90,7 @@ function orderStatusBadge(int $status): array {
         2 => ['bg' => '#dcfce7', 'color' => '#166534', 'border' => '#86efac', 'text' => 'Paid (Đã thanh toán)'],
         3 => ['bg' => '#f1f5f9', 'color' => '#475569', 'border' => '#cbd5e1', 'text' => 'Cancelled (Đã hủy)'],
         4 => ['bg' => '#fee2e2', 'color' => '#991b1b', 'border' => '#fca5a5', 'text' => 'Refunded (Đã hoàn tiền)'],
+        5 => ['bg' => '#e0f2fe', 'color' => '#0369a1', 'border' => '#7dd3fc', 'text' => 'Received (Đã nhận - Khóa HT)'],
         default => ['bg' => '#f1f5f9', 'color' => '#475569', 'border' => '#cbd5e1', 'text' => 'Unknown']
     };
 }
