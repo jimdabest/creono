@@ -247,15 +247,6 @@
     </div>
 </div>
 
-<style>
-.purchase-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
-}
-.btn-danger-outline:hover {
-    background: #fee2e2 !important;
-}
-</style>
 
 <script>
 // Xử lý gửi AJAX khi bấm 'Chấp nhận & Tải xuống'

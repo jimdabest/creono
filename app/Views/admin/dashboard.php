@@ -13,7 +13,8 @@
         </div>
         <div class="admin-actions">
             <a href="<?php echo URLROOT; ?>/admin/categories" class="btn btn-outline">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="vertical-align: middle; margin-right: 4px;">
                     <line x1="8" y1="6" x2="21" y2="6"></line>
                     <line x1="8" y1="12" x2="21" y2="12"></line>
                     <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -85,7 +86,8 @@
             </div>
             <div class="stat-info">
                 <span class="stat-label">Tổng doanh thu</span>
-                <span class="stat-number text-green"><?php echo number_format($data['total_revenue'], 0, ',', '.'); ?>đ</span>
+                <span
+                    class="stat-number text-green"><?php echo number_format($data['total_revenue'], 0, ',', '.'); ?>đ</span>
                 <span class="stat-desc">Doanh số toàn hệ thống</span>
             </div>
         </div>
@@ -111,17 +113,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($data['top_products'])) : ?>
-                            <?php foreach ($data['top_products'] as $prod) : ?>
+                        <?php if (!empty($data['top_products'])): ?>
+                            <?php foreach ($data['top_products'] as $prod): ?>
                                 <tr>
                                     <td class="font-medium"><?php echo htmlspecialchars($prod->title); ?></td>
-                                    <td><span class="badge badge-secondary"><?php echo htmlspecialchars($prod->store_name); ?></span></td>
+                                    <td><span
+                                            class="badge badge-secondary"><?php echo htmlspecialchars($prod->store_name); ?></span>
+                                    </td>
                                     <td class="font-semibold"><?php echo number_format($prod->price, 0, ',', '.'); ?>đ</td>
-                                    <td><span class="badge badge-success"><?php echo number_format($prod->download_count); ?></span></td>
-                                    <td>⭐ <?php echo number_format($prod->rating, 1); ?> (<?php echo $prod->review_count; ?>)</td>
+                                    <td><span
+                                            class="badge badge-success"><?php echo number_format($prod->download_count); ?></span>
+                                    </td>
+                                    <td>⭐ <?php echo number_format($prod->rating, 1); ?> (<?php echo $prod->review_count; ?>)
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
-                        <?php else : ?>
+                        <?php else: ?>
                             <tr>
                                 <td colspan="5" class="text-center text-muted">Chưa có sản phẩm nào</td>
                             </tr>
@@ -149,17 +156,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($data['seller_revenues'])) : ?>
-                            <?php foreach ($data['seller_revenues'] as $seller) : ?>
+                        <?php if (!empty($data['seller_revenues'])): ?>
+                            <?php foreach ($data['seller_revenues'] as $seller): ?>
                                 <tr>
                                     <td class="font-medium"><?php echo htmlspecialchars($seller->store_name); ?></td>
                                     <td><?php echo number_format($seller->total_orders); ?></td>
                                     <td><?php echo number_format($seller->total_products); ?></td>
-                                    <td class="font-semibold text-green"><?php echo number_format($seller->total_revenue, 0, ',', '.'); ?>đ</td>
+                                    <td class="font-semibold text-green">
+                                        <?php echo number_format($seller->total_revenue, 0, ',', '.'); ?>đ</td>
                                     <td class="text-muted"><?php echo number_format($seller->total_fee, 0, ',', '.'); ?>đ</td>
                                 </tr>
                             <?php endforeach; ?>
-                        <?php else : ?>
+                        <?php else: ?>
                             <tr>
                                 <td colspan="5" class="text-center text-muted">Chưa có dữ liệu doanh thu</td>
                             </tr>
@@ -176,8 +184,14 @@
             <h3>Chức năng Quản trị Hệ thống</h3>
         </div>
         <div class="admin-quick-links">
+            <!-- Quản lý Danh mục -->
             <a href="<?php echo URLROOT; ?>/admin/categories" class="quick-link-card">
-                <div class="link-icon">📁</div>
+                <div class="link-icon" style="color: var(--apple-blue);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
                 <div class="link-info">
                     <h4>Quản lý Danh mục</h4>
                     <p>Thêm, sửa, xóa các danh mục sản phẩm</p>
@@ -185,8 +199,17 @@
                 <span class="link-arrow">&rarr;</span>
             </a>
 
+            <!-- Quản lý Người dùng -->
             <a href="<?php echo URLROOT; ?>/adminUserController/index" class="quick-link-card">
-                <div class="link-icon">👥</div>
+                <div class="link-icon" style="color: #af52de;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
                 <div class="link-info">
                     <h4>Quản lý Người dùng</h4>
                     <p>Quản lý tài khoản Buyer, Seller & Phân quyền</p>
@@ -194,8 +217,18 @@
                 <span class="link-arrow">&rarr;</span>
             </a>
 
+            <!-- Quản lý Sản phẩm -->
             <a href="<?php echo URLROOT; ?>/adminProductController/index" class="quick-link-card">
-                <div class="link-icon">📦</div>
+                <div class="link-icon" style="color: var(--apple-orange);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </div>
                 <div class="link-info">
                     <h4>Quản lý Sản phẩm</h4>
                     <p>CRUD, kiểm duyệt & giám sát tất cả sản phẩm</p>
@@ -203,51 +236,82 @@
                 <span class="link-arrow">&rarr;</span>
             </a>
 
+            <!-- Duyệt tài liệu sản phẩm -->
             <a href="<?php echo URLROOT; ?>/admin/approvals" class="quick-link-card">
-                <div class="link-icon">✅</div>
+                <div class="link-icon" style="color: var(--apple-green);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                </div>
                 <div class="link-info">
                     <h4>Duyệt tài liệu sản phẩm</h4>
                     <p>Phê duyệt hoặc từ chối tài liệu sản phẩm</p>
                 </div>
-                <?php if (!empty($data['pending_approvals_count'])) : ?>
-                    <span class="badge badge-warning" style="margin-left: auto; font-size: 13px; padding: 4px 10px;"><?php echo $data['pending_approvals_count']; ?> chờ duyệt</span>
-                <?php else : ?>
+                <?php if (!empty($data['pending_approvals_count'])): ?>
+                    <span class="badge badge-warning"
+                        style="margin-left: auto; font-size: 13px; padding: 4px 10px;"><?php echo $data['pending_approvals_count']; ?>
+                        chờ duyệt</span>
+                <?php else: ?>
                     <span class="link-arrow">&rarr;</span>
                 <?php endif; ?>
             </a>
 
+            <!-- Quản lý Báo cáo vi phạm -->
             <a href="<?php echo URLROOT; ?>/admin/reports" class="quick-link-card">
-                <div class="link-icon">🚩</div>
+                <div class="link-icon" style="color: var(--apple-red);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                        <line x1="4" y1="22" x2="4" y2="15"></line>
+                    </svg>
+                </div>
                 <div class="link-info">
                     <h4>Quản lý Báo cáo vi phạm</h4>
                     <p>Xử lý báo cáo vi phạm & khiếu nại dán nhãn AI</p>
                 </div>
-                <?php if (!empty($data['pending_reports_count'])) : ?>
-                    <span class="badge badge-danger" style="margin-left: auto; font-size: 13px; padding: 4px 10px;"><?php echo $data['pending_reports_count']; ?> chưa xử lý</span>
-                <?php else : ?>
+                <?php if (!empty($data['pending_reports_count'])): ?>
+                    <span class="badge badge-danger"
+                        style="margin-left: auto; font-size: 13px; padding: 4px 10px;"><?php echo $data['pending_reports_count']; ?>
+                        chưa xử lý</span>
+                <?php else: ?>
                     <span class="link-arrow">&rarr;</span>
                 <?php endif; ?>
             </a>
 
-            <!-- Nút 1: Quản lý Rút tiền (UC12) -->
-            <a href="<?php echo URLROOT; ?>/admin/withdrawals" class="action-item">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--apple-blue, #0071e3)" stroke-width="2">
-                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                        <line x1="2" y1="10" x2="22" y2="10"></line>
+            <!-- Phê duyệt rút tiền -->
+            <a href="<?php echo URLROOT; ?>/admin/withdrawals" class="quick-link-card">
+                <div class="link-icon" style="color: #32ade6;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
                     </svg>
-                    <span>Phê duyệt rút tiền</span>
                 </div>
+                <div class="link-info">
+                    <h4>Phê duyệt rút tiền</h4>
+                    <p>Xử lý yêu cầu rút doanh thu của Người bán</p>
+                </div>
+                <span class="link-arrow">&rarr;</span>
             </a>
 
-            <a href="<?php echo URLROOT; ?>/admin/settings" class="action-item">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--apple-gray, #86868b)" stroke-width="2">
+            <!-- Cấu hình hệ thống -->
+            <a href="<?php echo URLROOT; ?>/admin/settings" class="quick-link-card">
+                <div class="link-icon" style="color: var(--apple-gray-700);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
                     </svg>
-                    <span>Cấu hình hệ thống</span>
                 </div>
+                <div class="link-info">
+                    <h4>Cấu hình hệ thống</h4>
+                    <p>Quản lý tỷ lệ hoa hồng và các tham số cốt lõi</p>
+                </div>
+                <span class="link-arrow">&rarr;</span>
             </a>
         </div>
     </div>

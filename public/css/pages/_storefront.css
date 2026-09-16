@@ -1,0 +1,121 @@
+/* ============================================================================== */
+/* STOREFRONT PAGE STYLES                                                         */
+/* ============================================================================== */
+
+.store-header {
+    background: var(--apple-gray-bg, #f5f5f7);
+    border-radius: 24px;
+    padding: 32px;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.store-logo {
+    flex-shrink: 0;
+}
+
+.store-logo img {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.store-logo-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    background: var(--apple-blue, #0071e3);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.store-info {
+    flex: 1;
+}
+
+.store-info h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    color: #1d1d1f;
+}
+
+.store-info p {
+    font-size: 16px;
+    color: var(--apple-gray, #86868b);
+    max-width: 600px;
+    margin-bottom: 16px;
+}
+
+.store-stats {
+    display: flex;
+    gap: 24px;
+    font-size: 15px;
+    color: var(--apple-gray, #86868b);
+    flex-wrap: wrap;
+}
+
+.store-stats strong {
+    color: #1d1d1f;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .store-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+        gap: 16px;
+    }
+
+    .store-info h1 {
+        font-size: 26px;
+    }
+
+    .store-info p {
+        font-size: 15px;
+    }
+
+    .store-stats {
+        gap: 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .store-header {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .store-logo img,
+    .store-logo-placeholder {
+        width: 72px;
+        height: 72px;
+        font-size: 32px;
+    }
+
+    .store-info h1 {
+        font-size: 22px;
+    }
+
+    .store-info p {
+        font-size: 14px;
+    }
+
+    .store-stats {
+        gap: 8px;
+        font-size: 12px;
+    }
+}

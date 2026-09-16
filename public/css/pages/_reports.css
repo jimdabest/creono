@@ -1,0 +1,226 @@
+/* ============================== */
+/* REPORT MODULE - APPLE STYLE    */
+/* ============================== */
+
+.report-page {
+    margin-top: 40px;
+    margin-bottom: 80px;
+    max-width: 720px;
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.report-title {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--apple-black);
+    margin-bottom: 8px;
+}
+
+.report-subtitle {
+    font-size: 17px;
+    color: var(--apple-gray);
+}
+
+.report-card {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid var(--apple-gray-border);
+    padding: 32px 36px;
+    box-shadow: var(--apple-shadow-sm);
+}
+
+.report-target-info {
+    background: var(--apple-gray-bg);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    border: 1px solid var(--apple-gray-border);
+}
+
+.report-target-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--apple-gray);
+    margin-bottom: 8px;
+}
+
+.report-target-detail {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.target-type-badge {
+    display: inline-block;
+    background: var(--apple-blue);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: var(--apple-radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.target-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--apple-black);
+}
+
+.target-id {
+    font-size: 13px;
+    color: var(--apple-gray-light);
+    font-weight: 400;
+}
+
+.report-form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.report-form .form-group {
+    margin-bottom: 18px;
+}
+
+.report-form .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--apple-black);
+    margin-bottom: 6px;
+    letter-spacing: -0.016em;
+}
+
+.report-form .form-group .form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--apple-gray-border);
+    border-radius: var(--apple-radius-sm);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--apple-black);
+    background: #ffffff;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.report-form .form-group .form-control:focus {
+    outline: none;
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
+}
+
+.report-form .form-group .form-control.is-invalid {
+    border-color: var(--apple-red);
+}
+
+.report-form .form-group .form-control.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.12);
+}
+
+.report-form .form-group .error-text {
+    display: block;
+    color: var(--apple-red);
+    font-size: 13px;
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+.report-form .form-group .form-hint {
+    display: block;
+    font-size: 13px;
+    color: var(--apple-gray-light);
+    margin-top: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.form-actions .btn {
+    flex: 1;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: none;
+    text-decoration: none;
+}
+
+.btn-submit-report {
+    background: var(--apple-blue);
+    color: #ffffff;
+}
+
+.btn-submit-report:hover {
+    background: var(--apple-blue-hover);
+    transform: scale(1.02);
+    color: #ffffff;
+}
+
+.btn-cancel-report {
+    background: var(--apple-gray-bg);
+    color: var(--apple-black);
+}
+
+.btn-cancel-report:hover {
+    background: var(--apple-gray-border);
+    color: var(--apple-black);
+    transform: scale(1.02);
+}
+
+.report-footer-note {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--apple-gray-bg);
+    text-align: center;
+}
+
+.report-footer-note p {
+    font-size: 14px;
+    color: var(--apple-gray);
+    margin: 0;
+    line-height: 1.5;
+}
+
+@media only screen and (max-width: 735px) {
+    .report-card {
+        padding: 24px 20px;
+    }
+
+    .report-title {
+        font-size: 28px;
+    }
+
+    .report-target-detail {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}

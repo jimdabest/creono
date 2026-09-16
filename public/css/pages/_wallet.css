@@ -1,0 +1,180 @@
+/* ============================================================================== */
+/* WALLET PAGE STYLES                                                             */
+/* ============================================================================== */
+
+.wallet-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+.wallet-container .card {
+    flex: 1;
+    min-width: 280px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+.wallet-container .card:last-child {
+    flex: 2;
+    min-width: 300px;
+}
+
+.balance-box {
+    background: var(--apple-gray-bg, #f5f5f7);
+    padding: 24px 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.balance-box p:first-child {
+    margin: 0;
+    color: var(--apple-gray, #86868b);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.balance-box h3 {
+    margin: 8px 0;
+    color: var(--apple-green, #34c759);
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.balance-box p:last-child {
+    margin: 0;
+    color: var(--apple-red, #ff3b30);
+    font-size: 14px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .wallet-container {
+        flex-direction: column !important;
+        gap: 20px !important;
+        padding: 16px 12px !important;
+    }
+
+    .wallet-container .card {
+        min-width: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
+    }
+
+    .balance-box h3 {
+        font-size: 28px !important;
+    }
+
+    .wallet-container h2 {
+        font-size: 22px !important;
+    }
+
+    .wallet-container h3 {
+        font-size: 18px !important;
+    }
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    thead tr {
+        display: none;
+    }
+
+    tr {
+        margin-bottom: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+    }
+
+    td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0 !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+        font-size: 14px;
+    }
+
+    td:last-child {
+        border-bottom: none !important;
+    }
+
+    td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--apple-gray, #86868b);
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    /* Gán nhãn cho các cột */
+    td:nth-of-type(1):before {
+        content: "Thời gian";
+    }
+
+    td:nth-of-type(2):before {
+        content: "Loại GD";
+    }
+
+    td:nth-of-type(3):before {
+        content: "Số tiền";
+    }
+
+    td:nth-of-type(4):before {
+        content: "Nội dung";
+    }
+
+    .table-responsive {
+        overflow-x: visible !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .wallet-container .card {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .balance-box {
+        padding: 16px !important;
+    }
+
+    .balance-box h3 {
+        font-size: 24px !important;
+    }
+
+    .wallet-container h2 {
+        font-size: 20px !important;
+    }
+
+    .wallet-container h3 {
+        font-size: 17px !important;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        font-size: 14px !important;
+        padding: 10px 12px !important;
+    }
+
+    input[type="submit"] {
+        font-size: 15px !important;
+        padding: 12px !important;
+    }
+}

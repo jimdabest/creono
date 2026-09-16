@@ -1,0 +1,304 @@
+/* ========== BUTTONS (Apple Style) ========== */
+.btn {
+    display: inline-block;
+    background: var(--apple-blue);
+    color: #fff;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+    padding: 12px 22px;
+    border: none;
+    border-radius: var(--apple-radius-full);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+    min-width: 60px;
+}
+
+.btn:hover {
+    background: var(--apple-blue-hover);
+    color: #fff;
+    text-decoration: none;
+    transform: scale(1.02);
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn-light {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--apple-black);
+}
+
+.btn-light:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: scale(1.02);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--apple-blue);
+    color: var(--apple-blue);
+    padding: 8px 18px;
+    width: auto;
+    min-width: unset;
+    font-size: 14px;
+}
+
+.btn-outline:hover {
+    background: var(--apple-blue);
+    color: #fff;
+    transform: scale(1.02);
+}
+
+.btn-success {
+    background: var(--apple-green);
+}
+
+.btn-success:hover {
+    background: #28a745;
+    transform: scale(1.02);
+}
+
+.btn-hero {
+    padding: 14px 32px;
+    font-size: 19px;
+    min-width: 120px;
+}
+
+.btn-secondary {
+    background: var(--apple-gray-bg);
+    color: var(--apple-black);
+    border: none;
+    font-weight: 500;
+    padding: 6px 16px;
+    font-size: 14px;
+    border-radius: var(--apple-radius-full);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    width: auto;
+    min-width: unset;
+}
+
+.btn-secondary:hover {
+    background: var(--apple-gray-border);
+    color: var(--apple-black);
+    transform: scale(1.02);
+}
+
+.btn-hero-outline {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--apple-black);
+    border: 1px solid transparent;
+}
+
+.btn-hero-outline:hover {
+    background: rgba(0, 0, 0, 0.09);
+    color: var(--apple-black);
+    transform: scale(1.02);
+}
+
+.btn-large {
+    padding: 16px 48px;
+    font-size: 18px;
+    width: auto;
+    min-width: 220px;
+    background: var(--apple-blue);
+    color: #fff;
+    border-radius: var(--apple-radius-full);
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: inline-block;
+    font-weight: 500;
+}
+
+.btn-large:hover {
+    background: var(--apple-blue-hover);
+    color: #fff;
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(0, 113, 227, 0.25);
+}
+
+.btn-nav {
+    padding: 4px 16px;
+    border-radius: var(--apple-radius-full);
+    font-size: 14px;
+    font-weight: 400;
+    height: auto !important;
+}
+
+.btn-login {
+    color: var(--apple-black) !important;
+}
+
+.btn-login:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--apple-black) !important;
+}
+
+.btn-register {
+    background: var(--apple-blue);
+    color: #fff !important;
+}
+
+.btn-register:hover {
+    background: var(--apple-blue-hover);
+    color: #fff !important;
+}
+
+.btn-danger {
+    background: var(--apple-red);
+    color: #fff;
+    border: none;
+    border-radius: var(--apple-radius-full);
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background: #e0342d;
+    transform: scale(1.02);
+}
+
+.btn-danger-outline {
+    background: #fff;
+    border: 1px solid #ef4444;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-danger-outline:hover {
+    background: #fee2e2 !important;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-action-edit {
+    background: rgba(0, 113, 227, 0.08);
+    color: var(--apple-blue);
+}
+
+.btn-action-edit:hover {
+    background: var(--apple-blue);
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-action-delete {
+    background: rgba(255, 59, 48, 0.08);
+    color: var(--apple-red);
+}
+
+.btn-action-delete:hover {
+    background: var(--apple-red);
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-action-lock {
+    color: var(--apple-orange) !important;
+    border-color: rgba(255, 149, 0, 0.3) !important;
+}
+
+.btn-action-lock:hover {
+    background: rgba(255, 149, 0, 0.08) !important;
+}
+
+.btn-action-unlock {
+    color: var(--apple-green) !important;
+    border-color: rgba(52, 199, 89, 0.3) !important;
+}
+
+.btn-action-unlock:hover {
+    background: rgba(52, 199, 89, 0.08) !important;
+}
+
+.btn-remove-cart-item {
+    background: rgba(255, 59, 48, 0.1);
+    border: none;
+    color: #ff3b30;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.btn-mini-cart {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: none;
+    background: var(--apple-gray-bg);
+    color: var(--apple-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.btn-mini-cart:hover {
+    background: var(--apple-blue);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.btn-mini-cart:active {
+    transform: scale(0.94);
+}
+
+.btn-mini-cart.is-success {
+    background: var(--apple-green);
+    color: #ffffff;
+}
+
+.btn-buy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--apple-blue);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    line-height: 1;
+}
+
+.btn-buy:hover {
+    background: var(--apple-blue-hover);
+    color: #ffffff;
+    transform: scale(1.03);
+}
+
+.btn-buy:active {
+    transform: scale(0.97);
+}

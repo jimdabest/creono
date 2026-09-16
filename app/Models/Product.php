@@ -6,28 +6,109 @@ class Product extends BaseModel
 {
     protected string $table = 'products';
 
+    // =========================================================================
+    // DANH SÁCH SẢN PHẨM (TRANG CHỢ TÀI LIỆU)
+    // =========================================================================
+
     /**
-     * Lấy tất cả sản phẩm kèm tên cửa hàng
+     * Lấy danh sách sản phẩm với bộ lọc tìm kiếm, danh mục và sắp xếp
+     *
+     * @param string $search     Từ khóa tìm kiếm (title hoặc description)
+     * @param int    $categoryId ID danh mục (0 = tất cả)
+     * @param string $sort       newest | price_asc | price_desc | popular | rating
      * @return array<object>
      */
-    public function getProducts(): array
-    {
-        $this->db->query("
-            SELECT products.*, stores.name as store_name, stores.slug as store_slug 
-            FROM {$this->table} 
-            JOIN stores ON products.store_id = stores.id 
-            WHERE products.status = 2 
-            ORDER BY products.created_at DESC
-        ");
+    public function getProducts(
+        string $search = '',
+        int $categoryId = 0,
+        string $sort = 'newest'
+    ): array {
+        $sql = "SELECT p.*, 
+                   u.name AS seller_name, 
+                   c.name AS category_name, 
+                   c.slug AS category_slug,
+                   s.name AS store_name, 
+                   s.slug AS store_slug
+            FROM products p
+            JOIN stores s ON p.store_id = s.id
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE p.status = 2 AND p.deleted_at IS NULL";
+
+        $params = [];
+
+        // Lọc theo danh mục
+        if ($categoryId > 0) {
+            $sql .= " AND p.category_id = :category_id";
+            $params[':category_id'] = $categoryId;
+        }
+
+        // Tìm kiếm theo tiêu đề hoặc mô tả
+        if ($search !== '') {
+            $sql .= " AND (p.title LIKE :search OR p.description LIKE :search)";
+            $params[':search'] = '%' . $search . '%';
+        }
+
+        // Sắp xếp an toàn (whitelist)
+        $sql .= match ($sort) {
+            'price_asc'  => " ORDER BY p.price ASC",
+            'price_desc' => " ORDER BY p.price DESC",
+            'popular'    => " ORDER BY p.download_count DESC",
+            'rating'     => " ORDER BY p.rating DESC, p.review_count DESC",
+            default      => " ORDER BY p.created_at DESC"
+        };
+
+        $this->db->query($sql);
+        foreach ($params as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+
         return $this->db->resultSet();
     }
 
+    /**
+     * Đếm tổng sản phẩm theo bộ lọc (dùng cho phân trang)
+     */
+    public function countProducts(string $search = '', int $categoryId = 0): int
+    {
+        $sql = "SELECT COUNT(*) AS total
+            FROM products p
+            WHERE p.status = 2 AND p.deleted_at IS NULL";
+        $params = [];
+
+        if ($categoryId > 0) {
+            $sql .= " AND p.category_id = :category_id";
+            $params[':category_id'] = $categoryId;
+        }
+
+        if ($search !== '') {
+            $sql .= " AND (p.title LIKE :search OR p.description LIKE :search)";
+            $params[':search'] = '%' . $search . '%';
+        }
+
+        $this->db->query($sql);
+        foreach ($params as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+
+        $row = $this->db->single();
+        return $row ? (int) $row->total : 0;
+    }
+
+    // =========================================================================
+    // THỐNG KÊ CHUNG
+    // =========================================================================
+
     public function getTotalProducts(): int
     {
-        $this->db->query("SELECT COUNT(*) as total FROM {$this->table} WHERE status = 2");
+        $this->db->query("SELECT COUNT(*) as total FROM {$this->table} WHERE status = 2 AND deleted_at IS NULL");
         $result = $this->db->single();
-        return $result ? (int)$result->total : 0;
+        return $result ? (int) $result->total : 0;
     }
+
+    // =========================================================================
+    // THỐNG KÊ THEO SELLER
+    // =========================================================================
 
     /**
      * Lấy số lượng sản phẩm của seller
@@ -42,7 +123,7 @@ class Product extends BaseModel
         ");
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->single();
-        return $result ? (int)$result->total : 0;
+        return $result ? (int) $result->total : 0;
     }
 
     /**
@@ -58,7 +139,7 @@ class Product extends BaseModel
         ");
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->single();
-        return $result ? (float)$result->avg_rating : 0.0;
+        return $result ? (float) $result->avg_rating : 0.0;
     }
 
     /**
@@ -74,7 +155,7 @@ class Product extends BaseModel
         ");
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->single();
-        return $result ? (int)$result->total : 0;
+        return $result ? (int) $result->total : 0;
     }
 
     /**
@@ -100,9 +181,12 @@ class Product extends BaseModel
         return $this->db->resultSet();
     }
 
+    // =========================================================================
+    // KIỂM DUYỆT SẢN PHẨM (ADMIN)
+    // =========================================================================
+
     /**
-     * Lấy tất cả sản phẩm đang chờ duyệt (status = 1) kèm thông tin chi tiết
-     * @return array<object>
+     * Lấy tất cả sản phẩm đang chờ duyệt (status = 1)
      */
     public function getPendingApprovals(): array
     {
@@ -131,7 +215,7 @@ class Product extends BaseModel
     {
         $this->db->query("SELECT COUNT(*) as total FROM {$this->table} WHERE status = 1 AND deleted_at IS NULL");
         $result = $this->db->single();
-        return $result ? (int)$result->total : 0;
+        return $result ? (int) $result->total : 0;
     }
 
     /**
@@ -144,6 +228,10 @@ class Product extends BaseModel
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
+
+    // =========================================================================
+    // CHI TIẾT SẢN PHẨM
+    // =========================================================================
 
     /**
      * Lấy chi tiết sản phẩm đầy đủ thông tin (kèm store, seller, category)
@@ -205,8 +293,12 @@ class Product extends BaseModel
         return $this->db->execute();
     }
 
+    // =========================================================================
+    // LỌC NÂNG CAO
+    // =========================================================================
+
     /**
-     * Lấy danh sách sản phẩm với bộ lọc nâng cao
+     * Lấy danh sách sản phẩm với bộ lọc nâng cao (category slug + price range)
      * @return array<object>
      */
     public function getProductsFiltered(
@@ -239,19 +331,12 @@ class Product extends BaseModel
             $bind[':maxPrice'] = $maxPrice;
         }
 
-        switch ($sort) {
-            case 'price_asc':
-                $sql .= " ORDER BY p.price ASC";
-                break;
-            case 'price_desc':
-                $sql .= " ORDER BY p.price DESC";
-                break;
-            case 'rating':
-                $sql .= " ORDER BY p.rating DESC, p.review_count DESC";
-                break;
-            default:
-                $sql .= " ORDER BY p.created_at DESC";
-        }
+        $sql .= match ($sort) {
+            'price_asc'  => " ORDER BY p.price ASC",
+            'price_desc' => " ORDER BY p.price DESC",
+            'rating'     => " ORDER BY p.rating DESC, p.review_count DESC",
+            default      => " ORDER BY p.created_at DESC"
+        };
 
         $this->db->query($sql);
         foreach ($bind as $key => $val) {
@@ -259,12 +344,11 @@ class Product extends BaseModel
         }
         return $this->db->resultSet();
     }
-    // public function getProductsByStoreId(int $storeId): array
-    // {
-    //     $this->db->query("SELECT * FROM {$this->table} WHERE store_id = :store_id AND deleted_at IS NULL ORDER BY created_at DESC");
-    //     $this->db->bind(':store_id', $storeId);
-    //     return $this->db->resultSet();
-    // }
+
+    // =========================================================================
+    // LỌC THEO CỬA HÀNG (STOREFRONT)
+    // =========================================================================
+
     public function getProductsByStoreId(
         int $storeId,
         ?int $limit = null,
@@ -288,7 +372,18 @@ class Product extends BaseModel
             $sql .= " AND p.category_id = (SELECT id FROM categories WHERE slug = :category)";
         }
 
-        // Sắp xếp (có thể tùy chỉnh)
+        // Whitelist orderBy để tránh SQL injection
+        $allowedOrderBy = [
+            'p.created_at DESC',
+            'p.created_at ASC',
+            'p.price ASC',
+            'p.price DESC',
+            'p.rating DESC',
+            'p.download_count DESC'
+        ];
+        if (!in_array($orderBy, $allowedOrderBy, true)) {
+            $orderBy = 'p.created_at DESC';
+        }
         $sql .= " ORDER BY $orderBy";
 
         // Phân trang
@@ -310,9 +405,11 @@ class Product extends BaseModel
 
         return $this->db->resultSet();
     }
+
     public function countProductsByStoreId(int $storeId, string $categorySlug = ''): int
     {
-        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE store_id = :store_id AND status = 2 AND deleted_at IS NULL";
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} 
+                WHERE store_id = :store_id AND status = 2 AND deleted_at IS NULL";
         if ($categorySlug !== '') {
             $sql .= " AND category_id = (SELECT id FROM categories WHERE slug = :category)";
         }
@@ -322,6 +419,6 @@ class Product extends BaseModel
             $this->db->bind(':category', $categorySlug);
         }
         $result = $this->db->single();
-        return $result ? (int)$result->total : 0;
+        return $result ? (int) $result->total : 0;
     }
 }

@@ -93,3 +93,21 @@
     border-color: var(--apple-red) !important;
     box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.12) !important;
 }
+
+/* ========== FORM CARD (Admin) ========== */
+.form-card-lg {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 36px;
+    background: #fff;
+    border-radius: var(--apple-radius-lg);
+    border: 1px solid var(--apple-gray-border);
+    box-shadow: var(--apple-shadow-sm);
+}
+
+.form-hint {
+    font-size: 13px;
+    color: var(--apple-gray);
+    margin-top: 4px;
+    display: block;
+}

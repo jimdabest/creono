@@ -21,42 +21,60 @@ class Products extends Controller
 
     public function __construct()
     {
-        $this->productModel  = $this->model('Product');
-        $this->reviewModel   = $this->model('Review');
+        $this->productModel = $this->model('Product');
+        $this->reviewModel = $this->model('Review');
         $this->favoriteModel = $this->model('Favorite');
-        $this->cartModel     = $this->model('Cart');
+        $this->cartModel = $this->model('Cart');
         $this->categoryModel = $this->model('Category');
-        $this->orderModel    = $this->model('Order');
-        $this->storeModel    = $this->model('Store');
+        $this->orderModel = $this->model('Order');
+        $this->storeModel = $this->model('Store');
     }
 
     // ===================== CÁC ACTION CŨ =====================
 
+    // app/Controllers/Products.php
+
     public function index(): void
     {
-        $category = $_GET['category'] ?? '';
-        $keyword  = $_GET['keyword'] ?? '';
-        $minPrice = isset($_GET['min_price']) ? (float)$_GET['min_price'] : 0;
-        $maxPrice = isset($_GET['max_price']) ? (float)$_GET['max_price'] : 0;
-        $sort     = $_GET['sort'] ?? 'newest';
+        // 1. Đọc tham số từ URL (sanitize)
+        $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
+        $categoryId = isset($_GET['category']) ? (int) $_GET['category'] : 0;
+        $sort = isset($_GET['sort']) ? trim((string) $_GET['sort']) : 'newest';
 
-        $products = $this->productModel->getProductsFiltered($category, $keyword, $minPrice, $maxPrice, $sort);
-
-        $favoriteIds = [];
-        if (isset($_SESSION['user_id'])) {
-            $favoriteIds = $this->favoriteModel->getFavoriteProductIds((int)$_SESSION['user_id']);
+        // Whitelist sort để tránh lỗi khi URL thủ công
+        $allowedSorts = ['newest', 'price_asc', 'price_desc', 'popular', 'rating'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
         }
 
+        // Giới hạn độ dài keyword
+        if (mb_strlen($search) > 100) {
+            $search = mb_substr($search, 0, 100);
+        }
+
+        // 2. Lấy dữ liệu
+        $products = $this->productModel->getProducts($search, $categoryId, $sort);
+        $categories = $this->categoryModel->getAllOrdered();
+        $totalCount = count($products);
+
+        // 3. Favorite IDs nếu đã đăng nhập
+        $favoriteIds = [];
+        if (isset($_SESSION['user_id'])) {
+            $favoriteIds = $this->favoriteModel->getFavoriteProductIds((int) $_SESSION['user_id']);
+        }
+
+        // 4. Truyền dữ liệu — ĐẢM BẢO tên key khớp với View
         $data = [
-            'title' => 'Chợ Tài Liệu - Sân Sàn C2C',
+            'title' => 'Chợ Tài Liệu - Creono',
+            'description' => 'Khám phá hàng ngàn tài liệu số chất lượng cao trên Creono.',
             'products' => $products,
+            'categories' => $categories,
             'favorite_ids' => $favoriteIds,
-            'csrf_token' => generateCsrfToken(),
-            'category' => $category,
-            'keyword' => $keyword,
-            'min_price' => $minPrice,
-            'max_price' => $maxPrice,
-            'sort' => $sort
+            'current_keyword' => $search,       // ← ĐÚNG TÊN View đang dùng
+            'current_category' => $categoryId,   // ← ĐÚNG: là INT, không phải slug
+            'current_sort' => $sort,
+            'total_count' => $totalCount,
+            'csrf_token' => generateCsrfToken()
         ];
 
         $this->view('products/index', $data);
@@ -85,14 +103,14 @@ class Products extends Controller
         $hasPurchased = false;
         $orderStatus = null;
         if (isset($_SESSION['user_id'])) {
-            $userId = (int)$_SESSION['user_id'];
+            $userId = (int) $_SESSION['user_id'];
             $hasReviewed = $this->reviewModel->hasUserReviewed($productId, $userId);
             $isFavorited = $this->favoriteModel->isFavorited($userId, $productId);
             $cart = $this->cartModel->getOrCreateCart($userId);
-            $inCart = $this->cartModel->hasItem((int)$cart->id, $productId);
+            $inCart = $this->cartModel->hasItem((int) $cart->id, $productId);
             $order = $this->orderModel->getOrderByUserAndProduct($userId, $productId);
             if ($order) {
-                $orderStatus = (int)$order->status;
+                $orderStatus = (int) $order->status;
                 if (in_array($orderStatus, [Order::STATUS_PAID, Order::STATUS_RECEIVED])) {
                     $hasPurchased = true;
                 }
@@ -102,20 +120,20 @@ class Products extends Controller
         }
         $isSeller = isset($_SESSION['user_id']) &&
             isset($product->seller_id) &&
-            (int)$product->seller_id === (int)$_SESSION['user_id'];
+            (int) $product->seller_id === (int) $_SESSION['user_id'];
         $data = [
-            'title'              => htmlspecialchars($product->title) . ' - Creono',
-            'description'        => htmlspecialchars(substr($product->description ?? '', 0, 150)),
-            'product'            => $product,
-            'reviews'            => $reviews,
-            'rating_stats'       => $ratingStats,
-            'has_reviewed'       => $hasReviewed,
-            'is_favorited'       => $isFavorited,
-            'in_cart'            => $inCart,
-            'is_seller'          => $isSeller,
-            'has_purchased'      => $hasPurchased,
+            'title' => htmlspecialchars($product->title) . ' - Creono',
+            'description' => htmlspecialchars(substr($product->description ?? '', 0, 150)),
+            'product' => $product,
+            'reviews' => $reviews,
+            'rating_stats' => $ratingStats,
+            'has_reviewed' => $hasReviewed,
+            'is_favorited' => $isFavorited,
+            'in_cart' => $inCart,
+            'is_seller' => $isSeller,
+            'has_purchased' => $hasPurchased,
             'buyer_order_status' => $orderStatus,
-            'csrf_token'         => generateCsrfToken()
+            'csrf_token' => generateCsrfToken()
         ];
         $this->view('products/detail', $data);
     }
@@ -132,10 +150,10 @@ class Products extends Controller
             }
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
-            $title       = trim($_POST['title'] ?? '');
+            $title = trim($_POST['title'] ?? '');
             $description = trim($_POST['description'] ?? '');
-            $price       = str_replace(',', '', $_POST['price'] ?? '0');
-            $category_id = (int)($_POST['category_id'] ?? 0);
+            $price = str_replace(',', '', $_POST['price'] ?? '0');
+            $category_id = (int) ($_POST['category_id'] ?? 0);
 
             $errors = [];
             if (empty($title)) {
@@ -178,7 +196,7 @@ class Products extends Controller
             }
 
             if (empty($errors)) {
-                $store_id = $this->getStoreIdByUserId((int)$_SESSION['user_id']);
+                $store_id = $this->getStoreIdByUserId((int) $_SESSION['user_id']);
                 if (!$store_id) {
                     setFlash('error', 'Bạn chưa có cửa hàng. Vui lòng liên hệ Admin.');
                     header('location: ' . URLROOT . '/products/index');
@@ -203,14 +221,14 @@ class Products extends Controller
                 }
 
                 $productData = [
-                    'store_id'     => $store_id,
-                    'category_id'  => $category_id,
-                    'title'        => $title,
-                    'description'  => $description,
-                    'price'        => $price,
-                    'preview_url'  => $preview_url,
-                    'status'       => 1, // Pending
-                    'created_at'   => date('Y-m-d H:i:s')
+                    'store_id' => $store_id,
+                    'category_id' => $category_id,
+                    'title' => $title,
+                    'description' => $description,
+                    'price' => $price,
+                    'preview_url' => $preview_url,
+                    'status' => 1, // Pending
+                    'created_at' => date('Y-m-d H:i:s')
                 ];
 
                 if ($this->productModel->create($productData)) {
@@ -218,17 +236,17 @@ class Products extends Controller
                     if (!empty($document_url)) {
                         $documentModel = $this->model('Document');
                         $documentData = [
-                            'product_id'  => $productId,
-                            'file_url'    => $document_url,
-                            'ai_score'    => null,
+                            'product_id' => $productId,
+                            'file_url' => $document_url,
+                            'ai_score' => null,
                             'ai_label_id' => null
                         ];
                         $documentModel->create($documentData);
 
                         // UC25: Phân tích AI thực tế bằng AiDetectionService
-                        $aiResult  = AiDetectionService::detect((string)($description ?? ''), (string)($title ?? ''));
+                        $aiResult = AiDetectionService::detect((string) ($description ?? ''), (string) ($title ?? ''));
                         $documentModel->update($documentModel->getLastInsertId(), [
-                            'ai_score'    => $aiResult['ai_score'],
+                            'ai_score' => $aiResult['ai_score'],
                             'ai_label_id' => $aiResult['ai_label_id']
                         ]);
                     }
@@ -241,24 +259,24 @@ class Products extends Controller
             }
 
             $data = [
-                'title'        => 'Đăng sản phẩm mới',
-                'categories'   => $this->categoryModel->getAllOrdered(),
-                'product'      => (object)[
-                    'title'       => $title,
+                'title' => 'Đăng sản phẩm mới',
+                'categories' => $this->categoryModel->getAllOrdered(),
+                'product' => (object) [
+                    'title' => $title,
                     'description' => $description,
-                    'price'       => $price,
+                    'price' => $price,
                     'category_id' => $category_id,
                 ],
-                'errors'       => $errors,
-                'csrf_token'   => generateCsrfToken()
+                'errors' => $errors,
+                'csrf_token' => generateCsrfToken()
             ];
             $this->view('products/create', $data);
         } else {
             $data = [
-                'title'      => 'Đăng sản phẩm mới',
+                'title' => 'Đăng sản phẩm mới',
                 'categories' => $this->categoryModel->getAllOrdered(),
-                'product'    => null,
-                'errors'     => [],
+                'product' => null,
+                'errors' => [],
                 'csrf_token' => generateCsrfToken()
             ];
             $this->view('products/create', $data);
@@ -404,7 +422,7 @@ class Products extends Controller
             header('location: ' . URLROOT . '/seller/dashboard');
             exit();
         }
-        if ((int)$product->seller_id !== (int)$_SESSION['user_id']) {
+        if ((int) $product->seller_id !== (int) $_SESSION['user_id']) {
             setFlash('error', 'Bạn không có quyền chỉnh sửa sản phẩm này');
             header('location: ' . URLROOT . '/seller/dashboard');
             exit();
@@ -418,16 +436,20 @@ class Products extends Controller
             }
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
-            $title       = trim($_POST['title'] ?? '');
+            $title = trim($_POST['title'] ?? '');
             $description = trim($_POST['description'] ?? '');
-            $price       = str_replace(',', '', $_POST['price'] ?? '0');
-            $category_id = (int)($_POST['category_id'] ?? 0);
+            $price = str_replace(',', '', $_POST['price'] ?? '0');
+            $category_id = (int) ($_POST['category_id'] ?? 0);
 
             $errors = [];
-            if (empty($title)) $errors['title_err'] = 'Vui lòng nhập tiêu đề';
-            if (empty($description)) $errors['description_err'] = 'Vui lòng nhập mô tả';
-            if (empty($price) || $price <= 0) $errors['price_err'] = 'Giá bán phải lớn hơn 0';
-            if ($category_id <= 0) $errors['category_err'] = 'Vui lòng chọn danh mục';
+            if (empty($title))
+                $errors['title_err'] = 'Vui lòng nhập tiêu đề';
+            if (empty($description))
+                $errors['description_err'] = 'Vui lòng nhập mô tả';
+            if (empty($price) || $price <= 0)
+                $errors['price_err'] = 'Giá bán phải lớn hơn 0';
+            if ($category_id <= 0)
+                $errors['category_err'] = 'Vui lòng chọn danh mục';
 
             // --- XỬ LÝ UPLOAD ẢNH COVER MỚI ---
             $preview_url = $product->preview_url;
@@ -449,7 +471,7 @@ class Products extends Controller
                         }
                     }
                     $preview_url = $uploadResult['path'];
-                    $store_id = (int)$product->store_id;
+                    $store_id = (int) $product->store_id;
                     $store = $this->storeModel->findById($store_id);
                     $storeName = $store ? $store->name : 'Creono';
                     WatermarkService::processUpload('../public' . $preview_url, $storeName);
@@ -479,7 +501,7 @@ class Products extends Controller
                     $document_url = $uploadResult['path'];
                     $docExt = strtolower(pathinfo($document_url, PATHINFO_EXTENSION));
                     if ($docExt === 'pdf') {
-                        $store_id = (int)$product->store_id;
+                        $store_id = (int) $product->store_id;
                         $store = $this->storeModel->findById($store_id);
                         $storeName = $store ? $store->name : 'Creono';
                         WatermarkService::processUpload('../public' . $document_url, $storeName);
@@ -492,31 +514,32 @@ class Products extends Controller
             // --- CẬP NHẬT DATABASE ---
             if (empty($errors)) {
                 $updateData = [
-                    'title'        => $title,
-                    'description'  => $description,
-                    'price'        => $price,
-                    'category_id'  => $category_id,
-                    'preview_url'  => $preview_url
+                    'title' => $title,
+                    'description' => $description,
+                    'price' => $price,
+                    'category_id' => $category_id,
+                    'preview_url' => $preview_url
                 ];
                 if ($this->productModel->update($productId, $updateData)) {
-                    // Cập nhật file tài liệu nếu có thay đổi
+                    // Xử lý file tài liệu: cập nhật nếu đã có, tạo mới nếu chưa
                     if (!empty($document_url)) {
                         $documentModel = $this->model('Document');
-                        $documentData = [
-                            'product_id'  => $productId,
-                            'file_url'    => $document_url,
-                            'ai_score'    => null,
-                            'ai_label_id' => null
-                        ];
-                        $documentModel->create($documentData);
+                        $aiResult = AiDetectionService::detect((string) ($description ?? ''), (string) ($title ?? ''));
 
-                        // UC25: Tái quét AI khi người bán cập nhật mô tả/tiêu đề
-                        $aiResult = AiDetectionService::detect((string)($description ?? ''), (string)($title ?? ''));
-                        $docId    = $documentModel->getLastInsertId();
-                        $documentModel->update($docId, [
-                            'ai_score'    => $aiResult['ai_score'],
-                            'ai_label_id' => $aiResult['ai_label_id']
-                        ]);
+                        if ($document) {
+                            $documentModel->update($document->id, [
+                                'file_url' => $document_url,
+                                'ai_score' => $aiResult['ai_score'],
+                                'ai_label_id' => $aiResult['ai_label_id']
+                            ]);
+                        } else {
+                            $documentModel->create([
+                                'product_id' => $productId,
+                                'file_url' => $document_url,
+                                'ai_score' => $aiResult['ai_score'],
+                                'ai_label_id' => $aiResult['ai_label_id']
+                            ]);
+                        }
                     }
                     setFlash('success', 'Cập nhật sản phẩm thành công!');
                     header('location: ' . URLROOT . '/seller/dashboard');
@@ -528,27 +551,27 @@ class Products extends Controller
 
             // --- NẾU CÓ LỖI, HIỂN THỊ LẠI FORM VỚI DỮ LIỆU CŨ ---
             $data = [
-                'title'      => 'Chỉnh sửa sản phẩm',
+                'title' => 'Chỉnh sửa sản phẩm',
                 'categories' => $this->categoryModel->getAllOrdered(),
-                'product'    => (object) array_merge((array)$product, [
-                    'title'       => $title,
+                'product' => (object) array_merge((array) $product, [
+                    'title' => $title,
                     'description' => $description,
-                    'price'       => $price,
+                    'price' => $price,
                     'category_id' => $category_id,
                 ]),
-                'document'   => $document,
-                'errors'     => $errors,
+                'document' => $document,
+                'errors' => $errors,
                 'csrf_token' => generateCsrfToken()
             ];
             $this->view('products/edit', $data);
         } else {
             // GET: hiển thị form với dữ liệu hiện tại
             $data = [
-                'title'      => 'Chỉnh sửa sản phẩm',
+                'title' => 'Chỉnh sửa sản phẩm',
                 'categories' => $this->categoryModel->getAllOrdered(),
-                'product'    => $product,
-                'document'   => $document,
-                'errors'     => [],
+                'product' => $product,
+                'document' => $document,
+                'errors' => [],
                 'csrf_token' => generateCsrfToken()
             ];
             $this->view('products/edit', $data);
@@ -584,7 +607,7 @@ class Products extends Controller
             header('location: ' . URLROOT . '/seller/dashboard');
             exit();
         }
-        if ((int)$product->seller_id !== (int)$_SESSION['user_id']) {
+        if ((int) $product->seller_id !== (int) $_SESSION['user_id']) {
             setFlash('error', 'Bạn không có quyền xóa sản phẩm này');
             header('location: ' . URLROOT . '/seller/dashboard');
             exit();
@@ -686,7 +709,7 @@ class Products extends Controller
     {
         RoleMiddleware::check([2]); // Chỉ Seller
 
-        $userId = (int)$_SESSION['user_id'];
+        $userId = (int) $_SESSION['user_id'];
         $storeId = $this->getStoreIdByUserId($userId);
         if (!$storeId) {
             setFlash('error', 'Bạn chưa có cửa hàng.');
@@ -713,6 +736,153 @@ class Products extends Controller
     }
 
     // ===================== UC28: XEM TRƯỚC (PREVIEW) =====================
+
+    /**
+     * API lấy thông tin preview của sản phẩm đã lưu (cho trang detail)
+     * URL: /products/getPreviewData/{productId}
+     * Trả về JSON: mode, preview_url, pdf_url, preview_images, watermark_text
+     */
+    public function getPreviewData(?int $productId = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!$productId) {
+            echo json_encode(['success' => false, 'message' => 'ID sản phẩm không hợp lệ.']);
+            exit();
+        }
+
+        $product = $this->productModel->getProductDetail($productId);
+        if (!$product) {
+            echo json_encode(['success' => false, 'message' => 'Sản phẩm không tồn tại.']);
+            exit();
+        }
+
+        $document = $this->productModel->getDocumentByProductId($productId);
+        $watermarkText = 'CRENO.VN SHOP';
+
+        $cacheDir = (defined('FCPATH') ? FCPATH : dirname(__DIR__, 2) . '/public/') . 'uploads/cache/previews/';
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+
+        if ($document && !empty($document->file_url)) {
+            $docPath = (defined('FCPATH') ? FCPATH : dirname(__DIR__, 2) . '/public/')
+                     . ltrim($document->file_url, '/');
+
+            if (file_exists($docPath)) {
+                $ext = strtolower(pathinfo($docPath, PATHINFO_EXTENSION));
+
+                if ($ext === 'pdf') {
+                    $cachePdfPath = $cacheDir . 'preview_prod_' . $productId . '.pdf';
+
+                    if (!file_exists($cachePdfPath) || filemtime($cachePdfPath) < filemtime($docPath)) {
+                        $ok = WatermarkService::applyPdfWatermark(
+                            $docPath,
+                            $cachePdfPath,
+                            $watermarkText,
+                            ['maxPages' => 2, 'fontSize' => 28, 'angle' => 45.0]
+                        );
+
+                        if (!$ok || !file_exists($cachePdfPath)) {
+                            echo json_encode([
+                                'success'        => true,
+                                'mode'           => 'canvas_fallback',
+                                'pdf_url'        => URLROOT . $document->file_url,
+                                'watermark_text' => $watermarkText
+                            ]);
+                            exit();
+                        }
+                    }
+
+                    echo json_encode([
+                        'success'        => true,
+                        'mode'           => 'server_pdf',
+                        'preview_url'    => URLROOT . '/uploads/cache/previews/preview_prod_' . $productId . '.pdf',
+                        'watermark_text' => $watermarkText
+                    ]);
+                    exit();
+                }
+
+                $imageExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                if (in_array($ext, $imageExts, true)) {
+                    $cacheImg = $cacheDir . 'preview_prod_' . $productId . '.' . $ext;
+                    if (!file_exists($cacheImg) || filemtime($cacheImg) < filemtime($docPath)) {
+                        WatermarkService::applyImageWatermark($docPath, $cacheImg, $watermarkText, [
+                            'type' => 'diagonal_repeat', 'opacity' => 28
+                        ]);
+                    }
+                    echo json_encode([
+                        'success'        => true,
+                        'mode'           => 'server_pdf',
+                        'preview_url'    => URLROOT . '/uploads/cache/previews/preview_prod_' . $productId . '.' . $ext,
+                        'watermark_text' => $watermarkText
+                    ]);
+                    exit();
+                }
+            }
+        }
+
+        if (!empty($product->preview_url)) {
+            $imgPath = (defined('FCPATH') ? FCPATH : dirname(__DIR__, 2) . '/public/')
+                     . ltrim($product->preview_url, '/');
+            if (file_exists($imgPath)) {
+                $ext = strtolower(pathinfo($imgPath, PATHINFO_EXTENSION));
+                $cacheImg = $cacheDir . 'preview_prod_' . $productId . '_img.' . $ext;
+                if (!file_exists($cacheImg) || filemtime($cacheImg) < filemtime($imgPath)) {
+                    WatermarkService::applyImageWatermark($imgPath, $cacheImg, $watermarkText, [
+                        'type' => 'diagonal_repeat', 'opacity' => 28
+                    ]);
+                }
+                echo json_encode([
+                    'success'        => true,
+                    'mode'           => 'server_pdf',
+                    'preview_url'    => URLROOT . '/uploads/cache/previews/preview_prod_' . $productId . '_img.' . $ext,
+                    'watermark_text' => $watermarkText
+                ]);
+                exit();
+            }
+        }
+
+        $samplePdf = $cacheDir . 'preview_prod_' . $productId . '_sample.pdf';
+        if (!file_exists($samplePdf)) {
+            WatermarkService::generateSamplePreviewPdf($product, $samplePdf, 2);
+        }
+        if (file_exists($samplePdf)) {
+            echo json_encode([
+                'success'        => true,
+                'mode'           => 'server_pdf',
+                'preview_url'    => URLROOT . '/uploads/cache/previews/preview_prod_' . $productId . '_sample.pdf',
+                'watermark_text' => $watermarkText
+            ]);
+            exit();
+        }
+
+        $gd = WatermarkService::generateGdPreviewPages(
+            $cacheDir,
+            'gd_prod_' . $productId,
+            (string) ($product->title ?? 'Tài liệu'),
+            $watermarkText,
+            2
+        );
+        if (!empty($gd['p1'])) {
+            $urls = [];
+            foreach (['p1', 'p2', 'locked'] as $key) {
+                if (!empty($gd[$key])) {
+                    $urls[] = URLROOT . '/uploads/cache/previews/gd_prod_' . $productId . '_' . $key . '.png';
+                }
+            }
+            echo json_encode([
+                'success'        => true,
+                'mode'           => 'canvas_fallback',
+                'preview_images' => $urls,
+                'watermark_text' => $watermarkText
+            ]);
+            exit();
+        }
+
+        echo json_encode(['success' => false, 'message' => 'Chưa thể tạo bản xem trước cho sản phẩm này.']);
+        exit();
+    }
 
     /**
      * Preview tài liệu/ảnh đã được nhúng Watermark dành cho Buyer hoặc bất kỳ ai xem sản phẩm
@@ -768,7 +938,7 @@ class Products extends Controller
 
         header('Content-Type: application/json; charset=utf-8');
 
-        $userId = (int)$_SESSION['user_id'];
+        $userId = (int) $_SESSION['user_id'];
         $storeId = $this->getStoreIdByUserId($userId);
         $store = $storeId ? $this->storeModel->findById($storeId) : null;
         $storeName = $store ? $store->name : 'Creono';
@@ -783,7 +953,7 @@ class Products extends Controller
             echo json_encode([
                 'success' => false,
                 'message' => 'Vui lòng chọn file tài liệu PDF trước khi bấm Xem trước Watermark.',
-                'hint'    => 'Tính năng xem trước chỉ hỗ trợ định dạng PDF. Để xem trước ảnh đại diện, hãy chọn file PDF tài liệu.'
+                'hint' => 'Tính năng xem trước chỉ hỗ trợ định dạng PDF. Để xem trước ảnh đại diện, hãy chọn file PDF tài liệu.'
             ]);
             exit();
         }
@@ -796,7 +966,7 @@ class Products extends Controller
             echo json_encode([
                 'success' => false,
                 'message' => 'File tài liệu định dạng "' . strtoupper($ext) . '" không hỗ trợ xem trước trực quan.',
-                'hint'    => 'Tính năng xem trước Watermark chỉ hoạt động với file PDF. File ZIP, RAR sẽ không hiển thị được nội dung xem trước.'
+                'hint' => 'Tính năng xem trước Watermark chỉ hoạt động với file PDF. File ZIP, RAR sẽ không hiển thị được nội dung xem trước.'
             ]);
             exit();
         }
@@ -815,8 +985,8 @@ class Products extends Controller
         }
 
         // Tạo file xem trước: Đóng dấu Watermark, giới hạn 2 trang + trang khóa nội dung
-        $tempId  = 'seller_' . $userId . '_' . time();
-        $rawPdf  = $cacheDir . 'raw_' . $tempId . '.pdf';
+        $tempId = 'seller_' . $userId . '_' . time();
+        $rawPdf = $cacheDir . 'raw_' . $tempId . '.pdf';
         @copy($file['tmp_name'], $rawPdf);
 
         $watermarkText = 'CRENO.VN SHOP';
@@ -842,33 +1012,33 @@ class Products extends Controller
             $destPdf,
             $watermarkText,
             [
-                'subText'        => '',
-                'maxPages'       => 2,   // Chỉ hiển thị 2 trang đầu
-                'fontSize'       => 28,
-                'angle'          => 45.0,
-                'footerText'     => 'Tai lieu duoc bao ve ban quyen tai Creono.vn - Chi dung cho muc dich xem truoc.',
+                'subText' => '',
+                'maxPages' => 2,   // Chỉ hiển thị 2 trang đầu
+                'fontSize' => 28,
+                'angle' => 45.0,
+                'footerText' => 'Tai lieu duoc bao ve ban quyen tai Creono.vn - Chi dung cho muc dich xem truoc.',
             ]
         );
 
         if ($success && file_exists($destPdf)) {
             echo json_encode([
-                'success'        => true,
-                'mode'           => 'server_pdf',
-                'type'           => 'pdf',
-                'preview_url'    => URLROOT . '/uploads/cache/seller_previews/' . $tempId . '.pdf',
+                'success' => true,
+                'mode' => 'server_pdf',
+                'type' => 'pdf',
+                'preview_url' => URLROOT . '/uploads/cache/seller_previews/' . $tempId . '.pdf',
                 'watermark_text' => $watermarkText,
-                'message'        => 'Đã tạo bản xem trước Watermark thành công!'
+                'message' => 'Đã tạo bản xem trước Watermark thành công!'
             ]);
         } else {
             // Chế độ fallback Canvas / GD khi thiếu FPDI hoặc PDF mã hóa cao
             echo json_encode([
-                'success'        => true,
-                'mode'           => 'canvas_fallback',
-                'type'           => 'canvas',
-                'pdf_url'        => URLROOT . '/uploads/cache/seller_previews/raw_' . $tempId . '.pdf',
+                'success' => true,
+                'mode' => 'canvas_fallback',
+                'type' => 'canvas',
+                'pdf_url' => URLROOT . '/uploads/cache/seller_previews/raw_' . $tempId . '.pdf',
                 'preview_images' => $gdImageUrls,
                 'watermark_text' => $watermarkText,
-                'message'        => 'Đã tạo bản xem trước 2 trang đầu thành công!'
+                'message' => 'Đã tạo bản xem trước 2 trang đầu thành công!'
             ]);
         }
         exit();
