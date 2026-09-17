@@ -47,8 +47,11 @@ class Pages extends Controller
 
     public function about()
     {
+        $testimonials = $this->testimonialModel->getAllOrdered();
+
         $data = [
-            'title' => 'Về chúng tôi'
+            'title' => 'Về chúng tôi',
+            'testimonials' => $testimonials
         ];
         $this->view('pages/about', $data);
     }
