@@ -56,6 +56,18 @@ CREATE TABLE stores (
     user_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     status TINYINT DEFAULT 1,
+    description TEXT DEFAULT NULL,
+    logo_url VARCHAR(255) DEFAULT NULL,
+    document_url VARCHAR(500) DEFAULT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    address VARCHAR(255) DEFAULT NULL,
+    bank_name VARCHAR(100) DEFAULT NULL,
+    bank_account_number VARCHAR(50) DEFAULT NULL,
+    bank_account_name VARCHAR(100) DEFAULT NULL,
+    slug VARCHAR(255) DEFAULT NULL UNIQUE,
+    rejection_reason TEXT DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_store_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
