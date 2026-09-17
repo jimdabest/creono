@@ -89,20 +89,28 @@
                 if($count++ >= 4) break;
             ?>
                 <div class="product-card interactive-hover">
-                    <div class="product-image-wrapper">
-                        <div class="product-placeholder">Preview</div>
+                    <div class="product-image-wrapper" style="position: relative; height: 160px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f5f5f7;">
+                        
+                        <!-- UPDATE: Xử lý hiển thị ảnh thật từ Database -->
+                        <?php if (!empty($product->preview_url)): ?>
+                            <img src="<?php echo URLROOT . htmlspecialchars($product->preview_url); ?>" alt="<?php echo htmlspecialchars($product->title); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        <?php else: ?>
+                            <div class="product-placeholder" style="color: #86868b; font-size: 13px;">Preview</div>
+                        <?php endif; ?>
+                        
                         <?php if (!empty($product->store_slug)): ?>
-                            <a href="<?php echo URLROOT; ?>/storefront/<?php echo $product->store_slug; ?>" class="product-badge" style="text-decoration: none; color: inherit;">
+                            <a href="<?php echo URLROOT; ?>/storefront/<?php echo $product->store_slug; ?>" class="product-badge" style="text-decoration: none; color: inherit; position: absolute; bottom: 12px; left: 12px; background: rgba(29,29,31,0.72); backdrop-filter: blur(10px); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px;">
                                 <?php echo htmlspecialchars($product->store_name); ?>
                             </a>
                         <?php else: ?>
-                            <span class="product-badge" style="text-decoration: none; color: inherit;">
+                            <span class="product-badge" style="text-decoration: none; color: inherit; position: absolute; bottom: 12px; left: 12px; background: rgba(29,29,31,0.72); backdrop-filter: blur(10px); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px;">
                                 <?php echo htmlspecialchars($product->store_name); ?>
                             </span>
                         <?php endif; ?>
+                        
                         <?php if($product->rating > 0) : ?>
-                            <span class="product-rating">
-                                ★ <?php echo number_format($product->rating, 1); ?>
+                            <span class="product-rating" style="position: absolute; bottom: 12px; right: 12px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #1d1d1f;">
+                                <span style="color: #ffb800;">★</span> <?php echo number_format($product->rating, 1); ?>
                             </span>
                         <?php endif; ?>
                     </div>

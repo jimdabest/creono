@@ -682,29 +682,28 @@ class Admin extends Controller
         $subject = 'Thông báo về báo cáo vi phạm #' . $reportId;
 
         if ($status === 'resolved') {
-            $body = "
-            <div style='font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;'>
-                <h2>Xin chào {$reporter->name},</h2>
-                <p>Báo cáo vi phạm <strong>#{$reportId}</strong> của bạn đã được xem xét và <strong style='color: #34c759;'>CHẤP NHẬN</strong>.</p>
-                <p>Chúng tôi đã xử lý đối tượng vi phạm theo quy định. Cảm ơn bạn đã giúp chúng tôi duy trì cộng đồng an toàn.</p>
-                <br>
-                <p>Trân trọng,<br>Đội ngũ Creono</p>
-            </div>
-            ";
+            $emailTitle = 'Báo cáo vi phạm đã được xử lý';
+            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($reporter->name) . '</strong>,</p>'
+                . '<p>Báo cáo vi phạm <strong>#' . $reportId . '</strong> của bạn đã được xem xét và <strong>CHẤP NHẬN</strong>.</p>'
+                . '<p>Chúng tôi đã xử lý đối tượng vi phạm theo quy định. Cảm ơn bạn đã giúp chúng tôi duy trì cộng đồng an toàn.</p>';
+            $ctaText = 'Xem chi tiết';
+            $ctaLink = URLROOT . '/products/index';
+            $footerNote = 'Cảm ơn bạn đã đóng góp cho cộng đồng Creono.';
         } else {
-            $body = "
-            <div style='font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;'>
-                <h2>Xin chào {$reporter->name},</h2>
-                <p>Báo cáo vi phạm <strong>#{$reportId}</strong> của bạn đã được xem xét và <strong style='color: #ff9500;'>BÁC BỎ</strong>.</p>
-                <p>Chúng tôi không tìm thấy đủ bằng chứng cho vi phạm này. Nếu bạn có thêm thông tin, vui lòng gửi lại báo cáo mới.</p>
-                <br>
-                <p>Trân trọng,<br>Đội ngũ Creono</p>
-            </div>
-            ";
+            $emailTitle = 'Báo cáo vi phạm đã bị bác bỏ';
+            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($reporter->name) . '</strong>,</p>'
+                . '<p>Báo cáo vi phạm <strong>#' . $reportId . '</strong> của bạn đã được xem xét và <strong>BÁC BỎ</strong>.</p>'
+                . '<p>Chúng tôi không tìm thấy đủ bằng chứng cho vi phạm này. Nếu bạn có thêm thông tin, vui lòng gửi lại báo cáo mới.</p>';
+            $ctaText = 'Gửi báo cáo mới';
+            $ctaLink = URLROOT . '/reports/create';
+            $footerNote = 'Chúng tôi luôn lắng nghe phản hồi từ bạn.';
         }
 
-        $altBody = strip_tags($body);
-        sendEmail($reporter->email, $subject, $body, $altBody);
+        ob_start();
+        include APPROOT . '/Views/emails/layout.php';
+        $body = ob_get_clean();
+
+        sendEmail($reporter->email, $subject, $body);
     }
 
     // =========================================================================
@@ -721,30 +720,29 @@ class Admin extends Controller
         $subject = 'Thông báo xác minh danh tính (KYC) - Creono';
 
         if ($status === 'approved') {
-            $body = "
-            <div style='font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;'>
-                <h2>Xin chào {$user->name},</h2>
-                <p>Yêu cầu xác minh danh tính (KYC) của bạn đã được <strong style='color: #34c759;'>DUYỆT</strong> thành công.</p>
-                <p>Bạn có thể sử dụng đầy đủ các tính năng của nền tảng.</p>
-                <br>
-                <p>Trân trọng,<br>Đội ngũ Creono</p>
-            </div>
-            ";
+            $emailTitle = 'Xác minh danh tính thành công';
+            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($user->name) . '</strong>,</p>'
+                . '<p>Yêu cầu xác minh danh tính (KYC) của bạn đã được <strong>DUYỆT</strong> thành công.</p>'
+                . '<p>Bạn có thể sử dụng đầy đủ các tính năng của nền tảng.</p>';
+            $ctaText = 'Truy cập hồ sơ';
+            $ctaLink = URLROOT . '/users/profile';
+            $footerNote = 'Cảm ơn bạn đã xác minh danh tính.';
         } else {
-            $body = "
-            <div style='font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;'>
-                <h2>Xin chào {$user->name},</h2>
-                <p>Yêu cầu xác minh danh tính (KYC) của bạn đã bị <strong style='color: #ff3b30;'>TỪ CHỐI</strong>.</p>
-                <p><strong>Lý do:</strong> " . htmlspecialchars($note) . "</p>
-                <p>Vui lòng cập nhật lại giấy tờ và gửi lại yêu cầu mới.</p>
-                <br>
-                <p>Trân trọng,<br>Đội ngũ Creono</p>
-            </div>
-            ";
+            $emailTitle = 'Xác minh danh tính bị từ chối';
+            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($user->name) . '</strong>,</p>'
+                . '<p>Yêu cầu xác minh danh tính (KYC) của bạn đã bị <strong>TỪ CHỐI</strong>.</p>'
+                . '<p><strong>Lý do:</strong> ' . htmlspecialchars($note) . '</p>'
+                . '<p>Vui lòng cập nhật lại giấy tờ và gửi lại yêu cầu mới.</p>';
+            $ctaText = 'Cập nhật hồ sơ KYC';
+            $ctaLink = URLROOT . '/users/kyc';
+            $footerNote = 'Nếu bạn cần hỗ trợ, vui lòng liên hệ bộ phận chăm sóc khách hàng.';
         }
 
-        $altBody = strip_tags($body);
-        sendEmail($user->email, $subject, $body, $altBody);
+        ob_start();
+        include APPROOT . '/Views/emails/layout.php';
+        $body = ob_get_clean();
+
+        sendEmail($user->email, $subject, $body);
     }
 
     // =========================================================================
@@ -971,11 +969,20 @@ class Admin extends Controller
         $success = $this->storeModel->approveStore($storeId);
         if ($success) {
             if (!empty($store->applicant_email) && function_exists('sendEmail')) {
-                $subject = 'Chúc mừng! Hồ sơ đăng ký cửa hàng "' . $store->name . '" đã được phê duyệt';
-                $body = 'Xin chào ' . htmlspecialchars($store->applicant_name) . ",\n\n"
-                    . 'Hồ sơ đăng ký cửa hàng "' . htmlspecialchars($store->name) . '" của bạn trên Creono đã được Quản trị viên phê duyệt thành công!\n'
-                    . 'Tài khoản của bạn đã được nâng cấp lên Người bán (Seller). Bạn có thể đăng nhập và bắt đầu đăng tải tài liệu ngay bây giờ.\n\n'
-                    . 'Trân trọng,\nĐội ngũ Creono';
+                $subject = 'Chúc mừng! Cửa hàng "' . $store->name . '" đã được phê duyệt';
+
+                $emailTitle = 'Chúc mừng bạn đã trở thành Người bán!';
+                $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($store->applicant_name) . '</strong>,</p>'
+                    . '<p>Hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn trên Creono đã được Quản trị viên phê duyệt thành công!</p>'
+                    . '<p>Tài khoản của bạn đã được nâng cấp lên <strong>Người bán (Seller)</strong>. Bạn có thể đăng nhập và bắt đầu đăng tải tài liệu ngay bây giờ.</p>';
+                $ctaText = 'Truy cập Dashboard Người bán';
+                $ctaLink = URLROOT . '/seller/dashboard';
+                $footerNote = 'Cảm ơn bạn đã đồng hành cùng Creono!';
+
+                ob_start();
+                include APPROOT . '/Views/emails/layout.php';
+                $body = ob_get_clean();
+
                 @sendEmail($store->applicant_email, $subject, $body);
             }
             $this->jsonResponse(true, 'Đã phê duyệt hồ sơ cửa hàng thành công! Tài khoản đã được nâng cấp lên Người bán.');
@@ -1021,12 +1028,21 @@ class Admin extends Controller
         $success = $this->storeModel->rejectStore($storeId, $reason);
         if ($success) {
             if (!empty($store->applicant_email) && function_exists('sendEmail')) {
-                $subject = 'Thông báo về hồ sơ đăng ký cửa hàng "' . $store->name . '" trên Creono';
-                $body = 'Xin chào ' . htmlspecialchars($store->applicant_name) . ",\n\n"
-                    . 'Rất tiếc, hồ sơ đăng ký cửa hàng "' . htmlspecialchars($store->name) . '" của bạn chưa đáp ứng yêu cầu của nền tảng Creono.\n\n'
-                    . 'Lý do từ chối: ' . htmlspecialchars($reason) . "\n\n"
-                    . 'Vui lòng kiểm tra lại thông tin và nộp lại hồ sơ nếu cần thiết.\n\n'
-                    . 'Trân trọng,\nĐội ngũ Creono';
+                $subject = 'Thông báo về hồ sơ đăng ký cửa hàng "' . $store->name . '"';
+
+                $emailTitle = 'Thông báo về hồ sơ đăng ký cửa hàng';
+                $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($store->applicant_name) . '</strong>,</p>'
+                    . '<p>Rất tiếc, hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn chưa đáp ứng yêu cầu của nền tảng Creono.</p>'
+                    . '<p><strong>Lý do từ chối:</strong> ' . htmlspecialchars($reason) . '</p>'
+                    . '<p>Vui lòng kiểm tra lại thông tin và nộp lại hồ sơ nếu cần thiết.</p>';
+                $ctaText = 'Quay lại Creono';
+                $ctaLink = URLROOT;
+                $footerNote = 'Nếu bạn có thắc mắc, vui lòng liên hệ bộ phận hỗ trợ.';
+
+                ob_start();
+                include APPROOT . '/Views/emails/layout.php';
+                $body = ob_get_clean();
+
                 @sendEmail($store->applicant_email, $subject, $body);
             }
             $this->jsonResponse(true, 'Đã từ chối hồ sơ đăng ký cửa hàng thành công.');

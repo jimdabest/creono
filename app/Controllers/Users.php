@@ -437,22 +437,24 @@ class Users extends Controller
             $userExists = $this->userModel->findByEmail($email);
 
             if ($userExists) {
-                // Tạo token
                 $token = $this->userModel->createPasswordResetToken($email);
                 $resetLink = URLROOT . '/users/resetPassword/' . $token;
 
-                // Render email template
+                $subject = 'Đặt lại mật khẩu trên Creono';
+                $emailTitle = 'Xin chào,';
+                $emailContent = '<p>Bạn đã yêu cầu đặt lại mật khẩu trên <strong>Creono</strong>.</p>'
+                    . '<p>Nhấn vào nút bên dưới để đặt lại mật khẩu (có hiệu lực trong <strong>15 phút</strong>):</p>';
+                $ctaText = 'Đặt lại mật khẩu';
+                $ctaLink = $resetLink;
+                $footerNote = 'Nếu bạn không yêu cầu, vui lòng bỏ qua email này.';
+
                 ob_start();
-                include APPROOT . '/Views/emails/reset_password.php';
+                include APPROOT . '/Views/emails/layout.php';
                 $body = ob_get_clean();
 
-                $subject = 'Đặt lại mật khẩu trên Creono';
                 $altBody = "Đặt lại mật khẩu: $resetLink";
-
-                // Gửi email (hàm sendEmail đã được load trong public/index.php)
                 $mailSent = sendEmail($email, $subject, $body, $altBody);
 
-                // Ghi log nếu thất bại (không ảnh hưởng đến phản hồi)
                 if (!$mailSent && function_exists('logError')) {
                     logError("Không thể gửi email reset password cho $email");
                 }
