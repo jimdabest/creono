@@ -28,6 +28,13 @@
             </div>
 
             <div class="form-group">
+                <label for="document">Giấy tờ đính kèm (Giấy phép KD / Xác thực)</label>
+                <input type="file" name="document" id="document" class="form-control <?php echo isset($data['errors']['document_err']) ? 'is-invalid' : ''; ?>" accept="image/jpeg, image/png, image/webp, application/pdf">
+                <span class="error-text"><?php echo $data['errors']['document_err'] ?? ''; ?></span>
+                <small class="form-hint">Tùy chọn: Tải lên giấy phép kinh doanh, CCCD hoặc chứng chỉ xác thực (PDF, JPG, PNG tối đa 5MB).</small>
+            </div>
+
+            <div class="form-group">
                 <label for="phone">Số điện thoại</label>
                 <input type="text" name="phone" id="phone" class="form-control" value="<?php echo htmlspecialchars($data['store']->phone ?? ''); ?>">
             </div>

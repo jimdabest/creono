@@ -25,22 +25,43 @@ class App {
         }
 
         $url = $this->getUrl();
-        // echo "Đang gọi: " . $this->currentController . "/" . $this->currentMethod; // Debug
-        // Kiểm tra xem file Controller có tồn tại không
-        if (isset($url[0]) && file_exists('../app/Controllers/' . ucwords($url[0]) . '.php')) {
-            $this->currentController = ucwords($url[0]);
-            unset($url[0]);
-        }
+        $controllerPath = '../app/Controllers/';
 
-        require_once '../app/Controllers/' . $this->currentController . '.php';
-        $this->currentController = new $this->currentController;
+        // Hỗ trợ Sub-controller (ví dụ: Admin/Stores.php)
+        if (isset($url[0]) && is_dir($controllerPath . ucwords($url[0])) && isset($url[1]) && file_exists($controllerPath . ucwords($url[0]) . '/' . ucwords($url[1]) . '.php')) {
+            $subFolder = ucwords($url[0]);
+            $this->currentController = ucwords($url[1]);
+            $controllerFile = $controllerPath . $subFolder . '/' . $this->currentController . '.php';
+            unset($url[0], $url[1]);
 
-        // Kiểm tra method có tồn tại trong Controller không
-        // Ngăn chặn gọi trực tiếp các hàm base như view(), model()
-        if (isset($url[1])) {
-            if (!in_array(strtolower($url[1]), ['view', 'model']) && method_exists($this->currentController, $url[1])) {
-                $this->currentMethod = $url[1];
-                unset($url[1]);
+            require_once $controllerFile;
+            $this->currentController = new $this->currentController;
+
+            if (isset($url[2])) {
+                if (!in_array(strtolower($url[2]), ['view', 'model']) && method_exists($this->currentController, $url[2])) {
+                    $this->currentMethod = $url[2];
+                    unset($url[2]);
+                }
+            } else {
+                $this->currentMethod = 'index';
+            }
+        } else {
+            // Kiểm tra xem file Controller có tồn tại không
+            if (isset($url[0]) && file_exists($controllerPath . ucwords($url[0]) . '.php')) {
+                $this->currentController = ucwords($url[0]);
+                unset($url[0]);
+            }
+
+            require_once $controllerPath . $this->currentController . '.php';
+            $this->currentController = new $this->currentController;
+
+            // Kiểm tra method có tồn tại trong Controller không
+            // Ngăn chặn gọi trực tiếp các hàm base như view(), model()
+            if (isset($url[1])) {
+                if (!in_array(strtolower($url[1]), ['view', 'model']) && method_exists($this->currentController, $url[1])) {
+                    $this->currentMethod = $url[1];
+                    unset($url[1]);
+                }
             }
         }
 

@@ -228,44 +228,47 @@
         </div>
     </nav>
 
+    <!-- ====== FLASH TOAST CONTAINER (fixed, managed by flash.js) ====== -->
+    <?php if (function_exists('getFlash')) : ?>
+        <?php
+        $successFlash = getFlash('success');
+        $errorFlash   = getFlash('error');
+        $infoFlash    = getFlash('info');
+        $warningFlash = getFlash('warning');
+        $hasFlash = $successFlash || $errorFlash || $infoFlash || $warningFlash;
+        ?>
+        <?php if ($hasFlash) : ?>
+        <div id="toast-container">
+            <?php if ($successFlash) : ?>
+                <div class="alert alert-success" role="alert" data-auto-dismiss="5000">
+                    <?php echo htmlspecialchars($successFlash['message']); ?>
+                    <button type="button" class="alert-close" aria-label="Đóng">&times;</button>
+                </div>
+            <?php endif; ?>
+            <?php if ($errorFlash) : ?>
+                <div class="alert alert-danger" role="alert" data-auto-dismiss="7000">
+                    <?php echo htmlspecialchars($errorFlash['message']); ?>
+                    <button type="button" class="alert-close" aria-label="Đóng">&times;</button>
+                </div>
+            <?php endif; ?>
+            <?php if ($infoFlash) : ?>
+                <div class="alert alert-info" role="alert" data-auto-dismiss="4000">
+                    <?php echo htmlspecialchars($infoFlash['message']); ?>
+                    <button type="button" class="alert-close" aria-label="Đóng">&times;</button>
+                </div>
+            <?php endif; ?>
+            <?php if ($warningFlash) : ?>
+                <div class="alert alert-warning" role="alert" data-auto-dismiss="6000">
+                    <?php echo htmlspecialchars($warningFlash['message']); ?>
+                    <button type="button" class="alert-close" aria-label="Đóng">&times;</button>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
     <!-- ====== MAIN CONTENT ====== -->
     <main class="main-content" role="main">
         <div class="container">
 
-            <!-- Flash Messages -->
-            <?php if (function_exists('getFlash')) : ?>
-                <?php
-                $successFlash = getFlash('success');
-                $errorFlash = getFlash('error');
-                $infoFlash = getFlash('info');
-                $warningFlash = getFlash('warning');
-                ?>
-
-                <?php if ($successFlash) : ?>
-                    <div class="alert alert-success" role="alert" data-auto-dismiss="5000">
-                        <?php echo htmlspecialchars($successFlash['message']); ?>
-                        <button type="button" class="alert-close">&times;</button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($errorFlash) : ?>
-                    <div class="alert alert-danger" role="alert" data-auto-dismiss="7000">
-                        <?php echo htmlspecialchars($errorFlash['message']); ?>
-                        <button type="button" class="alert-close">&times;</button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($infoFlash) : ?>
-                    <div class="alert alert-info" role="alert" data-auto-dismiss="4000">
-                        <?php echo htmlspecialchars($infoFlash['message']); ?>
-                        <button type="button" class="alert-close">&times;</button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($warningFlash) : ?>
-                    <div class="alert alert-warning" role="alert" data-auto-dismiss="6000">
-                        <?php echo htmlspecialchars($warningFlash['message']); ?>
-                        <button type="button" class="alert-close">&times;</button>
-                    </div>
-                <?php endif; ?>
-            <?php endif; ?>
+            <!-- Flash messages are rendered above in #toast-container (fixed position) -->

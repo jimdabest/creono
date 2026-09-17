@@ -258,6 +258,26 @@
                 <?php endif; ?>
             </a>
 
+            <!-- Duyệt đăng ký cửa hàng -->
+            <a href="<?php echo URLROOT; ?>/admin/stores/pending" class="quick-link-card">
+                <div class="link-icon link-icon-store">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div class="link-info">
+                    <h4>Duyệt đăng ký cửa hàng</h4>
+                    <p>Xét duyệt hồ sơ và cấp quyền Người bán</p>
+                </div>
+                <?php if (!empty($data['pending_stores_count'])): ?>
+                    <span class="badge badge-warning badge-count-pending"><?php echo $data['pending_stores_count']; ?> chờ duyệt</span>
+                <?php else: ?>
+                    <span class="link-arrow">&rarr;</span>
+                <?php endif; ?>
+            </a>
+
             <!-- Quản lý Báo cáo vi phạm -->
             <a href="<?php echo URLROOT; ?>/admin/reports" class="quick-link-card">
                 <div class="link-icon" style="color: var(--apple-red);">
