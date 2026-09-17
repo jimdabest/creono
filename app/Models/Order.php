@@ -265,9 +265,10 @@ class Order extends BaseModel
     }
 
     // Hàm kiểm tra User đã mua Product chưa (chưa bị hủy hoặc hoàn tiền)
-    public function hasPurchased(int $userId, int $productId): bool
+    public function hasPurchased(int $userId, int $productId)
     {
-        $this->db->query("SELECT id FROM orders WHERE user_id = :user_id AND product_id = :product_id AND status IN (2, 5) LIMIT 1");
+        // Chỉ tính là đã mua nếu đơn hàng ở trạng thái 2 (Đã thanh toán)
+        $this->db->query("SELECT id FROM orders WHERE user_id = :user_id AND product_id = :product_id AND status = 2");
         $this->db->bind(':user_id', $userId);
         $this->db->bind(':product_id', $productId);
         $row = $this->db->single();
@@ -319,15 +320,13 @@ class Order extends BaseModel
     }
 
     /**
-     * Lấy danh sách tất cả các tài liệu đã mua của User (bao gồm Chờ xác nhận, Đã nhận, Đã hoàn tiền)
+     * Lấy danh sách tài liệu đã mua của User (Chỉ hiển thị đơn đang hoạt động status = 2)
      */
     public function getPurchasedProducts(int $userId): array
     {
         $this->db->query("
             SELECT o.id as order_id, 
-                   o.order_number,
-                   o.status as order_status,
-                   o.total_amount,
+                   o.status, 
                    o.created_at as purchased_at, 
                    p.id as product_id, 
                    p.title, 
@@ -338,7 +337,7 @@ class Order extends BaseModel
             FROM {$this->table} o
             JOIN products p ON o.product_id = p.id
             JOIN stores s ON p.store_id = s.id
-            WHERE o.user_id = :user_id AND o.status IN (2, 4, 5)
+            WHERE o.user_id = :user_id AND o.status = 2
             ORDER BY o.created_at DESC
         ");
         $this->db->bind(':user_id', $userId);

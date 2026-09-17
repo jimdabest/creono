@@ -104,6 +104,7 @@ class Products extends Controller
         $orderStatus = null;
         if (isset($_SESSION['user_id'])) {
             $userId = (int) $_SESSION['user_id'];
+            $hasPurchased = $this->orderModel->hasPurchased($userId, $productId);
             $hasReviewed = $this->reviewModel->hasUserReviewed($productId, $userId);
             $isFavorited = $this->favoriteModel->isFavorited($userId, $productId);
             $cart = $this->cartModel->getOrCreateCart($userId);
