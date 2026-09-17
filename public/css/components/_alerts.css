@@ -3,40 +3,56 @@
 /* ============================== */
 #toast-container {
     position: fixed;
-    top: 32px;
+    top: 68px; /* Đặt dưới thanh navbar 48px với khoảng đệm an toàn 20px */
     left: 50%;
     transform: translateX(-50%);
-    z-index: 999999;
+    z-index: 1000000;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     pointer-events: none;
     align-items: center;
+    width: max-content;
+    max-width: calc(100vw - 32px);
 }
 
 .alert {
     pointer-events: auto;
     display: inline-flex;
     align-items: center;
-    padding: 12px 16px 12px 20px;
-    border-radius: 100px;
-    font-size: 15px;
+    padding: 12px 20px;
+    border-radius: 9999px;
+    font-size: 14.5px;
     font-weight: 500;
     letter-spacing: -0.01em;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: saturate(180%) blur(24px);
     -webkit-backdrop-filter: saturate(180%) blur(24px);
     border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
-    color: var(--apple-black);
-    animation: toastSlideDown 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    margin-bottom: 0;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    color: var(--apple-black, #1d1d1f);
+    animation: toastSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    margin: 0;
+    line-height: 1.4;
+    max-width: min(650px, calc(100vw - 40px));
+    box-sizing: border-box;
+}
+
+/* Khi alert nằm trong luồng tài liệu thông thường (ví dụ: in-page container) */
+.container > .alert,
+.main-content .alert:not(#toast-container .alert) {
+    display: flex;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin: 16px 0 20px 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 @keyframes toastSlideDown {
     0% {
         opacity: 0;
-        transform: translateY(-24px) scale(0.9);
+        transform: translateY(-16px) scale(0.96);
     }
 
     100% {
@@ -46,20 +62,20 @@
 }
 
 .alert-success {
-    border-bottom: 2px solid var(--apple-green);
+    border-bottom: 3px solid var(--apple-green, #34c759);
 }
 
 .alert-danger,
 .alert-error {
-    border-bottom: 2px solid var(--apple-red);
+    border-bottom: 3px solid var(--apple-red, #ff3b30);
 }
 
 .alert-info {
-    border-bottom: 2px solid var(--apple-blue);
+    border-bottom: 3px solid var(--apple-blue, #0071e3);
 }
 
 .alert-warning {
-    border-bottom: 2px solid var(--apple-orange);
+    border-bottom: 3px solid var(--apple-orange, #ff9500);
 }
 
 .alert-icon {

@@ -112,4 +112,15 @@ class BaseModel {
     public function getLastInsertId(): int {
         return (int)$this->db->lastInsertId();
     }
+
+    /**
+     * Xóa cache của model
+     */
+    public function clearCache(?int $id = null): void {
+        if ($id !== null) {
+            unset($this->cache[$this->table . '_' . $id]);
+        } else {
+            $this->cache = [];
+        }
+    }
 }

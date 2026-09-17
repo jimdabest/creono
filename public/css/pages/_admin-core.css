@@ -202,6 +202,131 @@
 .d-none-mobile { display: block; }
 .d-none-desktop { display: none; }
 
+/* --- STORE APPROVALS (UC Duyệt đăng ký cửa hàng) --- */
+.link-icon-store { color: #007aff; }
+.store-logo-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #f5f5f7;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.store-logo-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e5f0ff 0%, #cce0ff 100%);
+    color: #007aff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.store-name-link {
+    font-weight: 700;
+    color: #1d1d1f;
+    display: block;
+    margin-bottom: 2px;
+}
+.store-applicant-name {
+    font-weight: 600;
+    color: #1d1d1f;
+    display: block;
+}
+.store-applicant-email {
+    font-size: 13px;
+    color: #86868b;
+    display: block;
+}
+.doc-attached-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: #e5f0ff;
+    color: #007aff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.doc-attached-link:hover {
+    background: #007aff;
+    color: #ffffff;
+}
+.doc-empty-badge {
+    color: #86868b;
+    font-size: 12px;
+    font-style: italic;
+}
+.row-fade-out {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.4s ease;
+}
+.btn-action-approve {
+    background: #eaf9ed;
+    color: #248a3d;
+}
+.btn-action-approve:hover {
+    background: #248a3d;
+    color: #ffffff;
+    transform: scale(1.05);
+}
+.table-empty-row {
+    text-align: center;
+    padding: 48px 16px;
+    color: #86868b;
+    font-size: 15px;
+}
+.badge-count-pending {
+    margin-left: auto;
+    font-size: 13px;
+    padding: 4px 10px;
+}
+.modal-store-name {
+    font-weight: 700;
+    color: #1d1d1f;
+    margin-bottom: 12px;
+}
+.modal-reason-textarea {
+    width: 100%;
+    min-height: 100px;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+.modal-error-msg {
+    color: #ff3b30;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    margin-top: 4px;
+    display: none;
+}
+.store-actions-cell {
+    white-space: nowrap;
+    min-width: 200px;
+    vertical-align: middle;
+}
+.store-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
 /* --- 7. RESPONSIVE MEDIA QUERIES --- */
 @media (max-width: 992px) {
     .admin-stats-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
@@ -298,4 +423,87 @@
     .admin-table td { font-size: 13px !important; padding: 10px 8px !important; }
     .btn-action { font-size: 12px !important; padding: 6px 10px !important; }
     .stat-info .stat-number { font-size: 24px !important; }
+}
+
+/* --- AJAX LOADING STATES --- */
+@keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Nút loading: thay nội dung bằng spinner + text */
+.btn-action.is-loading,
+.btn.is-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+.btn-action.is-loading .btn-loading-spinner,
+.btn.is-loading .btn-loading-spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+/* Ẩn icon gốc khi loading */
+.btn-action.is-loading .btn-original-icon,
+.btn.is-loading .btn-original-icon {
+    display: none;
+}
+
+/* Table row đang xử lý */
+tr.row-processing {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+/* Full-page overlay loading (dùng cho approve vì confirm xong rồi mới gọi) */
+.page-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.page-loading-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.page-loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.page-loading-spinner__ring {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(0, 122, 255, 0.2);
+    border-top-color: #007aff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.page-loading-spinner__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
 }

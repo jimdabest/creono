@@ -11,22 +11,19 @@ const FlashModule = (function() {
      * Khởi tạo flash messages
      */
     function init() {
-        // Tìm tất cả các alert hiện có (do PHP render ra ở header)
-        const alerts = document.querySelectorAll('.alert');
-        
-        // Tạo container chứa Toast nếu chưa có
+        // #toast-container đã được PHP render sẵn trong HTML với các alert bên trong.
+        // JS chỉ cần setup sự kiện đóng và auto-dismiss, không cần di chuyển DOM nữa.
         let container = document.getElementById('toast-container');
-        if (!container && alerts.length > 0) {
+
+        // Nếu không có container từ server (không có flash), tạo sẵn để show() dùng sau
+        if (!container) {
             container = document.createElement('div');
             container.id = 'toast-container';
             document.body.appendChild(container);
-            
-            // Di chuyển các alert cũ cắm rễ trong HTML vào container nổi
-            alerts.forEach(function(alert) {
-                container.appendChild(alert);
-            });
         }
 
+        // Setup tất cả alert hiện có trong container
+        const alerts = container.querySelectorAll('.alert');
         alerts.forEach(function(alert) {
             setupAlert(alert);
         });
@@ -139,6 +136,14 @@ const FlashModule = (function() {
     };
 
 })();
+
+// Global browser window bindings
+if (typeof window !== 'undefined') {
+    window.FlashModule = FlashModule;
+    window.showFlash = function(type, message, duration) {
+        return FlashModule.show(message, type, duration);
+    };
+}
 
 // Export
 if (typeof module !== 'undefined' && module.exports) {

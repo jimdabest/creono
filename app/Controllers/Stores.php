@@ -20,12 +20,19 @@ class Stores extends Controller
     // [UC19] Hiển thị và xử lý form tạo cửa hàng
     public function create(): void
     {
-        // Nếu đã có cửa hàng thì chuyển hướng sang trang chỉnh sửa
+        // Nếu đã có cửa hàng
         $existingStore = $this->storeModel->getStoreByUserId($_SESSION['user_id']);
         if ($existingStore) {
-            setFlash('info', 'Bạn đã có cửa hàng, hãy quản lý thông tin tại đây.');
-            header('location: ' . URLROOT . '/stores/edit');
-            exit();
+            if ((int)$existingStore->status === 0) {
+                setFlash('info', 'Hồ sơ mở cửa hàng "' . htmlspecialchars($existingStore->name) . '" của bạn đang chờ Quản trị viên xét duyệt.');
+                header('location: ' . URLROOT . '/pages/index');
+                exit();
+            }
+            if ((int)$existingStore->status === 1) {
+                setFlash('info', 'Bạn đã có cửa hàng, hãy quản lý thông tin tại đây.');
+                header('location: ' . URLROOT . '/stores/edit');
+                exit();
+            }
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -44,7 +51,7 @@ class Stores extends Controller
                 'bank_name' => trim($_POST['bank_name'] ?? ''),
                 'bank_account_number' => trim($_POST['bank_account_number'] ?? ''),
                 'bank_account_name' => trim($_POST['bank_account_name'] ?? ''),
-                'status' => 2 // 2: Tự động duyệt (theo chính sách nền tảng)
+                'status' => 0 // 0: Đang chờ Quản trị viên phê duyệt
             ];
 
             $errors = [];
@@ -64,18 +71,26 @@ class Stores extends Controller
             }
             $data['logo_url'] = $logo_url;
 
+            // Xử lý upload giấy tờ đính kèm (giấy phép KD, giấy tờ xác minh)
+            $document_url = '';
+            if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
+                $uploadDocResult = $this->uploadDocument($_FILES['document']);
+                if ($uploadDocResult['success']) {
+                    $document_url = $uploadDocResult['path'];
+                } else {
+                    $errors['document_err'] = $uploadDocResult['message'];
+                }
+            }
+            $data['document_url'] = $document_url;
+
             if (empty($errors)) {
                 if ($this->storeModel->createStore($data)) {
-                    // Update user role -> Seller (2)
-                    $this->userModel->update($_SESSION['user_id'], ['role' => 2]);
-                    $_SESSION['user_role'] = 2;
-                    
                     if (!empty($_SESSION['user_email']) && function_exists('sendEmail')) {
-                        sendEmail($_SESSION['user_email'], 'Tạo cửa hàng thành công', 'Chúc mừng bạn đã trở thành Người bán trên Creono! Cửa hàng: ' . $data['name']);
+                        @sendEmail($_SESSION['user_email'], 'Đã nhận hồ sơ đăng ký cửa hàng', 'Hồ sơ mở cửa hàng "' . $data['name'] . '" của bạn đã được gửi thành công và đang chờ Quản trị viên Creono xét duyệt.');
                     }
 
-                    setFlash('success', 'Đăng ký bán hàng thành công!');
-                    header('location: ' . URLROOT . '/seller/dashboard');
+                    setFlash('success', 'Đăng ký bán hàng thành công! Hồ sơ của bạn đang được Quản trị viên xét duyệt.');
+                    header('location: ' . URLROOT . '/pages/index');
                     exit();
                 } else {
                     setFlash('error', 'Đã xảy ra lỗi hệ thống, vui lòng thử lại.');
@@ -224,5 +239,38 @@ class Stores extends Controller
         }
 
         return ['success' => false, 'message' => 'Lỗi kỹ thuật, không thể tải lên file.'];
+    }
+
+    private function uploadDocument(array $file): array
+    {
+        $targetDir = '../public/uploads/stores/documents/';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        // Validate Size Max 5MB
+        if ($file['size'] > 5242880) {
+            return ['success' => false, 'message' => 'Kích thước giấy tờ đính kèm không được vượt quá 5MB.'];
+        }
+
+        // Validate MIME type
+        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!in_array($mimeType, $allowedMimeTypes)) {
+            return ['success' => false, 'message' => 'Chỉ hỗ trợ file ảnh (JPG, PNG, WebP) hoặc tài liệu PDF.'];
+        }
+
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $newName = 'doc_' . time() . '_' . uniqid() . '.' . $extension;
+        $targetPath = $targetDir . $newName;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return ['success' => true, 'path' => '/uploads/stores/documents/' . $newName];
+        }
+
+        return ['success' => false, 'message' => 'Lỗi kỹ thuật, không thể tải lên giấy tờ đính kèm.'];
     }
 }

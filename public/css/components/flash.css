@@ -1,0 +1,98 @@
+/* ========================================================
+   FLASH & TOAST NOTIFICATION COMPONENT
+   Style cho Toast/Flash Module (Apple Style Toast)
+   ======================================================== */
+
+#toast-container {
+    position: fixed;
+    top: 68px; /* Đặt dưới thanh navbar 48px với khoảng đệm an toàn 20px */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    align-items: center;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+}
+
+.alert {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 9999px;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    color: var(--apple-black, #1d1d1f);
+    animation: toastSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    margin: 0;
+    line-height: 1.4;
+    max-width: min(650px, calc(100vw - 40px));
+    box-sizing: border-box;
+}
+
+/* In-page regular alerts */
+.container > .alert,
+.main-content .alert:not(#toast-container .alert) {
+    display: flex;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin: 16px 0 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.alert-success {
+    border-bottom: 3px solid var(--apple-green, #34c759);
+}
+
+.alert-danger,
+.alert-error {
+    border-bottom: 3px solid var(--apple-red, #ff3b30);
+}
+
+.alert-info {
+    border-bottom: 3px solid var(--apple-blue, #0071e3);
+}
+
+.alert-warning {
+    border-bottom: 3px solid var(--apple-orange, #ff9500);
+}
+
+.alert-icon {
+    margin-right: 10px;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.alert-close {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--apple-gray, #86868b);
+    transition: all 0.2s ease;
+}
+
+.alert-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--apple-black, #1d1d1f);
+}
