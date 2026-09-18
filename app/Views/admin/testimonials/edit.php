@@ -1,86 +1,11 @@
 <?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<style>
-.tm-form-card {
-    max-width: 680px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 16px;
-    padding: 32px;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
-.tm-form-group {
-    margin-bottom: 20px;
-}
-.tm-form-label {
-    display: block;
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 8px;
-    color: var(--apple-black);
-}
-.tm-required {
-    color: #ff3b30;
-}
-.tm-form-input,
-.tm-form-select,
-.tm-form-textarea {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid #d2d2d7;
-    border-radius: 10px;
-    font-size: 14px;
-    color: var(--apple-black);
-    background: #fff;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    font-family: inherit;
-    box-sizing: border-box;
-}
-.tm-form-input:focus,
-.tm-form-select:focus,
-.tm-form-textarea:focus {
-    border-color: var(--apple-blue);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
-}
-.tm-form-error {
-    display: block;
-    color: #ff3b30;
-    font-size: 12px;
-    margin-top: 5px;
-}
-.tm-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid #f0f0f5;
-}
-.tm-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    user-select: none;
-}
-.tm-checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-.tm-form-hint {
-    font-size: 12px;
-    color: var(--apple-gray);
-    margin-top: 4px;
-}
-</style>
+<!-- CSS chuyên biệt cho trang Quản lý Testimonials -->
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/admin-testimonials.css?v=<?php echo time(); ?>">
 
 <div class="container mt-4 mb-5">
-    <div class="admin-header mb-4" style="max-width: 680px; margin: 0 auto 24px auto;">
+    <div class="admin-header mb-4 tm-header-centered">
         <nav class="breadcrumb mb-2">
             <a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Dashboard</a> &nbsp;&rsaquo;&nbsp;
             <a href="<?php echo URLROOT; ?>/testimonialController/index">Quản lý Testimonials</a> &nbsp;&rsaquo;&nbsp;
@@ -168,7 +93,7 @@
             <div class="tm-form-actions">
                 <a href="<?php echo URLROOT; ?>/testimonialController/index" class="btn btn-outline">Hủy bỏ</a>
                 <button type="submit" class="btn btn-success">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tm-btn-icon">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                     Cập nhật thay đổi

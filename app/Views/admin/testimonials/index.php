@@ -1,123 +1,8 @@
 <?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<style>
-/* CSS giao diện Quản lý Testimonials */
-.tm-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-.tm-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-}
-.tm-stat-chip {
-    background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 14px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-}
-.tm-stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.tm-stat-icon--total { background: rgba(0, 113, 227, 0.1); color: var(--apple-blue); }
-.tm-stat-icon--featured { background: rgba(255, 149, 0, 0.12); color: var(--apple-orange); }
-.tm-stat-icon--rating { background: rgba(52, 199, 89, 0.12); color: var(--apple-green); }
-.tm-stat-info { display: flex; flex-direction: column; }
-.tm-stat-value { font-size: 22px; font-weight: 700; color: var(--apple-black); line-height: 1.2; }
-.tm-stat-label { font-size: 13px; color: var(--apple-gray); margin-top: 2px; }
-
-/* Table styling */
-.tm-user-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.tm-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: #f0f0f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    color: var(--apple-blue);
-    font-size: 14px;
-    flex-shrink: 0;
-}
-.tm-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.tm-user-meta strong {
-    display: block;
-    color: var(--apple-black);
-    font-size: 14px;
-}
-.tm-user-meta small {
-    color: var(--apple-gray);
-    font-size: 12px;
-}
-.tm-stars {
-    color: #ffb800;
-    font-size: 15px;
-    letter-spacing: 1px;
-}
-.tm-content-box {
-    max-width: 380px;
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: #333;
-    font-style: italic;
-}
-.tm-badge-featured {
-    cursor: pointer;
-    border: none;
-    background: none;
-    padding: 0;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-.tm-badge-featured.is-active {
-    background: rgba(255, 149, 0, 0.15);
-    color: #d97706;
-}
-.tm-badge-featured.is-inactive {
-    background: #f1f2f6;
-    color: var(--apple-gray);
-}
-.tm-badge-featured:hover {
-    transform: scale(1.04);
-}
-.btn-action-group {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-}
-</style>
+<!-- CSS chuyên biệt cho trang Quản lý Testimonials -->
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/admin-testimonials.css?v=<?php echo time(); ?>">
 
 <div class="container mt-4 mb-5">
     <!-- Breadcrumb & Header -->
@@ -132,7 +17,7 @@
         </div>
         <div class="admin-actions">
             <a href="<?php echo URLROOT; ?>/testimonialController/create" class="btn btn-success" id="btn-add-testimonial">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tm-btn-icon">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
@@ -201,14 +86,14 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">ID</th>
-                            <th style="width: 200px;">Người dùng</th>
+                            <th class="tm-col-id">ID</th>
+                            <th class="tm-col-user">Người dùng</th>
                             <th>Nội dung cảm nhận</th>
-                            <th style="width: 110px;">Số sao</th>
-                            <th style="width: 140px; text-align: center;">Duyệt nổi bật</th>
-                            <th style="width: 80px; text-align: center;">Thứ tự</th>
-                            <th style="width: 110px;">Ngày tạo</th>
-                            <th style="width: 140px;" class="text-right">Hành động</th>
+                            <th class="tm-col-stars">Số sao</th>
+                            <th class="tm-col-featured">Duyệt nổi bật</th>
+                            <th class="tm-col-order">Thứ tự</th>
+                            <th class="tm-col-date">Ngày tạo</th>
+                            <th class="tm-col-actions text-right">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -272,7 +157,7 @@
                                             Sửa
                                         </a>
 
-                                        <form action="<?php echo URLROOT; ?>/testimonialController/destroy/<?php echo $tm->id; ?>" method="POST" style="display: inline-block;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá của \'<?php echo htmlspecialchars($tm->user_name ?? '', ENT_QUOTES); ?>\'?');">
+                                        <form action="<?php echo URLROOT; ?>/testimonialController/destroy/<?php echo $tm->id; ?>" method="POST" class="tm-inline-form" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá của \'<?php echo htmlspecialchars($tm->user_name ?? '', ENT_QUOTES); ?>\'?');">
                                             <input type="hidden" name="csrf_token" value="<?php echo $data['csrf_token']; ?>">
                                             <button type="submit" class="btn-action btn-action-delete" title="Xóa testimonial">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -290,11 +175,11 @@
                 </table>
             </div>
         <?php else : ?>
-            <div style="text-align: center; padding: 48px 20px; color: var(--apple-gray);">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.5;">
+            <div class="tm-empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="tm-empty-icon">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <p style="font-size: 16px; margin-bottom: 16px;">Chưa có testimonial nào được tạo.</p>
+                <p class="tm-empty-text">Chưa có testimonial nào được tạo.</p>
                 <a href="<?php echo URLROOT; ?>/testimonialController/create" class="btn btn-primary btn-sm">Thêm cảm nhận đầu tiên</a>
             </div>
         <?php endif; ?>
