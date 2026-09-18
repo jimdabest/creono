@@ -1,14 +1,14 @@
 <?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<!-- CSS chuyên biệt cho trang Quản lý Testimonials -->
+<!-- CSS chuyên biệt cho trang Quản lý Đánh giá nền tảng -->
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/admin-testimonials.css?v=<?php echo time(); ?>">
 
 <div class="container mt-4 mb-5">
     <div class="admin-header mb-4 tm-header-centered">
         <nav class="breadcrumb mb-2">
             <a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Dashboard</a> &nbsp;&rsaquo;&nbsp;
-            <a href="<?php echo URLROOT; ?>/testimonialController/index">Quản lý Testimonials</a> &nbsp;&rsaquo;&nbsp;
+            <a href="<?php echo URLROOT; ?>/testimonialController/index">Quản lý Đánh giá nền tảng</a> &nbsp;&rsaquo;&nbsp;
             <span class="text-muted">Thêm mới</span>
         </nav>
         <h1 class="admin-title">Thêm Testimonial mới</h1>

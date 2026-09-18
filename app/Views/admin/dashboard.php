@@ -334,7 +334,7 @@
                 <span class="link-arrow">&rarr;</span>
             </a>
 
-            <!-- Quản lý Testimonials -->
+            <!-- Quản lý Đánh giá nền tảng -->
             <a href="<?php echo URLROOT; ?>/testimonialController/index" class="quick-link-card">
                 <div class="link-icon" style="color: #ff9500;">
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -343,7 +343,7 @@
                     </svg>
                 </div>
                 <div class="link-info">
-                    <h4>Quản lý Testimonials</h4>
+                    <h4>Quản lý Đánh giá nền tảng</h4>
                     <p>Cảm nhận khách hàng & đánh giá hiển thị trên website</p>
                 </div>
                 <span class="link-arrow">&rarr;</span>

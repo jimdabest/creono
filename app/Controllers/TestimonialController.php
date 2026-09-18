@@ -42,7 +42,7 @@ class TestimonialController extends Controller
         $testimonials = $this->testimonialModel->getAllOrdered();
 
         $data = [
-            'title'        => 'Quản lý Testimonials - Creono',
+            'title'        => 'Quản lý Đánh giá nền tảng - Creono',
             'testimonials' => $testimonials,
             'csrf_token'   => generateCsrfToken()
         ];

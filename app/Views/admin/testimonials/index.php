@@ -1,7 +1,7 @@
 <?php /** @var array $data */ ?>
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
-<!-- CSS chuyên biệt cho trang Quản lý Testimonials -->
+<!-- CSS chuyên biệt cho trang Quản lý Đánh giá nền tảng -->
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/admin-testimonials.css?v=<?php echo time(); ?>">
 
 <div class="container mt-4 mb-5">
@@ -10,9 +10,9 @@
         <div>
             <nav class="breadcrumb mb-2">
                 <a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Dashboard</a> &nbsp;&rsaquo;&nbsp;
-                <span class="text-muted">Quản lý Testimonials</span>
+                <span class="text-muted">Quản lý Đánh giá nền tảng</span>
             </nav>
-            <h1 class="admin-title">Quản lý Testimonials</h1>
+            <h1 class="admin-title">Quản lý Đánh giá nền tảng</h1>
             <p class="admin-subtitle">Danh sách cảm nhận & đánh giá của khách hàng về hệ thống Creono</p>
         </div>
         <div class="admin-actions">
