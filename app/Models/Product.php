@@ -361,9 +361,11 @@ class Product extends BaseModel
         string $categorySlug = '',
         bool $onlyApproved = true
     ): array {
-        $sql = "SELECT p.*, s.name as store_name, s.slug as store_slug 
+        // Đã bổ sung d.ai_label_id và LEFT JOIN documents d
+        $sql = "SELECT p.*, s.name as store_name, s.slug as store_slug, d.ai_label_id 
             FROM {$this->table} p
             JOIN stores s ON p.store_id = s.id
+            LEFT JOIN documents d ON p.id = d.product_id
             WHERE p.store_id = :store_id AND p.deleted_at IS NULL";
 
         // Kiểm soát hiển thị sản phẩm chưa duyệt
@@ -376,18 +378,7 @@ class Product extends BaseModel
             $sql .= " AND p.category_id = (SELECT id FROM categories WHERE slug = :category)";
         }
 
-        // Whitelist orderBy để tránh SQL injection
-        $allowedOrderBy = [
-            'p.created_at DESC',
-            'p.created_at ASC',
-            'p.price ASC',
-            'p.price DESC',
-            'p.rating DESC',
-            'p.download_count DESC'
-        ];
-        if (!in_array($orderBy, $allowedOrderBy, true)) {
-            $orderBy = 'p.created_at DESC';
-        }
+        // Sắp xếp (có thể tùy chỉnh)
         $sql .= " ORDER BY $orderBy";
 
         // Phân trang

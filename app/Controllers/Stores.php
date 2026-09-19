@@ -85,7 +85,7 @@ class Stores extends Controller
 
             if (empty($errors)) {
                 if ($this->storeModel->createStore($data)) {
-                    if (!empty($_SESSION['user_email']) && function_exists('sendEmail')) {
+                    if (!empty($_SESSION['user_email']) && function_exists('sendTemplatedEmail')) {
                         $subject = 'Đã nhận hồ sơ đăng ký cửa hàng';
 
                         $emailTitle = 'Đã nhận hồ sơ đăng ký cửa hàng';
@@ -96,11 +96,15 @@ class Stores extends Controller
                         $ctaLink = URLROOT;
                         $footerNote = 'Cảm ơn bạn đã tin tưởng Creono.';
 
-                        ob_start();
-                        include APPROOT . '/Views/emails/layout.php';
-                        $body = ob_get_clean();
-
-                        @sendEmail($_SESSION['user_email'], $subject, $body);
+                        sendTemplatedEmail(
+                            $_SESSION['user_email'],
+                            $subject,
+                            $emailTitle,
+                            $emailContent,
+                            $ctaText,
+                            $ctaLink,
+                            $footerNote
+                        );
                     }
 
                     setFlash('success', 'Đăng ký bán hàng thành công! Hồ sơ của bạn đang được Quản trị viên xét duyệt.');

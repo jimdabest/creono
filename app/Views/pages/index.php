@@ -2,7 +2,7 @@
 <?php require APPROOT . '/Views/inc/header.php'; ?>
 
 <!-- ============================== -->
-<!-- HERO SECTION (Apple Product Launch Style) -->
+<!-- HERO SECTION (Apple Product Launch Style) - GIỮ NGUYÊN -->
 <!-- ============================== -->
 <section class="hero-section text-center">
     <div class="container">
@@ -23,8 +23,9 @@
     </div>
 </section>
 
+
 <!-- ============================== -->
-<!-- BENTO STATS & HIGHLIGHTS -->
+<!-- BENTO STATS & HIGHLIGHTS - GIỮ NGUYÊN -->
 <!-- ============================== -->
 <section class="bento-section">
     <div class="container">
@@ -71,68 +72,82 @@
     </div>
 </section>
 
+
 <!-- ============================== -->
-<!-- TÀI LIỆU NỔI BẬT (Featured Products) -->
+<!-- FEATURED PRODUCTS - APPLE STYLE GRID (TOP 10) -->
 <!-- ============================== -->
 <?php if(!empty($data['featured_products'])) : ?>
-<section class="featured-section">
+<?php
+// Lấy top 10 sản phẩm
+$topProducts = array_slice($data['featured_products'], 0, 10);
+// Tách 2 sản phẩm đầu cho hàng trên (ô lớn), 8 sản phẩm còn lại cho hàng dưới (ô nhỏ)
+$heroProducts = array_slice($topProducts, 0, 2);
+$gridProducts = array_slice($topProducts, 2, 8);
+?>
+<section class="apple-showcase-section">
     <div class="container">
-        <div class="section-header">
-            <h2>Được lựa chọn cho bạn.</h2>
-            <a href="<?php echo URLROOT; ?>/products/index" class="view-all">Xem tất cả tài liệu <span style="font-size: 12px;">↗</span></a>
-        </div>
         
-        <div class="product-grid-home">
-            <?php 
-            $count = 0;
-            foreach($data['featured_products'] as $product) : 
-                if($count++ >= 4) break;
-            ?>
-                <div class="product-card interactive-hover">
-                    <div class="product-image-wrapper" style="position: relative; height: 160px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f5f5f7;">
-                        
-                        <!-- UPDATE: Xử lý hiển thị ảnh thật từ Database -->
-                        <?php if (!empty($product->preview_url)): ?>
-                            <img src="<?php echo URLROOT . htmlspecialchars($product->preview_url); ?>" alt="<?php echo htmlspecialchars($product->title); ?>" style="width: 100%; height: 100%; object-fit: cover;">
-                        <?php else: ?>
-                            <div class="product-placeholder" style="color: #86868b; font-size: 13px;">Preview</div>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($product->store_slug)): ?>
-                            <a href="<?php echo URLROOT; ?>/storefront/<?php echo $product->store_slug; ?>" class="product-badge" style="text-decoration: none; color: inherit; position: absolute; bottom: 12px; left: 12px; background: rgba(29,29,31,0.72); backdrop-filter: blur(10px); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px;">
-                                <?php echo htmlspecialchars($product->store_name); ?>
-                            </a>
-                        <?php else: ?>
-                            <span class="product-badge" style="text-decoration: none; color: inherit; position: absolute; bottom: 12px; left: 12px; background: rgba(29,29,31,0.72); backdrop-filter: blur(10px); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px;">
-                                <?php echo htmlspecialchars($product->store_name); ?>
-                            </span>
-                        <?php endif; ?>
-                        
-                        <?php if($product->rating > 0) : ?>
-                            <span class="product-rating" style="position: absolute; bottom: 12px; right: 12px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #1d1d1f;">
-                                <span style="color: #ffb800;">★</span> <?php echo number_format($product->rating, 1); ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="product-content">
-                        <h3 class="product-title"><?php echo htmlspecialchars($product->title); ?></h3>
-                        <p class="product-desc"><?php echo htmlspecialchars($product->description ?? 'Tài liệu số chất lượng cao được kiểm duyệt trên Creono.'); ?></p>
-                    </div>
+        <!-- Tiêu đề section -->
+        <div class="apple-showcase-header">
+            <h2>Được lựa chọn cho bạn.</h2>
+            <p class="apple-showcase-subtitle">Khám phá những tài liệu số nổi bật nhất trên Creono.</p>
+        </div>
 
-                    <div class="product-footer">
-                        <span class="product-price"><?php echo number_format($product->price, 0, ',', '.'); ?> ₫</span>
-                        <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" class="btn btn-outline" style="border: none; background: var(--apple-gray-bg); color: var(--apple-black); font-weight: 500;">Chi tiết</a>
+        <!-- Hàng trên: 2 ô lớn -->
+        <?php if (!empty($heroProducts)) : ?>
+        <div class="apple-grid-large">
+            <?php foreach ($heroProducts as $product) : ?>
+                <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" class="apple-card apple-card-large">
+                    <div class="apple-card-bg" style="background-image: url('<?php echo !empty($product->preview_url) ? URLROOT . htmlspecialchars($product->preview_url) : ''; ?>');">
+                        <?php if (empty($product->preview_url)): ?>
+                            <div class="apple-card-placeholder">Preview</div>
+                        <?php endif; ?>
                     </div>
-                </div>
+                    <div class="apple-card-overlay"></div>
+                    <div class="apple-card-content">
+                        <span class="apple-card-store"><?php echo htmlspecialchars($product->store_name); ?></span>
+                        <h3 class="apple-card-title"><?php echo htmlspecialchars($product->title); ?></h3>
+                        <p class="apple-card-desc"><?php echo htmlspecialchars(mb_substr($product->description ?? 'Tài liệu số chất lượng cao.', 0, 100)); ?>...</p>
+                        <div class="apple-card-footer">
+                            <span class="apple-card-price"><?php echo number_format($product->price, 0, ',', '.'); ?> ₫</span>
+                            <?php if($product->rating > 0) : ?>
+                                <span class="apple-card-rating">★ <?php echo number_format($product->rating, 1); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </a>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
+
+        <!-- Hàng dưới: các ô nhỏ -->
+        <?php if (!empty($gridProducts)) : ?>
+        <div class="apple-grid-small">
+            <?php foreach ($gridProducts as $product) : ?>
+                <a href="<?php echo URLROOT; ?>/products/detail/<?php echo $product->id; ?>" class="apple-card apple-card-small">
+                    <div class="apple-card-bg" style="background-image: url('<?php echo !empty($product->preview_url) ? URLROOT . htmlspecialchars($product->preview_url) : ''; ?>');">
+                        <?php if (empty($product->preview_url)): ?>
+                            <div class="apple-card-placeholder">Preview</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="apple-card-overlay"></div>
+                    <div class="apple-card-content">
+                        <span class="apple-card-store"><?php echo htmlspecialchars($product->store_name); ?></span>
+                        <h4 class="apple-card-title"><?php echo htmlspecialchars($product->title); ?></h4>
+                        <div class="apple-card-footer">
+                            <span class="apple-card-price"><?php echo number_format($product->price, 0, ',', '.'); ?> ₫</span>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
     </div>
 </section>
 <?php endif; ?>
-
 <!-- ============================== -->
-<!-- DANH MỤC (Categories) -->
+<!-- DANH MỤC (Categories) - GIỮ NGUYÊN DẠNG PILL -->
 <!-- ============================== -->
 <?php if(!empty($data['categories'])) : ?>
 <section class="categories-section" style="background: #fff; padding: 80px 0;">

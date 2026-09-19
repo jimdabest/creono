@@ -46,7 +46,6 @@ class Admin extends Controller
 
     /**
      * Giao diện Cấu hình hệ thống (UC45)
-     * URL: /admin/settings
      */
     public function settings(): void {
         $settingModel = $this->model('Setting');
@@ -62,28 +61,24 @@ class Admin extends Controller
 
     /**
      * API Cập nhật cấu hình (Xử lý AJAX)
-     * URL: /admin/updateSettings
      */
     public function updateSettings(): void {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(false, 'Method không hợp lệ');
         }
 
-        // Rule 3.3: Bảo mật CSRF
         if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
             $this->jsonResponse(false, 'Lỗi bảo mật CSRF');
         }
 
         $rate = $_POST['commission_rate'] ?? '';
         
-        // Unhappy Path: Validate bắt lỗi chữ đỏ
         if (!is_numeric($rate) || (float)$rate < 0 || (float)$rate > 100) {
             $this->jsonResponse(false, 'Dữ liệu không hợp lệ', [
                 'errors' => ['commission_rate_err' => 'Tỷ lệ hoa hồng phải là số từ 0 đến 100']
             ]);
         }
 
-        // Happy Path: Lưu DB
         $settingModel = $this->model('Setting');
         if ($settingModel->updateSetting('commission_rate', (string)$rate)) {
             $this->jsonResponse(true, 'Đã cập nhật tỷ lệ phí nền tảng thành công!');
@@ -106,8 +101,7 @@ class Admin extends Controller
             'top_products'           => $this->statModel->getTopProducts(5),
             'seller_revenues'        => $this->statModel->getSellerRevenueOverview(5),
             'pending_approvals_count' => $this->productModel->getPendingCount(),
-            'pending_reports_count'  => $this->reportModel->getPendingCount() + $this->aiAppealModel->getPendingCount(),
-            'pending_stores_count'   => $this->storeModel->getPendingCount()
+            'pending_reports_count'  => $this->reportModel->getPendingCount() + $this->aiAppealModel->getPendingCount()
         ];
 
         $this->view('admin/dashboard', $data);
@@ -116,25 +110,16 @@ class Admin extends Controller
     // =========================================================================
     // UC42: Quản lý Danh mục (Category CRUD)
     // =========================================================================
-
-    /**
-     * Danh sách danh mục
-     */
     public function categories(): void
     {
         $categories = $this->categoryModel->getAllWithProductCount();
-
         $data = [
             'title'      => 'Quản lý Danh mục - Creono Admin',
             'categories' => $categories
         ];
-
         $this->view('admin/categories/index', $data);
     }
 
-    /**
-     * Thêm danh mục mới (GET / POST)
-     */
     public function categoryCreate(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -194,7 +179,6 @@ class Admin extends Controller
             } else {
                 $data['errors'] = $errors;
             }
-
             $this->view('admin/categories/create', $data);
         } else {
             $data = [
@@ -205,59 +189,10 @@ class Admin extends Controller
                 'sort_order'  => 0,
                 'errors'      => []
             ];
-
             $this->view('admin/categories/create', $data);
         }
     }
 
-    public function withdrawals(): void
-    {
-        $data = [
-            'title' => 'Phê duyệt rút tiền',
-            'requests' => $this->walletModel->getPendingWithdrawals(),
-            'csrf_token' => generateCsrfToken()
-        ];
-        $this->view('admin/withdrawals/index', $data);
-    }
-
-    public function processWithdrawal(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonResponse(false, 'Method không hợp lệ');
-        }
-
-        // Bảo mật Rule 3.3: Bắt buộc có CSRF
-        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-            $this->jsonResponse(false, 'Lỗi bảo mật CSRF');
-        }
-
-        $requestId = (int)($_POST['request_id'] ?? 0);
-        $action = strtoupper($_POST['action'] ?? ''); // Dữ liệu: APPROVE hoặc REJECT
-        $adminId = (int)$_SESSION['user_id'];
-
-        if ($requestId <= 0 || !in_array($action, ['APPROVE', 'REJECT'])) {
-            $this->jsonResponse(false, 'Dữ liệu không hợp lệ. Hành động bị từ chối.');
-        }
-
-        if ($this->walletModel->processWithdrawalAdmin($requestId, $adminId, $action)) {
-            $msg = $action === 'APPROVE' ? 'Đã duyệt yêu cầu rút tiền thành công!' : 'Đã từ chối và hoàn tiền về ví cho người bán.';
-            $this->jsonResponse(true, $msg, ['redirect' => URLROOT . '/admin/withdrawals']);
-        } else {
-            $this->jsonResponse(false, 'Lỗi hệ thống khi xử lý dòng tiền. Vui lòng kiểm tra lại.');
-        }
-    }
-
-    // Nếu bạn chưa có hàm jsonResponse trong Admin.php thì nhớ thêm hàm này:
-    private function jsonResponse(bool $success, string $message, array $data = []): void
-    {
-        header('Content-Type: application/json');
-        echo json_encode(array_merge(['success' => $success, 'message' => $message], $data));
-        exit();
-    }
-
-    /**
-     * Chỉnh sửa danh mục (GET / POST)
-     */
     public function categoryEdit(?int $id = null): void
     {
         if (!$id) {
@@ -332,7 +267,6 @@ class Admin extends Controller
             } else {
                 $data['errors'] = $errors;
             }
-
             $this->view('admin/categories/edit', $data);
         } else {
             $data = [
@@ -345,14 +279,10 @@ class Admin extends Controller
                 'sort_order'  => $category->sort_order ?? 0,
                 'errors'      => []
             ];
-
             $this->view('admin/categories/edit', $data);
         }
     }
 
-    /**
-     * Xóa danh mục
-     */
     public function categoryDelete(?int $id = null): void
     {
         if (!$id) {
@@ -385,12 +315,8 @@ class Admin extends Controller
     }
 
     // =========================================================================
-    // UC43: Duyệt sản phẩm (Product Approval System)
+    // UC43: Duyệt sản phẩm
     // =========================================================================
-
-    /**
-     * Hiển thị danh sách sản phẩm chờ duyệt và lịch sử phê duyệt
-     */
     public function approvals(): void
     {
         $pendingProducts = $this->productModel->getPendingApprovals();
@@ -405,9 +331,6 @@ class Admin extends Controller
         $this->view('admin/approvals/index', $data);
     }
 
-    /**
-     * Phê duyệt sản phẩm (Approve)
-     */
     public function approveProduct(?int $id = null): void
     {
         if (!$id) {
@@ -443,9 +366,6 @@ class Admin extends Controller
         exit();
     }
 
-    /**
-     * Từ chối sản phẩm (Reject)
-     */
     public function rejectProduct(?int $id = null): void
     {
         if (!$id) {
@@ -482,12 +402,47 @@ class Admin extends Controller
     }
 
     // =========================================================================
+    // Phê duyệt rút tiền
+    // =========================================================================
+    public function withdrawals(): void
+    {
+        $data = [
+            'title' => 'Phê duyệt rút tiền',
+            'requests' => $this->walletModel->getPendingWithdrawals(),
+            'csrf_token' => generateCsrfToken()
+        ];
+        $this->view('admin/withdrawals/index', $data);
+    }
+
+    public function processWithdrawal(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(false, 'Method không hợp lệ');
+        }
+
+        if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
+            $this->jsonResponse(false, 'Lỗi bảo mật CSRF');
+        }
+
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        $action = strtoupper($_POST['action'] ?? '');
+        $adminId = (int)$_SESSION['user_id'];
+
+        if ($requestId <= 0 || !in_array($action, ['APPROVE', 'REJECT'])) {
+            $this->jsonResponse(false, 'Dữ liệu không hợp lệ. Hành động bị từ chối.');
+        }
+
+        if ($this->walletModel->processWithdrawalAdmin($requestId, $adminId, $action)) {
+            $msg = $action === 'APPROVE' ? 'Đã duyệt yêu cầu rút tiền thành công!' : 'Đã từ chối và hoàn tiền về ví cho người bán.';
+            $this->jsonResponse(true, $msg, ['redirect' => URLROOT . '/admin/withdrawals']);
+        } else {
+            $this->jsonResponse(false, 'Lỗi hệ thống khi xử lý dòng tiền. Vui lòng kiểm tra lại.');
+        }
+    }
+
+    // =========================================================================
     // UC44: Quản lý Báo cáo vi phạm & Khiếu nại AI (Reports & AI Appeals)
     // =========================================================================
-
-    /**
-     * Danh sách Báo cáo vi phạm và Khiếu nại nhãn AI
-     */
     public function reports(): void
     {
         $reports = $this->reportModel->getAllWithDetails();
@@ -502,9 +457,6 @@ class Admin extends Controller
         $this->view('admin/reports/index', $data);
     }
 
-    /**
-     * Xử lý báo cáo vi phạm từ người dùng (Resolve / Dismiss / Investigate)
-     */
     public function resolveReport(?int $id = null): void
     {
         if (!$id) {
@@ -550,7 +502,7 @@ class Admin extends Controller
     }
 
     /**
-     * Xử lý khiếu nại nhãn AI từ Seller (Approve / Reject Appeal)
+     * Xử lý khiếu nại nhãn AI từ Seller
      */
     public function processAppeal(?int $id = null): void
     {
@@ -569,33 +521,47 @@ class Admin extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
-                die('CSRF token validation failed');
+                die('Lỗi bảo mật CSRF.');
             }
+
+            $adminId = (int)$_SESSION['user_id'];
+            $action = trim($_POST['action'] ?? 'approve');
+
+            // Lấy thông tin sản phẩm để chèn tên vào Email
+            $product = $this->productModel->findById((int)$appeal->product_id);
+            $productTitle = $product ? $product->title : 'Tài liệu số';
+
+            if ($action === 'approve') {
+                // Khôi phục trạng thái sản phẩm và đổi nhãn AI về Human
+                $this->productModel->updateStatus((int)$appeal->product_id, 2);
+                $documentModel = $this->model('Document');
+                $documentModel->updateByProductId((int)$appeal->product_id, ['ai_label_id' => 1]);
+
+                // Đánh dấu đã giải quyết khiếu nại
+                $this->aiAppealModel->updateAppealStatus($id, 2, $adminId);
+                
+                // Gửi email thông báo Thành công
+                $this->sendAppealNotification((int)$appeal->seller_id, 'approved', $id, $productTitle);
+                
+                setFlash('success', "Đã chấp nhận khiếu nại AI #{$id}, khôi phục sản phẩm và cập nhật nhãn Human!");
+            } else {
+                // Cập nhật trạng thái từ chối
+                $this->aiAppealModel->updateAppealStatus($id, 3, $adminId);
+                
+                // Gửi email thông báo Từ chối
+                $this->sendAppealNotification((int)$appeal->seller_id, 'rejected', $id, $productTitle);
+                
+                setFlash('warning', "Đã từ chối khiếu nại nhãn AI #{$id}.");
+            }
+
+            header('location: ' . URLROOT . '/admin/reports');
+            exit();
         }
-
-        $adminId = (int)$_SESSION['user_id'];
-        $action = trim($_POST['action'] ?? 'approve');
-
-        if ($action === 'approve') {
-            $this->productModel->updateStatus((int)$appeal->product_id, 2);
-            $this->aiAppealModel->updateAppealStatus($id, 2, $adminId);
-            setFlash('success', "Đã chấp nhận khiếu nại AI #{$id} và khôi phục sản phẩm!");
-        } else {
-            $this->aiAppealModel->updateAppealStatus($id, 3, $adminId);
-            setFlash('warning', "Đã từ chối khiếu nại nhãn AI #{$id}.");
-        }
-
-        header('location: ' . URLROOT . '/admin/reports');
-        exit();
     }
 
     // =========================================================================
     // KYC (Xác minh danh tính) – Admin duyệt
     // =========================================================================
-
-    /**
-     * Danh sách KYC đang chờ duyệt
-     */
     public function listKyc(): void
     {
         $kycs = $this->kycModel->getPendingKycs();
@@ -606,9 +572,6 @@ class Admin extends Controller
         $this->view('admin/kyc/index', $data);
     }
 
-    /**
-     * Duyệt KYC thành công
-     */
     public function approveKyc(?int $id = null): void
     {
         if (!$id) {
@@ -624,10 +587,8 @@ class Admin extends Controller
             exit();
         }
 
-        // Cập nhật KYC status = 2 (Approved)
         if ($this->kycModel->approveKyc($id)) {
             setFlash('success', 'KYC đã được duyệt thành công.');
-            // Gửi email thông báo cho người dùng
             $this->sendKycNotification((int)$kyc->user_id, 'approved');
         } else {
             setFlash('error', 'Có lỗi xảy ra khi duyệt KYC.');
@@ -637,9 +598,6 @@ class Admin extends Controller
         exit();
     }
 
-    /**
-     * Từ chối KYC
-     */
     public function rejectKyc(?int $id = null): void
     {
         if (!$id) {
@@ -669,253 +627,24 @@ class Admin extends Controller
     }
 
     // =========================================================================
-    // Helper: Gửi email thông báo báo cáo
+    // Phê duyệt đăng ký cửa hàng (Trường hợp User ghép chung vào Controller Admin)
     // =========================================================================
-
-    private function sendReportNotification(int $reporterId, string $status, int $reportId): void
-    {
-        $reporter = $this->userModel->findById($reporterId);
-        if (!$reporter) {
-            return;
-        }
-
-        $subject = 'Thông báo về báo cáo vi phạm #' . $reportId;
-
-        if ($status === 'resolved') {
-            $emailTitle = 'Báo cáo vi phạm đã được xử lý';
-            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($reporter->name) . '</strong>,</p>'
-                . '<p>Báo cáo vi phạm <strong>#' . $reportId . '</strong> của bạn đã được xem xét và <strong>CHẤP NHẬN</strong>.</p>'
-                . '<p>Chúng tôi đã xử lý đối tượng vi phạm theo quy định. Cảm ơn bạn đã giúp chúng tôi duy trì cộng đồng an toàn.</p>';
-            $ctaText = 'Xem chi tiết';
-            $ctaLink = URLROOT . '/products/index';
-            $footerNote = 'Cảm ơn bạn đã đóng góp cho cộng đồng Creono.';
-        } else {
-            $emailTitle = 'Báo cáo vi phạm đã bị bác bỏ';
-            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($reporter->name) . '</strong>,</p>'
-                . '<p>Báo cáo vi phạm <strong>#' . $reportId . '</strong> của bạn đã được xem xét và <strong>BÁC BỎ</strong>.</p>'
-                . '<p>Chúng tôi không tìm thấy đủ bằng chứng cho vi phạm này. Nếu bạn có thêm thông tin, vui lòng gửi lại báo cáo mới.</p>';
-            $ctaText = 'Gửi báo cáo mới';
-            $ctaLink = URLROOT . '/reports/create';
-            $footerNote = 'Chúng tôi luôn lắng nghe phản hồi từ bạn.';
-        }
-
-        ob_start();
-        include APPROOT . '/Views/emails/layout.php';
-        $body = ob_get_clean();
-
-        sendEmail($reporter->email, $subject, $body);
-    }
-
-    // =========================================================================
-    // Helper: Gửi email thông báo KYC
-    // =========================================================================
-
-    private function sendKycNotification(int $userId, string $status, string $note = ''): void
-    {
-        $user = $this->userModel->findById($userId);
-        if (!$user) {
-            return;
-        }
-
-        $subject = 'Thông báo xác minh danh tính (KYC) - Creono';
-
-        if ($status === 'approved') {
-            $emailTitle = 'Xác minh danh tính thành công';
-            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($user->name) . '</strong>,</p>'
-                . '<p>Yêu cầu xác minh danh tính (KYC) của bạn đã được <strong>DUYỆT</strong> thành công.</p>'
-                . '<p>Bạn có thể sử dụng đầy đủ các tính năng của nền tảng.</p>';
-            $ctaText = 'Truy cập hồ sơ';
-            $ctaLink = URLROOT . '/users/profile';
-            $footerNote = 'Cảm ơn bạn đã xác minh danh tính.';
-        } else {
-            $emailTitle = 'Xác minh danh tính bị từ chối';
-            $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($user->name) . '</strong>,</p>'
-                . '<p>Yêu cầu xác minh danh tính (KYC) của bạn đã bị <strong>TỪ CHỐI</strong>.</p>'
-                . '<p><strong>Lý do:</strong> ' . htmlspecialchars($note) . '</p>'
-                . '<p>Vui lòng cập nhật lại giấy tờ và gửi lại yêu cầu mới.</p>';
-            $ctaText = 'Cập nhật hồ sơ KYC';
-            $ctaLink = URLROOT . '/users/kyc';
-            $footerNote = 'Nếu bạn cần hỗ trợ, vui lòng liên hệ bộ phận chăm sóc khách hàng.';
-        }
-
-        ob_start();
-        include APPROOT . '/Views/emails/layout.php';
-        $body = ob_get_clean();
-
-        sendEmail($user->email, $subject, $body);
-    }
-
-    // =========================================================================
-    // Helper: Tạo URL Slug
-    // =========================================================================
-
-    private function slugify(string $text): string
-    {
-        $utf8Map = [
-            'à' => 'a',
-            'á' => 'a',
-            'ả' => 'a',
-            'ã' => 'a',
-            'ạ' => 'a',
-            'ă' => 'a',
-            'ằ' => 'a',
-            'ắ' => 'a',
-            'ẳ' => 'a',
-            'ẵ' => 'a',
-            'ặ' => 'a',
-            'â' => 'a',
-            'ầ' => 'a',
-            'ấ' => 'a',
-            'ẩ' => 'a',
-            'ẫ' => 'a',
-            'ậ' => 'a',
-            'đ' => 'd',
-            'è' => 'e',
-            'é' => 'e',
-            'ẻ' => 'e',
-            'ẽ' => 'e',
-            'ẹ' => 'e',
-            'ê' => 'e',
-            'ề' => 'e',
-            'ế' => 'e',
-            'ể' => 'e',
-            'ễ' => 'e',
-            'ệ' => 'e',
-            'ì' => 'i',
-            'í' => 'i',
-            'ỉ' => 'i',
-            'ĩ' => 'i',
-            'ị' => 'i',
-            'ò' => 'o',
-            'ó' => 'o',
-            'ỏ' => 'o',
-            'õ' => 'o',
-            'ọ' => 'o',
-            'ô' => 'o',
-            'ồ' => 'o',
-            'ố' => 'o',
-            'ổ' => 'o',
-            'ỗ' => 'o',
-            'ộ' => 'o',
-            'ơ' => 'o',
-            'ờ' => 'o',
-            'ớ' => 'o',
-            'ở' => 'o',
-            'ỡ' => 'o',
-            'ợ' => 'o',
-            'ù' => 'u',
-            'ú' => 'u',
-            'ủ' => 'u',
-            'ũ' => 'u',
-            'ụ' => 'u',
-            'ư' => 'u',
-            'ừ' => 'u',
-            'ứ' => 'u',
-            'ử' => 'u',
-            'ữ' => 'u',
-            'ự' => 'u',
-            'ỳ' => 'y',
-            'ý' => 'y',
-            'ỷ' => 'y',
-            'ỹ' => 'y',
-            'ỵ' => 'y',
-            // Hoa
-            'À' => 'a',
-            'Á' => 'a',
-            'Ả' => 'a',
-            'Ã' => 'a',
-            'Ạ' => 'a',
-            'Ă' => 'a',
-            'Ằ' => 'a',
-            'Ắ' => 'a',
-            'Ẳ' => 'a',
-            'Ẵ' => 'a',
-            'Ặ' => 'a',
-            'Â' => 'a',
-            'Ầ' => 'a',
-            'Ấ' => 'a',
-            'Ẩ' => 'a',
-            'Ẫ' => 'a',
-            'Ậ' => 'a',
-            'Đ' => 'd',
-            'È' => 'e',
-            'É' => 'e',
-            'Ẻ' => 'e',
-            'Ẽ' => 'e',
-            'Ẹ' => 'e',
-            'Ê' => 'e',
-            'Ề' => 'e',
-            'Ế' => 'e',
-            'Ể' => 'e',
-            'Ễ' => 'e',
-            'Ệ' => 'e',
-            'Ì' => 'i',
-            'Í' => 'i',
-            'Ỉ' => 'i',
-            'Ĩ' => 'i',
-            'Ị' => 'i',
-            'Ò' => 'o',
-            'Ó' => 'o',
-            'Ỏ' => 'o',
-            'Õ' => 'o',
-            'Ọ' => 'o',
-            'Ô' => 'o',
-            'Ồ' => 'o',
-            'Ố' => 'o',
-            'Ổ' => 'o',
-            'Ỗ' => 'o',
-            'Ộ' => 'o',
-            'Ơ' => 'o',
-            'Ờ' => 'o',
-            'Ớ' => 'o',
-            'Ở' => 'o',
-            'Ỡ' => 'o',
-            'Ợ' => 'o',
-            'Ù' => 'u',
-            'Ú' => 'u',
-            'Ủ' => 'u',
-            'Ũ' => 'u',
-            'Ụ' => 'u',
-            'Ư' => 'u',
-            'Ừ' => 'u',
-            'Ứ' => 'u',
-            'Ử' => 'u',
-            'Ữ' => 'u',
-            'Ự' => 'u',
-            'Ỳ' => 'y',
-            'Ý' => 'y',
-            'Ỷ' => 'y',
-            'Ỹ' => 'y',
-            'Ỵ' => 'y'
-        ];
-
-        $text = strtr($text, $utf8Map);
-        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-        $text = preg_replace('~[^-\w]+~', '', $text);
-        $text = trim($text, '-');
-        $text = preg_replace('~-+~', '-', $text);
-        return strtolower($text ?: 'danh-muc');
-    }
-
-    // =========================================================================
-    // Phê duyệt đăng ký cửa hàng (Admin Store Approvals)
-    // =========================================================================
-
-    /**
-     * Màn hình duyệt cửa hàng hoặc điều hướng
-     * URL: /admin/stores hoặc /admin/pendingStores
-     */
     public function pendingStores(): void
     {
-        $pendingStores = $this->storeModel->getPendingStores();
-
-        $data = [
-            'title' => 'Duyệt đăng ký cửa hàng - Creono Admin',
-            'stores' => $pendingStores,
-            'csrf_token' => generateCsrfToken()
-        ];
-
-        $this->view('admin/stores/pending', $data);
+        // Kiểm tra xem method getPendingStores có tồn tại trong Store model không
+        if (method_exists($this->storeModel, 'getPendingStores')) {
+            $pendingStores = $this->storeModel->getPendingStores();
+            $data = [
+                'title' => 'Duyệt đăng ký cửa hàng - Creono Admin',
+                'stores' => $pendingStores,
+                'csrf_token' => generateCsrfToken()
+            ];
+            $this->view('admin/stores/pending', $data);
+        } else {
+            setFlash('error', 'Hàm getPendingStores chưa được khai báo trong Store model.');
+            header('location: ' . URLROOT . '/admin/dashboard');
+            exit();
+        }
     }
 
     public function stores(string $action = 'pending', ?int $id = null): void
@@ -933,9 +662,6 @@ class Admin extends Controller
         $this->pendingStores();
     }
 
-    /**
-     * Phê duyệt hồ sơ cửa hàng qua AJAX
-     */
     public function approveStore(?int $id = null): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -955,7 +681,10 @@ class Admin extends Controller
             return;
         }
 
-        $store = $this->storeModel->getStoreWithApplicant($storeId);
+        $store = method_exists($this->storeModel, 'getStoreWithApplicant') 
+                 ? $this->storeModel->getStoreWithApplicant($storeId) 
+                 : $this->storeModel->findById($storeId);
+
         if (!$store) {
             $this->jsonResponse(false, 'Không tìm thấy hồ sơ cửa hàng.');
             return;
@@ -966,34 +695,29 @@ class Admin extends Controller
             return;
         }
 
-        $success = $this->storeModel->approveStore($storeId);
-        if ($success) {
-            if (!empty($store->applicant_email) && function_exists('sendEmail')) {
-                $subject = 'Chúc mừng! Cửa hàng "' . $store->name . '" đã được phê duyệt';
+        if (method_exists($this->storeModel, 'approveStore')) {
+            $success = $this->storeModel->approveStore($storeId);
+            if ($success) {
+                if (!empty($store->applicant_email) && function_exists('sendTemplatedEmail')) {
+                    $subject = 'Chúc mừng! Hồ sơ đăng ký cửa hàng "' . $store->name . '" đã được phê duyệt';
+                    $emailTitle = 'Xin chào ' . htmlspecialchars($store->applicant_name ?? 'bạn') . ',';
+                    $emailContent = '<p>Hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn trên Creono đã được Quản trị viên phê duyệt thành công.</p>'
+                        . '<p>Tài khoản của bạn đã được nâng cấp lên <strong>Người bán (Seller)</strong>. Bạn có thể đăng nhập và bắt đầu đăng tải tài liệu ngay bây giờ.</p>';
+                    $ctaText = 'Đăng nhập ngay';
+                    $ctaLink = URLROOT . '/users/login';
+                    $footerNote = 'Chào mừng bạn đến với cộng đồng bán hàng trên Creono.';
 
-                $emailTitle = 'Chúc mừng bạn đã trở thành Người bán!';
-                $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($store->applicant_name) . '</strong>,</p>'
-                    . '<p>Hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn trên Creono đã được Quản trị viên phê duyệt thành công!</p>'
-                    . '<p>Tài khoản của bạn đã được nâng cấp lên <strong>Người bán (Seller)</strong>. Bạn có thể đăng nhập và bắt đầu đăng tải tài liệu ngay bây giờ.</p>';
-                $ctaText = 'Truy cập Dashboard Người bán';
-                $ctaLink = URLROOT . '/seller/dashboard';
-                $footerNote = 'Cảm ơn bạn đã đồng hành cùng Creono!';
-
-                ob_start();
-                include APPROOT . '/Views/emails/layout.php';
-                $body = ob_get_clean();
-
-                @sendEmail($store->applicant_email, $subject, $body);
+                    sendTemplatedEmail($store->applicant_email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
+                }
+                $this->jsonResponse(true, 'Đã phê duyệt hồ sơ cửa hàng thành công! Tài khoản đã được nâng cấp lên Người bán.');
+            } else {
+                $this->jsonResponse(false, 'Đã xảy ra lỗi khi phê duyệt cửa hàng.');
             }
-            $this->jsonResponse(true, 'Đã phê duyệt hồ sơ cửa hàng thành công! Tài khoản đã được nâng cấp lên Người bán.');
         } else {
-            $this->jsonResponse(false, 'Đã xảy ra lỗi khi phê duyệt cửa hàng.');
+            $this->jsonResponse(false, 'Hàm approveStore chưa được cài đặt trong Model.');
         }
     }
 
-    /**
-     * Từ chối hồ sơ cửa hàng qua AJAX
-     */
     public function rejectStore(?int $id = null): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -1019,35 +743,150 @@ class Admin extends Controller
             return;
         }
 
-        $store = $this->storeModel->getStoreWithApplicant($storeId);
+        $store = method_exists($this->storeModel, 'getStoreWithApplicant') 
+                 ? $this->storeModel->getStoreWithApplicant($storeId) 
+                 : $this->storeModel->findById($storeId);
+
         if (!$store) {
             $this->jsonResponse(false, 'Không tìm thấy hồ sơ cửa hàng.');
             return;
         }
 
-        $success = $this->storeModel->rejectStore($storeId, $reason);
-        if ($success) {
-            if (!empty($store->applicant_email) && function_exists('sendEmail')) {
-                $subject = 'Thông báo về hồ sơ đăng ký cửa hàng "' . $store->name . '"';
+        if (method_exists($this->storeModel, 'rejectStore')) {
+            $success = $this->storeModel->rejectStore($storeId, $reason);
+            if ($success) {
+                if (!empty($store->applicant_email) && function_exists('sendTemplatedEmail')) {
+                    $subject = 'Thông báo về hồ sơ đăng ký cửa hàng "' . $store->name . '" trên Creono';
+                    $emailTitle = 'Xin chào ' . htmlspecialchars($store->applicant_name ?? 'bạn') . ',';
+                    $emailContent = '<p>Rất tiếc, hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn chưa đáp ứng yêu cầu của nền tảng Creono.</p>'
+                        . '<p><strong>Lý do từ chối:</strong> ' . htmlspecialchars($reason) . '</p>'
+                        . '<p>Vui lòng kiểm tra lại thông tin và nộp lại hồ sơ nếu cần thiết.</p>';
+                    $ctaText = 'Xem hướng dẫn';
+                    $ctaLink = URLROOT . '/pages/about';
+                    $footerNote = 'Nếu cần hỗ trợ, vui lòng liên hệ với bộ phận hỗ trợ của Creono.';
 
-                $emailTitle = 'Thông báo về hồ sơ đăng ký cửa hàng';
-                $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($store->applicant_name) . '</strong>,</p>'
-                    . '<p>Rất tiếc, hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn chưa đáp ứng yêu cầu của nền tảng Creono.</p>'
-                    . '<p><strong>Lý do từ chối:</strong> ' . htmlspecialchars($reason) . '</p>'
-                    . '<p>Vui lòng kiểm tra lại thông tin và nộp lại hồ sơ nếu cần thiết.</p>';
-                $ctaText = 'Quay lại Creono';
-                $ctaLink = URLROOT;
-                $footerNote = 'Nếu bạn có thắc mắc, vui lòng liên hệ bộ phận hỗ trợ.';
-
-                ob_start();
-                include APPROOT . '/Views/emails/layout.php';
-                $body = ob_get_clean();
-
-                @sendEmail($store->applicant_email, $subject, $body);
+                    sendTemplatedEmail($store->applicant_email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
+                }
+                $this->jsonResponse(true, 'Đã từ chối hồ sơ đăng ký cửa hàng thành công.');
+            } else {
+                $this->jsonResponse(false, 'Đã xảy ra lỗi khi từ chối hồ sơ.');
             }
-            $this->jsonResponse(true, 'Đã từ chối hồ sơ đăng ký cửa hàng thành công.');
         } else {
-            $this->jsonResponse(false, 'Đã xảy ra lỗi khi từ chối hồ sơ.');
+            $this->jsonResponse(false, 'Hàm rejectStore chưa được cài đặt trong Model.');
+        }
+    }
+
+    // =========================================================================
+    // CÁC HÀM TRỢ GIÚP (HELPERS)
+    // =========================================================================
+
+    private function jsonResponse(bool $success, string $message, array $data = []): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array_merge(['success' => $success, 'message' => $message], $data), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    private function slugify(string $text): string
+    {
+        $utf8Map = [
+            'à' => 'a', 'á' => 'a', 'ả' => 'a', 'ã' => 'a', 'ạ' => 'a', 'ă' => 'a', 'ằ' => 'a', 'ắ' => 'a', 'ẳ' => 'a', 'ẵ' => 'a', 'ặ' => 'a', 'â' => 'a', 'ầ' => 'a', 'ấ' => 'a', 'ẩ' => 'a', 'ẫ' => 'a', 'ậ' => 'a',
+            'đ' => 'd',
+            'è' => 'e', 'é' => 'e', 'ẻ' => 'e', 'ẽ' => 'e', 'ẹ' => 'e', 'ê' => 'e', 'ề' => 'e', 'ế' => 'e', 'ể' => 'e', 'ễ' => 'e', 'ệ' => 'e',
+            'ì' => 'i', 'í' => 'i', 'ỉ' => 'i', 'ĩ' => 'i', 'ị' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ỏ' => 'o', 'õ' => 'o', 'ọ' => 'o', 'ô' => 'o', 'ồ' => 'o', 'ố' => 'o', 'ổ' => 'o', 'ỗ' => 'o', 'ộ' => 'o', 'ơ' => 'o', 'ờ' => 'o', 'ớ' => 'o', 'ở' => 'o', 'ỡ' => 'o', 'ợ' => 'o',
+            'ù' => 'u', 'ú' => 'u', 'ủ' => 'u', 'ũ' => 'u', 'ụ' => 'u', 'ư' => 'u', 'ừ' => 'u', 'ứ' => 'u', 'ử' => 'u', 'ữ' => 'u', 'ự' => 'u',
+            'ỳ' => 'y', 'ý' => 'y', 'ỷ' => 'y', 'ỹ' => 'y', 'ỵ' => 'y',
+            'À' => 'a', 'Á' => 'a', 'Ả' => 'a', 'Ã' => 'a', 'Ạ' => 'a', 'Ă' => 'a', 'Ằ' => 'a', 'Ắ' => 'a', 'Ẳ' => 'a', 'Ẵ' => 'a', 'Ặ' => 'a', 'Â' => 'a', 'Ầ' => 'a', 'Ấ' => 'a', 'Ẩ' => 'a', 'Ẫ' => 'a', 'Ậ' => 'a',
+            'Đ' => 'd',
+            'È' => 'e', 'É' => 'e', 'Ẻ' => 'e', 'Ẽ' => 'e', 'Ẹ' => 'e', 'Ê' => 'e', 'Ề' => 'e', 'Ế' => 'e', 'Ể' => 'e', 'Ễ' => 'e', 'Ệ' => 'e',
+            'Ì' => 'i', 'Í' => 'i', 'Ỉ' => 'i', 'Ĩ' => 'i', 'Ị' => 'i',
+            'Ò' => 'o', 'Ó' => 'o', 'Ỏ' => 'o', 'Õ' => 'o', 'Ọ' => 'o', 'Ô' => 'o', 'Ồ' => 'o', 'Ố' => 'o', 'Ổ' => 'o', 'Ỗ' => 'o', 'Ộ' => 'o', 'Ơ' => 'o', 'Ờ' => 'o', 'Ớ' => 'o', 'Ở' => 'o', 'Ỡ' => 'o', 'Ợ' => 'o',
+            'Ù' => 'u', 'Ú' => 'u', 'Ủ' => 'u', 'Ũ' => 'u', 'Ụ' => 'u', 'Ư' => 'u', 'Ừ' => 'u', 'Ứ' => 'u', 'Ử' => 'u', 'Ữ' => 'u', 'Ự' => 'u',
+            'Ỳ' => 'y', 'Ý' => 'y', 'Ỷ' => 'y', 'Ỹ' => 'y', 'Ỵ' => 'y'
+        ];
+
+        $text = strtr($text, $utf8Map);
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+        $text = preg_replace('~[^-\w]+~', '', $text);
+        $text = trim($text, '-');
+        $text = preg_replace('~-+~', '-', $text);
+        return strtolower($text ?: 'danh-muc');
+    }
+
+    private function sendReportNotification(int $reporterId, string $status, int $reportId): void
+    {
+        $reporter = $this->userModel->findById($reporterId);
+        if (!$reporter) return;
+
+        $subject = 'Thông báo về báo cáo vi phạm #' . $reportId;
+        $emailTitle = 'Xin chào ' . htmlspecialchars($reporter->name ?? 'bạn') . ',';
+        if ($status === 'resolved') {
+            $emailContent = '<p>Báo cáo vi phạm <strong>#' . $reportId . '</strong> của bạn đã được xem xét và <strong>CHẤP NHẬN</strong>.</p>'
+                . '<p>Chúng tôi đã xử lý đối tượng vi phạm theo quy định. Cảm ơn bạn đã giúp chúng tôi duy trì cộng đồng an toàn.</p>';
+            $ctaText = 'Xem chi tiết';
+            $ctaLink = URLROOT . '/reports/history';
+        } else {
+            $emailContent = '<p>Báo cáo vi phạm <strong>#' . $reportId . '</strong> của bạn đã được xem xét và <strong>BÁC BỎ</strong>.</p>'
+                . '<p>Chúng tôi không tìm thấy đủ bằng chứng cho vi phạm này. Nếu bạn có thêm thông tin, vui lòng gửi lại báo cáo mới.</p>';
+            $ctaText = 'Gửi báo cáo mới';
+            $ctaLink = URLROOT . '/reports/create';
+        }
+        $footerNote = 'Cảm ơn bạn đã đóng góp cho cộng đồng Creono.';
+
+        if (function_exists('sendTemplatedEmail')) {
+            sendTemplatedEmail($reporter->email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
+        }
+    }
+
+    private function sendKycNotification(int $userId, string $status, string $note = ''): void
+    {
+        $user = $this->userModel->findById($userId);
+        if (!$user) return;
+
+        $subject = 'Thông báo xác minh danh tính (KYC) - Creono';
+        $emailTitle = 'Xin chào ' . htmlspecialchars($user->name ?? 'bạn') . ',';
+        if ($status === 'approved') {
+            $emailContent = '<p>Yêu cầu xác minh danh tính (KYC) của bạn đã được <strong>DUYỆT</strong> thành công.</p>'
+                . '<p>Bạn có thể sử dụng đầy đủ các tính năng của nền tảng.</p>';
+            $ctaText = 'Truy cập tài khoản';
+            $ctaLink = URLROOT . '/users/login';
+        } else {
+            $emailContent = '<p>Yêu cầu xác minh danh tính (KYC) của bạn đã bị <strong>TỪ CHỐI</strong>.</p>'
+                . '<p><strong>Lý do:</strong> ' . htmlspecialchars($note) . '</p>'
+                . '<p>Vui lòng cập nhật lại giấy tờ và gửi lại yêu cầu mới.</p>';
+            $ctaText = 'Gửi lại KYC';
+            $ctaLink = URLROOT . '/users/kyc';
+        }
+        $footerNote = 'Nếu bạn cần hỗ trợ, vui lòng liên hệ với bộ phận hỗ trợ của Creono.';
+
+        if (function_exists('sendTemplatedEmail')) {
+            sendTemplatedEmail($user->email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
+        }
+    }
+
+    private function sendAppealNotification(int $sellerId, string $status, int $appealId, string $productTitle): void
+    {
+        $seller = $this->userModel->findById($sellerId);
+        if (!$seller) return;
+
+        $subject = 'Kết quả Kháng cáo nhãn AI cho sản phẩm: ' . $productTitle;
+        $emailTitle = 'Xin chào ' . htmlspecialchars($seller->name ?? 'bạn') . ',';
+        if ($status === 'approved') {
+            $emailContent = '<p>Yêu cầu kháng cáo nhãn AI <strong>#' . $appealId . '</strong> cho sản phẩm <strong>' . htmlspecialchars($productTitle) . '</strong> của bạn đã được <strong>CHẤP NHẬN</strong>.</p>'
+                . '<p>Chúng tôi đã gỡ bỏ nhãn AI và khôi phục nhãn "Human Written" cho sản phẩm của bạn. Cảm ơn bạn đã đóng góp nội dung chất lượng cho Creono!</p>';
+            $ctaText = 'Xem sản phẩm';
+            $ctaLink = URLROOT . '/products';
+        } else {
+            $emailContent = '<p>Yêu cầu kháng cáo nhãn AI <strong>#' . $appealId . '</strong> cho sản phẩm <strong>' . htmlspecialchars($productTitle) . '</strong> của bạn đã bị <strong>TỪ CHỐI</strong>.</p>'
+                . '<p>Sau khi xem xét bằng chứng, chúng tôi nhận thấy chưa đủ cơ sở để chứng minh tài liệu này hoàn toàn do con người tạo ra. Nhãn AI sẽ tiếp tục được giữ nguyên.</p>';
+            $ctaText = 'Tìm hiểu thêm';
+            $ctaLink = URLROOT . '/pages/about';
+        }
+        $footerNote = 'Trân trọng, Đội ngũ Quản trị Creono.';
+
+        if (function_exists('sendTemplatedEmail')) {
+            sendTemplatedEmail($seller->email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
         }
     }
 }

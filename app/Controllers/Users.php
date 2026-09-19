@@ -448,12 +448,15 @@ class Users extends Controller
                 $ctaLink = $resetLink;
                 $footerNote = 'Nếu bạn không yêu cầu, vui lòng bỏ qua email này.';
 
-                ob_start();
-                include APPROOT . '/Views/emails/layout.php';
-                $body = ob_get_clean();
-
-                $altBody = "Đặt lại mật khẩu: $resetLink";
-                $mailSent = sendEmail($email, $subject, $body, $altBody);
+                $mailSent = sendTemplatedEmail(
+                    $email,
+                    $subject,
+                    $emailTitle,
+                    $emailContent,
+                    $ctaText,
+                    $ctaLink,
+                    $footerNote
+                );
 
                 if (!$mailSent && function_exists('logError')) {
                     logError("Không thể gửi email reset password cho $email");
