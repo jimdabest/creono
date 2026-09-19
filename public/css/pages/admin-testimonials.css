@@ -1,0 +1,308 @@
+/* =====================================================================
+   ADMIN TESTIMONIALS - Quản lý Cảm nhận / Đánh giá khách hàng
+   ===================================================================== */
+
+/* === HEADER & LAYOUT === */
+.tm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.tm-header-centered {
+    max-width: 680px;
+    margin: 0 auto 24px auto;
+}
+
+/* === QUICK STATS ROW === */
+.tm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.tm-stat-chip {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.tm-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tm-stat-icon--total {
+    background: rgba(0, 113, 227, 0.1);
+    color: var(--apple-blue);
+}
+
+.tm-stat-icon--featured {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--apple-orange);
+}
+
+.tm-stat-icon--rating {
+    background: rgba(52, 199, 89, 0.12);
+    color: var(--apple-green);
+}
+
+.tm-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.tm-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--apple-black);
+    line-height: 1.2;
+}
+
+.tm-stat-label {
+    font-size: 13px;
+    color: var(--apple-gray);
+    margin-top: 2px;
+}
+
+/* === BẢNG DANH SÁCH TESTIMONIALS === */
+.tm-col-id {
+    width: 50px;
+}
+
+.tm-col-user {
+    width: 200px;
+}
+
+.tm-col-stars {
+    width: 110px;
+}
+
+.tm-col-featured {
+    width: 140px;
+    text-align: center;
+}
+
+.tm-col-order {
+    width: 80px;
+    text-align: center;
+}
+
+.tm-col-date {
+    width: 110px;
+}
+
+.tm-col-actions {
+    width: 140px;
+}
+
+.tm-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tm-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f0f0f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--apple-blue);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.tm-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tm-user-meta strong {
+    display: block;
+    color: var(--apple-black);
+    font-size: 14px;
+}
+
+.tm-user-meta small {
+    color: var(--apple-gray);
+    font-size: 12px;
+}
+
+.tm-stars {
+    color: #ffb800;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+.tm-content-box {
+    max-width: 380px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #333;
+    font-style: italic;
+}
+
+.tm-badge-featured {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.tm-badge-featured.is-active {
+    background: rgba(255, 149, 0, 0.15);
+    color: #d97706;
+}
+
+.tm-badge-featured.is-inactive {
+    background: #f1f2f6;
+    color: var(--apple-gray);
+}
+
+.tm-badge-featured:hover {
+    transform: scale(1.04);
+}
+
+.btn-action-group {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.tm-inline-form {
+    display: inline-block;
+}
+
+.tm-empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--apple-gray);
+}
+
+.tm-empty-icon {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.tm-empty-text {
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+.tm-btn-icon {
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+/* === FORM THÊM MỚI / CHỈNH SỬA === */
+.tm-form-card {
+    max-width: 680px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.tm-form-group {
+    margin-bottom: 20px;
+}
+
+.tm-form-label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--apple-black);
+}
+
+.tm-required {
+    color: #ff3b30;
+}
+
+.tm-form-input,
+.tm-form-select,
+.tm-form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d2d2d7;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--apple-black);
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.tm-form-input:focus,
+.tm-form-select:focus,
+.tm-form-textarea:focus {
+    border-color: var(--apple-blue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+
+.tm-form-error {
+    display: block;
+    color: #ff3b30;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.tm-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f5;
+}
+
+.tm-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+}
+
+.tm-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.tm-form-hint {
+    font-size: 12px;
+    color: var(--apple-gray);
+    margin-top: 4px;
+}

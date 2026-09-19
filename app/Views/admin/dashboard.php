@@ -333,6 +333,21 @@
                 </div>
                 <span class="link-arrow">&rarr;</span>
             </a>
+
+            <!-- Quản lý Đánh giá nền tảng -->
+            <a href="<?php echo URLROOT; ?>/testimonialController/index" class="quick-link-card">
+                <div class="link-icon" style="color: #ff9500;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div class="link-info">
+                    <h4>Quản lý Đánh giá nền tảng</h4>
+                    <p>Cảm nhận khách hàng & đánh giá hiển thị trên website</p>
+                </div>
+                <span class="link-arrow">&rarr;</span>
+            </a>
         </div>
     </div>
 </div>
