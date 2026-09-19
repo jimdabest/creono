@@ -1,6 +1,11 @@
 <?php
-class AuthMiddleware {
-    public static function check(): void {
+class AuthMiddleware
+{
+    public static function check(): void
+    {
+        // Bước 1: Đảm bảo session đã start
+        // Bước 2: Kiểm tra đã đăng nhập chưa
+        // Bước 3: Kiểm tra tài khoản có bị khóa không
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -18,10 +23,10 @@ class AuthMiddleware {
             try {
                 $db = new Database();
                 $db->query("SELECT is_locked FROM users WHERE id = :id");
-                $db->bind(':id', (int)$_SESSION['user_id']);
+                $db->bind(':id', (int) $_SESSION['user_id']);
                 $user = $db->single();
 
-                if (!$user || (!empty($user->is_locked) && (int)$user->is_locked === 1)) {
+                if (!$user || (!empty($user->is_locked) && (int) $user->is_locked === 1)) {
                     unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['user_role'], $_SESSION['is_locked']);
                     session_regenerate_id(true);
                     if (function_exists('setFlash')) {

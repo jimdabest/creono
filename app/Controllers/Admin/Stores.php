@@ -87,13 +87,16 @@ class Stores extends Controller
 
         if ($success) {
             // Gửi email thông báo cho người đăng ký nếu có email
-            if (!empty($store->applicant_email) && function_exists('sendEmail')) {
+            if (!empty($store->applicant_email) && function_exists('sendTemplatedEmail')) {
                 $subject = 'Chúc mừng! Hồ sơ đăng ký cửa hàng "' . $store->name . '" đã được phê duyệt';
-                $body = 'Xin chào ' . htmlspecialchars($store->applicant_name) . ",\n\n"
-                    . 'Hồ sơ đăng ký cửa hàng "' . htmlspecialchars($store->name) . '" của bạn trên Creono đã được Quản trị viên phê duyệt thành công!\n'
-                    . 'Tài khoản của bạn đã được nâng cấp lên Người bán (Seller). Bạn có thể đăng nhập và bắt đầu đăng tải tài liệu ngay bây giờ.\n\n'
-                    . 'Trân trọng,\nĐội ngũ Creono';
-                @sendEmail($store->applicant_email, $subject, $body);
+                $emailTitle = 'Xin chào ' . htmlspecialchars($store->applicant_name ?? 'bạn') . ',';
+                $emailContent = '<p>Hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn trên Creono đã được Quản trị viên phê duyệt thành công.</p>'
+                    . '<p>Tài khoản của bạn đã được nâng cấp lên <strong>Người bán (Seller)</strong>. Bạn có thể đăng nhập và bắt đầu đăng tải tài liệu ngay bây giờ.</p>';
+                $ctaText = 'Đăng nhập ngay';
+                $ctaLink = URLROOT . '/users/login';
+                $footerNote = 'Chào mừng bạn đến với cộng đồng bán hàng trên Creono.';
+
+                sendTemplatedEmail($store->applicant_email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
             }
 
             $this->jsonResponse(true, 'Đã phê duyệt hồ sơ cửa hàng thành công! Tài khoản đã được nâng cấp lên Người bán.');
@@ -145,14 +148,17 @@ class Stores extends Controller
 
         if ($success) {
             // Gửi email thông báo từ chối cho người đăng ký
-            if (!empty($store->applicant_email) && function_exists('sendEmail')) {
+            if (!empty($store->applicant_email) && function_exists('sendTemplatedEmail')) {
                 $subject = 'Thông báo về hồ sơ đăng ký cửa hàng "' . $store->name . '" trên Creono';
-                $body = 'Xin chào ' . htmlspecialchars($store->applicant_name) . ",\n\n"
-                    . 'Rất tiếc, hồ sơ đăng ký cửa hàng "' . htmlspecialchars($store->name) . '" của bạn chưa đáp ứng yêu cầu của nền tảng Creono.\n\n'
-                    . 'Lý do từ chối: ' . htmlspecialchars($reason) . "\n\n"
-                    . 'Vui lòng kiểm tra lại thông tin và nộp lại hồ sơ nếu cần thiết.\n\n'
-                    . 'Trân trọng,\nĐội ngũ Creono';
-                @sendEmail($store->applicant_email, $subject, $body);
+                $emailTitle = 'Xin chào ' . htmlspecialchars($store->applicant_name ?? 'bạn') . ',';
+                $emailContent = '<p>Rất tiếc, hồ sơ đăng ký cửa hàng <strong>' . htmlspecialchars($store->name) . '</strong> của bạn chưa đáp ứng yêu cầu của nền tảng Creono.</p>'
+                    . '<p><strong>Lý do từ chối:</strong> ' . htmlspecialchars($reason) . '</p>'
+                    . '<p>Vui lòng kiểm tra lại thông tin và nộp lại hồ sơ nếu cần thiết.</p>';
+                $ctaText = 'Xem hướng dẫn';
+                $ctaLink = URLROOT . '/pages/about';
+                $footerNote = 'Nếu cần hỗ trợ, vui lòng liên hệ với bộ phận hỗ trợ của Creono.';
+
+                sendTemplatedEmail($store->applicant_email, $subject, $emailTitle, $emailContent, $ctaText, $ctaLink, $footerNote);
             }
 
             $this->jsonResponse(true, 'Đã từ chối hồ sơ đăng ký cửa hàng thành công.');

@@ -58,3 +58,54 @@ function sendEmail(string $to, string $subject, string $body, string $altBody = 
         return false;
     }
 }
+
+/**
+ * Gửi email theo template chuẩn của Creono
+ *
+ * @param string $to
+ * @param string $subject
+ * @param string $title
+ * @param string $content
+ * @param string|null $ctaText
+ * @param string|null $ctaLink
+ * @param string $footerNote
+ * @return bool
+ */
+function sendTemplatedEmail(
+    string $to,
+    string $subject,
+    string $title,
+    string $content,
+    ?string $ctaText = null,
+    ?string $ctaLink = null,
+    string $footerNote = ''
+): bool {
+    $subject = trim($subject);
+    if ($subject !== '' && stripos($subject, '[Creono]') !== 0) {
+        $subject = '[Creono] ' . $subject;
+    }
+
+    $emailTitle = $title;
+    $emailContent = $content;
+    $ctaText = $ctaText ?? '';
+    $ctaLink = $ctaLink ?? '';
+    $footerNote = $footerNote ?: 'Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.';
+
+    ob_start();
+    require APPROOT . '/Views/emails/layout.php';
+    $body = ob_get_clean();
+
+    $altBody = trim(preg_replace('/\s+/', ' ', strip_tags($content)));
+
+    $sent = sendEmail($to, $subject, $body, $altBody);
+
+    if (!$sent && function_exists('logError')) {
+        logError('Gửi email template thất bại', [
+            'to' => $to,
+            'subject' => $subject,
+            'title' => $title,
+        ]);
+    }
+
+    return $sent;
+}

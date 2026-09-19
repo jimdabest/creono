@@ -245,11 +245,15 @@ class Product extends BaseModel
                    s.user_id as seller_id,
                    u.name as seller_name,
                    c.name as category_name,
-                   c.slug as category_slug
+                   c.slug as category_slug,
+                   d.ai_score,
+                   al.name AS ai_label_name
             FROM {$this->table} p
             JOIN stores s ON p.store_id = s.id
             JOIN users u ON s.user_id = u.id
             LEFT JOIN categories c ON p.category_id = c.id
+            LEFT JOIN documents d ON p.id = d.product_id
+            LEFT JOIN ai_labels al ON d.ai_label_id = al.id
             WHERE p.id = :id AND p.deleted_at IS NULL
         ");
         $this->db->bind(':id', $id);
