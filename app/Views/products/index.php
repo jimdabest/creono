@@ -270,6 +270,46 @@ $hasFilter = $currentKeyword !== '' || $currentCategory > 0;
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- KHỐI PHÂN TRANG (APPLE STYLE) -->
+    <?php if (isset($data['total_pages']) && $data['total_pages'] > 1): ?>
+        <?php
+            // Giữ lại các filter hiện tại (search, category, sort) khi chuyển trang
+            $queryParams = $_GET;
+            unset($queryParams['url']); 
+        ?>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 48px; margin-bottom: 24px;">
+            <!-- Nút Trước -->
+            <?php if ($data['current_page'] > 1): ?>
+                <?php $queryParams['page'] = $data['current_page'] - 1; ?>
+                <a href="?<?= http_build_query($queryParams) ?>" 
+                   style="padding: 10px 16px; border-radius: 12px; background: #f5f5f7; color: #1d1d1f; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s;">
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px; margin-top:-2px;"><polyline points="15 18 9 12 15 6"></polyline></svg>Trước
+                </a>
+            <?php endif; ?>
+
+            <!-- Các nút số trang -->
+            <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
+                <?php 
+                    $queryParams['page'] = $i; 
+                    $isActive = ($i === $data['current_page']);
+                ?>
+                <a href="?<?= http_build_query($queryParams) ?>" 
+                   style="display: flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; border-radius: 12px; font-size: 15px; font-weight: <?= $isActive ? '600' : '500' ?>; text-decoration: none; transition: all 0.2s; <?= $isActive ? 'background: #0071e3; color: #ffffff;' : 'background: #f5f5f7; color: #1d1d1f;' ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+
+            <!-- Nút Sau -->
+            <?php if ($data['current_page'] < $data['total_pages']): ?>
+                <?php $queryParams['page'] = $data['current_page'] + 1; ?>
+                <a href="?<?= http_build_query($queryParams) ?>" 
+                   style="padding: 10px 16px; border-radius: 12px; background: #f5f5f7; color: #1d1d1f; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s;">
+                   Sau<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-left:4px; margin-top:-2px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- AJAX: Favorite Toggle & Add to Cart -->
