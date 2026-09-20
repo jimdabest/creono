@@ -40,6 +40,12 @@ class Products extends Controller
         $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
         $categoryId = isset($_GET['category']) ? (int) $_GET['category'] : 0;
         $sort = isset($_GET['sort']) ? trim((string) $_GET['sort']) : 'newest';
+        
+        // Phân trang
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
+        $limit = 12; // Hiển thị 12 sản phẩm mỗi trang (đẹp cho grid 3 hoặc 4 cột)
+        $offset = ($page - 1) * $limit;
 
         // Whitelist sort để tránh lỗi khi URL thủ công
         $allowedSorts = ['newest', 'price_asc', 'price_desc', 'popular', 'rating'];
@@ -52,10 +58,13 @@ class Products extends Controller
             $search = mb_substr($search, 0, 100);
         }
 
-        // 2. Lấy dữ liệu
-        $products = $this->productModel->getProducts($search, $categoryId, $sort);
+        // 2. Lấy dữ liệu (Truyền thêm limit và offset)
+        $products = $this->productModel->getProducts($search, $categoryId, $sort, $limit, $offset);
+        $totalCount = $this->productModel->countProducts($search, $categoryId);
         $categories = $this->categoryModel->getAllOrdered();
-        $totalCount = count($products);
+        
+        // Tính tổng số trang
+        $totalPages = ceil($totalCount / $limit);
 
         // 3. Favorite IDs nếu đã đăng nhập
         $favoriteIds = [];
@@ -63,17 +72,19 @@ class Products extends Controller
             $favoriteIds = $this->favoriteModel->getFavoriteProductIds((int) $_SESSION['user_id']);
         }
 
-        // 4. Truyền dữ liệu — ĐẢM BẢO tên key khớp với View
+        // 4. Truyền dữ liệu ra View
         $data = [
             'title' => 'Chợ Tài Liệu - Creono',
             'description' => 'Khám phá hàng ngàn tài liệu số chất lượng cao trên Creono.',
             'products' => $products,
             'categories' => $categories,
             'favorite_ids' => $favoriteIds,
-            'current_keyword' => $search,       // ← ĐÚNG TÊN View đang dùng
-            'current_category' => $categoryId,   // ← ĐÚNG: là INT, không phải slug
+            'current_keyword' => $search,
+            'current_category' => $categoryId,
             'current_sort' => $sort,
             'total_count' => $totalCount,
+            'current_page' => $page,
+            'total_pages' => $totalPages,
             'csrf_token' => generateCsrfToken()
         ];
 
@@ -527,8 +538,10 @@ class Products extends Controller
                         $documentModel = $this->model('Document');
                         $aiResult = AiDetectionService::detect((string) ($description ?? ''), (string) ($title ?? ''));
 
-                        if ($document) {
-                            $documentModel->update($document->id, [
+                        $documentId = isset($document->id) ? (int) $document->id : 0;
+
+                        if ($documentId > 0) {
+                            $documentModel->update($documentId, [
                                 'file_url' => $document_url,
                                 'ai_score' => $aiResult['ai_score'],
                                 'ai_label_id' => $aiResult['ai_label_id']

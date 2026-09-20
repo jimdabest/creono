@@ -85,8 +85,26 @@ class Stores extends Controller
 
             if (empty($errors)) {
                 if ($this->storeModel->createStore($data)) {
-                    if (!empty($_SESSION['user_email']) && function_exists('sendEmail')) {
-                        @sendEmail($_SESSION['user_email'], 'Đã nhận hồ sơ đăng ký cửa hàng', 'Hồ sơ mở cửa hàng "' . $data['name'] . '" của bạn đã được gửi thành công và đang chờ Quản trị viên Creono xét duyệt.');
+                    if (!empty($_SESSION['user_email']) && function_exists('sendTemplatedEmail')) {
+                        $subject = 'Đã nhận hồ sơ đăng ký cửa hàng';
+
+                        $emailTitle = 'Đã nhận hồ sơ đăng ký cửa hàng';
+                        $emailContent = '<p>Xin chào <strong>' . htmlspecialchars($_SESSION['user_name'] ?? 'bạn') . '</strong>,</p>'
+                            . '<p>Hồ sơ mở cửa hàng <strong>' . htmlspecialchars($data['name']) . '</strong> của bạn đã được gửi thành công và đang chờ Quản trị viên Creono xét duyệt.</p>'
+                            . '<p>Chúng tôi sẽ thông báo kết quả qua email trong thời gian sớm nhất.</p>';
+                        $ctaText = 'Về trang chủ';
+                        $ctaLink = URLROOT;
+                        $footerNote = 'Cảm ơn bạn đã tin tưởng Creono.';
+
+                        sendTemplatedEmail(
+                            $_SESSION['user_email'],
+                            $subject,
+                            $emailTitle,
+                            $emailContent,
+                            $ctaText,
+                            $ctaLink,
+                            $footerNote
+                        );
                     }
 
                     setFlash('success', 'Đăng ký bán hàng thành công! Hồ sơ của bạn đang được Quản trị viên xét duyệt.');

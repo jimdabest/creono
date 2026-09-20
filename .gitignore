@@ -107,7 +107,10 @@ repomix-output.json
 repomix-output.txt
 .repomixignore
 repomix.config.json
-
+app/app.xml
+public/public.xml
+realko.html
+realko_files/
 # Backup
 *.zip
 *.tar.gz

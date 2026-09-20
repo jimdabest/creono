@@ -39,6 +39,30 @@
                 <?php echo htmlspecialchars($data['product']->title); ?>
             </h1>
 
+            <!-- AI DETECTION BADGE -->
+            <?php if (isset($data['product']->ai_score) && isset($data['product']->ai_label_name)): ?>
+                <?php
+                    $aiScore = (float) $data['product']->ai_score;
+                    $aiLabel = $data['product']->ai_label_name;
+
+                    if ($aiLabel === 'AI Generated') {
+                        $badgeClass = 'ai-badge--ai';
+                        $aiIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16.01"></line><line x1="16" y1="16" x2="16" y2="16.01"></line></svg>';
+                    } elseif ($aiLabel === 'Mixed') {
+                        $badgeClass = 'ai-badge--mixed';
+                        $aiIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><path d="M18 22V10"></path></svg>';
+                    } else {
+                        $badgeClass = 'ai-badge--human';
+                        $aiIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"></path></svg>';
+                    }
+                ?>
+                <div class="ai-badge <?php echo $badgeClass; ?>" title="Kết quả kiểm duyệt bởi AI" style="margin-bottom: 18px;">
+                    <span style="display: flex; align-items: center;"><?php echo $aiIcon; ?></span>
+                    <span><?php echo htmlspecialchars($aiLabel); ?></span>
+                    <span class="ai-badge-score"><?php echo number_format($aiScore, 1); ?>% AI</span>
+                </div>
+            <?php endif; ?>
+
             <!-- Rating Summary Bar -->
             <div class="product-meta-row" style="display: flex; align-items: center; gap: 20px; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid rgba(0,0,0,0.06);">
                 <div class="rating-display" style="display: flex; align-items: center; gap: 6px;">

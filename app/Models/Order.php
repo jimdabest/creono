@@ -320,7 +320,7 @@ class Order extends BaseModel
     }
 
     /**
-     * Lấy danh sách tài liệu đã mua của User (Chỉ hiển thị đơn đang hoạt động status = 2)
+     * Lấy danh sách tài liệu đã mua của User (Chỉ hiển thị đơn đang hoạt động status 2, 4, 5)
      */
     public function getPurchasedProducts(int $userId): array
     {
@@ -337,7 +337,7 @@ class Order extends BaseModel
             FROM {$this->table} o
             JOIN products p ON o.product_id = p.id
             JOIN stores s ON p.store_id = s.id
-            WHERE o.user_id = :user_id AND o.status = 2
+            WHERE o.user_id = :user_id AND o.status IN (2, 4, 5)
             ORDER BY o.created_at DESC
         ");
         $this->db->bind(':user_id', $userId);

@@ -576,6 +576,46 @@
         font-size: 11px !important;
         padding: 4px 10px !important;
     }
+}
+
+/* ============================================================================== */
+/* AI DETECTION BADGE STYLES                                                      */
+/* ============================================================================== */
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    vertical-align: middle;
+}
+
+.ai-badge--human {
+    background: rgba(52, 199, 89, 0.12);
+    color: #248a3d;
+}
+
+.ai-badge--mixed {
+    background: rgba(255, 149, 0, 0.12);
+    color: #b26800;
+}
+
+.ai-badge--ai {
+    background: rgba(175, 82, 222, 0.12);
+    color: #8932b8;
+}
+
+.ai-badge-score {
+    background: rgba(255, 255, 255, 0.7);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-left: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
 
     .seller-info-mini {
         flex-direction: column !important;
@@ -593,4 +633,3 @@
         margin-left: 8px !important;
         padding: 10px 12px !important;
     }
-}

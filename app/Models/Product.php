@@ -11,17 +11,21 @@ class Product extends BaseModel
     // =========================================================================
 
     /**
-     * Lấy danh sách sản phẩm với bộ lọc tìm kiếm, danh mục và sắp xếp
+     * Lấy danh sách sản phẩm với bộ lọc tìm kiếm, danh mục, sắp xếp và PHÂN TRANG
      *
      * @param string $search     Từ khóa tìm kiếm (title hoặc description)
      * @param int    $categoryId ID danh mục (0 = tất cả)
      * @param string $sort       newest | price_asc | price_desc | popular | rating
+     * @param int    $limit      Số sản phẩm trên 1 trang
+     * @param int    $offset     Vị trí bắt đầu lấy
      * @return array<object>
      */
     public function getProducts(
         string $search = '',
         int $categoryId = 0,
-        string $sort = 'newest'
+        string $sort = 'newest',
+        int $limit = 12,
+        int $offset = 0
     ): array {
         $sql = "SELECT p.*, 
                    u.name AS seller_name, 
@@ -58,10 +62,19 @@ class Product extends BaseModel
             default      => " ORDER BY p.created_at DESC"
         };
 
+        // Phân trang
+        $sql .= " LIMIT :limit OFFSET :offset";
+
         $this->db->query($sql);
+        
+        // Bind các tham số lọc
         foreach ($params as $key => $val) {
             $this->db->bind($key, $val);
         }
+        
+        // Bind tham số phân trang
+        $this->db->bind(':limit', $limit, PDO::PARAM_INT);
+        $this->db->bind(':offset', $offset, PDO::PARAM_INT);
 
         return $this->db->resultSet();
     }
@@ -245,11 +258,15 @@ class Product extends BaseModel
                    s.user_id as seller_id,
                    u.name as seller_name,
                    c.name as category_name,
-                   c.slug as category_slug
+                   c.slug as category_slug,
+                   d.ai_score,
+                   al.name AS ai_label_name
             FROM {$this->table} p
             JOIN stores s ON p.store_id = s.id
             JOIN users u ON s.user_id = u.id
             LEFT JOIN categories c ON p.category_id = c.id
+            LEFT JOIN documents d ON p.id = d.product_id
+            LEFT JOIN ai_labels al ON d.ai_label_id = al.id
             WHERE p.id = :id AND p.deleted_at IS NULL
         ");
         $this->db->bind(':id', $id);
@@ -269,11 +286,15 @@ class Product extends BaseModel
     }
 
     /**
-     * Lấy link file tải của sản phẩm từ bảng documents
+     * Lấy thông tin tài liệu của sản phẩm từ bảng documents
      */
     public function getDocumentByProductId(int $productId): ?object
     {
-        $this->db->query("SELECT file_url FROM documents WHERE product_id = :id");
+        $this->db->query("SELECT id, product_id, file_url, ai_score, ai_label_id 
+                          FROM documents 
+                          WHERE product_id = :id 
+                          ORDER BY id DESC 
+                          LIMIT 1");
         $this->db->bind(':id', $productId);
         return $this->db->single() ?: null;
     }
