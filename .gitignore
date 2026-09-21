@@ -31,7 +31,7 @@
 *.log
 error_log
 access_log
-/libs
+# /libs
 # Cache
 /cache/
 /cache/*.tmp
