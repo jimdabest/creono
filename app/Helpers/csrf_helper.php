@@ -9,6 +9,8 @@ function generateCsrfToken(): string
     return $_SESSION['csrf_token'];
 }
 
+
+//
 // Kiểm tra CSRF Token an toàn (chống Timing Attack)
 function verifyCsrfToken(string $token): bool
 {

@@ -1,193 +1,294 @@
-# Creono - C2C Digital Marketplace
+# Creono - Nền tảng tài liệu số C2C
 
-Dự án Creono là nền tảng thương mại điện tử C2C chuyên mua bán ấn phẩm số, tài liệu. Hệ thống được phát triển dựa trên kiến trúc **MVC (Model - View - Controller) bằng PHP **, không sử dụng framework.
+![Creono](https://img.shields.io/badge/Creono-Digital%20Marketplace-blue)
+![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4)
+![MySQL](https://img.shields.io/badge/MySQL-5.7%2B-4479A1)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+## 📖 Giới thiệu dự án
+
+**Creono** là một nền tảng thương mại điện tử C2C (Consumer-to-Consumer) chuyên về **tài liệu số**, cho phép người dùng mua bán, chia sẻ và trao đổi các sản phẩm số như:
+
+- 📄 Tài liệu học tập, giáo trình, luận văn
+- 💻 Source code, template, theme
+- 🎨 Thiết kế đồ họa, UI/UX kit
+- 📊 Biểu mẫu, báo cáo, tài liệu doanh nghiệp
+- 🎓 Khóa học, video hướng dẫn
+
+### ✨ Tính năng nổi bật
+
+| Nhóm chức năng | Mô tả |
+|---|---|
+| **Người dùng** | Đăng ký, đăng nhập, xác minh KYC, quản lý hồ sơ cá nhân, ví điện tử |
+| **Người bán** | Đăng ký mở cửa hàng, đăng tải sản phẩm, quản lý đơn hàng, thống kê doanh thu |
+| **Người mua** | Tìm kiếm, mua sắm, yêu thích, đánh giá, khiếu nại, tải tài liệu |
+| **Quản trị viên** | Duyệt cửa hàng, kiểm duyệt sản phẩm, quản lý người dùng, xử lý báo cáo, cấu hình hệ thống |
+| **AI Detection** | Phát hiện nội dung do AI tạo ra (ChatGPT, Claude, Gemini), hỗ trợ kháng cáo |
+| **Watermark** | Tự động đóng dấu bản quyền lên PDF/Ảnh, giới hạn xem trước 2 trang đầu |
+| **Báo cáo & Tố cáo** | Khiếu nại sản phẩm, tố cáo đạo nhái, báo cáo vi phạm |
+| **Hoàn tiền** | Xử lý hoàn tiền trong vòng 7 ngày với giao dịch ACID an toàn |
+
+### 🏗️ Kiến trúc dự án
+
+```
+creono/
+├── app/
+│   ├── Controllers/        # Xử lý logic request/response
+│   ├── Core/               # App, BaseModel, Controller, Database, Validator
+│   ├── Helpers/            # CSRF, Flash, Mail, Session, Watermark
+│   ├── Middleware/         # Auth, Guest, Role
+│   ├── Models/             # Tương tác database
+│   ├── Services/           # AiDetectionService, RefundService
+│   └── Views/              # Giao diện (admin, seller, buyer)
+├── config/                 # Cấu hình hệ thống
+├── libs/                   # Thư viện bên thứ ba (PHPMailer, FPDF, FPDI)
+├── public/                 # Document root
+│   ├── css/                # Stylesheet (Apple-inspired UI)
+│   ├── js/                 # JavaScript modules
+│   ├── uploads/            # File upload (tài liệu, ảnh)
+│   └── index.php           # Entry point
+└── README.md
+```
 
 ---
 
-## 🛠 Hướng dẫn Cài đặt (Setup Project)
+## 🚀 Hướng dẫn chạy dự án
 
-Dành cho Developer mới tham gia dự án, hãy làm theo các bước sau để chạy project ở môi trường Local (XAMPP/WAMP):
+### 📋 Yêu cầu hệ thống
 
-1. **Clone mã nguồn:**
+- **PHP** >= 7.4 (khuyến nghị 8.0+)
+- **MySQL** >= 5.7 hoặc **MariaDB** >= 10.3
+- **Composer** (tùy chọn, nếu dùng thư viện qua Composer)
+- **PHP Extensions**:
+  - `pdo_mysql`
+  - `mbstring`
+  - `gd` (xử lý watermark ảnh)
+  - `openssl`
+  - `curl`
+  - `fileinfo`
+
+### 📥 Bước 1: Clone dự án
+
 ```bash
-git clone https://github.com/jimdabest/creono.git
-```
-*(Lưu ý: Clone trực tiếp vào thư mục `htdocs` của XAMPP).*
-
-2. **Cấu hình Cơ sở dữ liệu:**
-*   Mở công cụ quản trị MySQL (phpMyAdmin hoặc DBeaver).
-*   Tạo một database mới tên là `creono_db` (Charset: `utf8mb4_unicode_ci`).
-*   Import file `creono_db.sql` (nằm ở thư mục gốc dự án) vào database vừa tạo.
-
-3. **Cấu hình Môi trường (Config):**
-*   Vào thư mục `config/`.
-*   Copy file `config.php.example` tạo mới 1 file `config.php`.
-*   Copy file `error.log.example` tạo mới 1 file `error.log`.
-*   Cập nhật thông số Database và `URLROOT` trong file `config.php` cho khớp với máy của bạn.
-
-4. **Kiểm tra URL Rewrite (.htaccess):**
-<!-- *   Hãy chắc chắn rằng XAMPP của bạn đã bật module `mod_rewrite` trong Apache (`httpd.conf`). -->
-*   Truy cập trang chủ: `http://localhost/creono`. Nếu trang load thành công nghĩa là hệ thống đã hoạt động!
-
----
-
-## 📜 Quy tắc Làm việc (Coding Rules)
-
-Để mã nguồn dự án luôn sạch sẽ, dễ bảo trì và hạn chế conflict, toàn bộ team cần tuân thủ các quy định sau:
-
-### 1. Quy tắc Đặt tên (Naming Convention)
-*   **Controller:** Tên Class và tên File luôn là **Số nhiều** và viết hoa chữ cái đầu (PascalCase). VD: `Users.php`, `Products.php`, `Orders.php`.
-*   **Model:** Tên Class và tên File luôn là **Số ít** (PascalCase). VD: `User.php`, `Product.php`.
-*   **View:** Lưu trong thư mục viết thường, **số nhiều**. File bên trong viết thường (snake_case). VD: `app/Views/users/register.php`.
-
-### 2. Quy tắc Thao tác Database & Giao dịch (Transactions)
-*   Hạn chế tối đa việc viết lệnh SQL trực tiếp trong Controller. Hãy định nghĩa bảng (`$table`) và dùng các hàm có sẵn của `BaseModel` (`findAll`, `findById`, `create`, `update`, `delete`).
-*   **Cực kỳ quan trọng đối với dữ liệu tài chính:** Sàn Creono liên tục xử lý thanh toán (Escrow), phân chia tiền và cập nhật trạng thái. Khi code các chức năng này, **bắt buộc** phải bọc logic trong Transaction để đảm bảo tính nhất quán dữ liệu:
-```php
-$this->db->beginTransaction();
-try {
-    // ... các lệnh update ...
-    $this->db->commit();
-} catch(Exception $e) {
-    $this->db->rollBack();
-}
+git clone https://github.com/your-username/creono.git
+cd creono
 ```
 
-### 3. Quy tắc Git Flow
-Để đảm bảo code không bị conflict và luôn được review trước khi gộp vào nhánh chính, toàn bộ team tuân thủ quy trình tạo Pull Request sau đây:
+### ⚙️ Bước 2: Cấu hình môi trường
 
-**Bước 1: Cập nhật code mới nhất từ nhánh `main`**
-Trước khi làm task mới, luôn phải lấy code mới nhất về máy để tránh lỗi cũ:
+#### 2.1. Tạo file cấu hình từ file example
+
+Dự án sử dụng các file `*.example` làm mẫu. Bạn cần **copy và xóa đuôi `.example`** để tạo file cấu hình thực tế:
+
+**Windows (CMD/PowerShell):**
+```cmd
+copy config\config.php.example config\config.php
+copy config\email.php.example config\email.php
+```
+
+**Linux/macOS:**
 ```bash
-git checkout main
-git pull origin main
-```
-**Bước 2: Tạo nhánh làm việc riêng (Branch)**
-Tuyệt đối không code trực tiếp trên nhánh main. Hãy tạo nhánh mới với cú pháp:
-Chức năng mới: ```feature/ten-chuc-nang```
-Sửa lỗi: ```bugfix/ten-loi```
-
-VD:
-```bash
-git checkout -b feature/user-login
+cp config/config.php.example config/config.php
+cp config/email.php.example config/email.php
 ```
 
-**Bước 3: Code và Commit thay đổi**
-Sau khi hoàn thành code chức năng, hãy thêm các thay đổi và commit với một thông điệp rõ ràng:
-```bash
-git add .
-# Cú pháp commit chuẩn: [Loại] Thông điệp (Ví dụ: feat, fix, docs, refactor)
-git commit -m "feat: hoàn thiện giao diện và logic đăng nhập"
-```
+> ⚠️ **Lưu ý:** Sau khi copy, **xóa đuôi `.example`** trong tên file để hệ thống nhận diện đúng file cấu hình. File `.example` chỉ là mẫu, hệ thống không đọc file này.
 
-**Bước 4: Đẩy nhánh lên GitHub (Push)**
-Đẩy nhánh bạn vừa tạo lên repository remote:
-```bash
-git push -u origin feature/user-login
-```
+#### 2.2. Cấu hình Database
 
-**Bước 5: Tạo Pull Request (Trên giao diện GitHub)**
-```
-1. Mở trang GitHub của dự án lên.
+Mở file `config/config.php` và cập nhật thông tin:
 
-2. Bạn sẽ thấy một thông báo màu vàng gợi ý tạo PR cho nhánh vừa push, click vào nút "Compare & pull request".
-
-3. Tiêu đề PR: Viết ngắn gọn, ví dụ: [Feature] Thêm tính năng đăng nhập.
-
-4. Nội dung PR (Mô tả): Ghi rõ các mục sau để người review dễ đọc:
-
-    Task này làm gì? (Ví dụ: Xử lý UI form login, băm mật khẩu, tạo Session).
-
-    Có cần chạy lệnh SQL mới nào không? (Nếu có thay đổi database, nhớ ghi rõ để người review biết).
-
-5. Click "Create pull request".
-```
----
-
-## 👨‍💻 Ví dụ Quy trình Phát triển: "Chức năng Tạo Danh Mục (Category)"
-
-Khi được giao task tạo một chức năng CRUD, hãy thực hiện theo trình tự 3 bước (Model -> Controller -> View):
-
-### Bước 1: Tạo Model (`app/Models/Category.php`)
-Vì đã có `BaseModel`, bạn chỉ cần khai báo tên bảng. Model đã tự động có sẵn hàm Thêm/Sửa/Xóa.
 ```php
 <?php
-class Category extends BaseModel {
-    // Chỉ định bảng database
-    protected $table = 'categories';
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');           // Tên user MySQL
+define('DB_PASS', '');                // Mật khẩu MySQL
+define('DB_NAME', 'creono_db');       // Tên database
 
-    // (Tùy chọn) Hàm lấy danh mục theo trạng thái
-    public function getActiveCategories() {
-        $this->db->query("SELECT * FROM {$this->table} WHERE status = 'Active'");
-        return $this->db->resultSet();
-    }
-}
+// URL gốc của dự án (tự động nhận diện)
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://" . $host;
+define('URLROOT', $url . '/creono');
+
+define('APPROOT', dirname(dirname(__FILE__)) . '/app');
+define('SITENAME', 'Creono');
+define('APP_ENV', 'development');     // 'development' hoặc 'production'
+
+// Upload config
+define('UPLOAD_MAX_SIZE', 5242880);   // 5MB
+define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'zip']);
+
+// Timezone
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 ```
 
-### Bước 2: Tạo Controller (`app/Controllers/Categories.php`)
-Điều hướng và xử lý logic (Nhận dữ liệu từ form, kiểm tra lỗi, gọi Model).
+#### 2.3. Cấu hình Email (SMTP)
+
+Mở file `config/email.php` (đã tạo từ `email.php.example`) và cập nhật:
+
 ```php
 <?php
-class Categories extends Controller {
-    private $categoryModel;
-
-    public function __construct() {
-        $this->categoryModel = $this->model('Category');
-    }
-
-    public function create() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Nhận và lọc dữ liệu
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-            
-            $data = [
-                'name' => trim($_POST['name']),
-                'name_err' => ''
-            ];
-
-            if (empty($data['name'])) {
-                $data['name_err'] = 'Vui lòng nhập tên danh mục';
-            }
-
-            // Gọi BaseModel để insert
-            if (empty($data['name_err'])) {
-                $insertData = [
-                    'id' => uuid_generate(), // Hàm tự sinh trong helper
-                    'name' => $data['name']
-                ];
-                
-                if($this->categoryModel->create($insertData)) {
-                    header('location: ' . URLROOT . '/categories/index');
-                }
-            } else {
-                $this->view('categories/create', $data); // Load lại form báo lỗi
-            }
-        } else {
-            // Load form trắng (GET)
-            $data = ['name' => '', 'name_err' => ''];
-            $this->view('categories/create', $data);
-        }
-    }
-}
+// Cấu hình SMTP - Ví dụ với Gmail
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_PORT', 587);
+define('SMTP_USERNAME', 'your-email@gmail.com');
+define('SMTP_PASSWORD', 'your-app-password');    // App Password, không phải mật khẩu Gmail
+define('SMTP_ENCRYPTION', 'tls');                // 'tls' hoặc 'ssl'
+define('SMTP_FROM_EMAIL', 'no-reply@creono.vn');
+define('SMTP_FROM_NAME', 'Creono');
 ```
 
-### Bước 3: Tạo View (`app/Views/categories/create.php`)
-Tạo giao diện hiển thị form và nạp layout Header/Footer.
-```php
-<?php /** @var array $data */ ?>
-<?php require APPROOT . '/Views/inc/header.php'; ?>
+> 💡 **Hướng dẫn tạo App Password Gmail:**
+> 1. Truy cập [Google Account Security](https://myaccount.google.com/security)
+> 2. Bật **2-Step Verification**
+> 3. Vào **App passwords** → Tạo mật khẩu mới cho "Mail"
+> 4. Copy mật khẩu 16 ký tự vào `SMTP_PASSWORD`
 
-<div class="card">
-    <h2>Thêm Danh Mục Mới</h2>
-    <form action="<?php echo URLROOT; ?>/categories/create" method="POST">
-        <div class="form-group">
-            <label>Tên danh mục:</label>
-            <input type="text" name="name" value="<?php echo $data['name']; ?>">
-            <span class="error-text"><?php echo $data['name_err']; ?></span>
-        </div>
-        <input type="submit" value="Lưu dữ liệu" class="btn">
-    </form>
-</div>
+### 🗄️ Bước 3: Tạo Database
 
-<?php require APPROOT . '/Views/inc/footer.php'; ?>
+#### 3.1. Tạo database
+
+```sql
+CREATE DATABASE creono_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
+
+#### 3.2. Import schema
+
+```bash
+mysql -u root -p creono_db < database/creono_db.sql
+```
+
+Hoặc import qua **phpMyAdmin**:
+1. Truy cập `http://localhost/phpmyadmin`
+2. Chọn database `creono_db`
+3. Vào tab **Import** → Chọn file `.sql` → **Go**
+
+> 📌 **Lưu ý:** Đảm bảo database có charset `utf8mb4` để hỗ trợ tiếng Việt và emoji.
+
+### 📁 Bước 4: Phân quyền thư mục
+
+**Linux/macOS:**
+```bash
+chmod -R 755 public/uploads
+chmod -R 755 logs
+```
+
+**Windows:** Không cần thiết, nhưng đảm bảo thư mục `public/uploads/` có quyền ghi.
+
+Tạo các thư mục cần thiết nếu chưa có:
+
+```bash
+mkdir -p public/uploads/products
+mkdir -p public/uploads/stores/documents
+mkdir -p public/uploads/avatars
+mkdir -p public/uploads/cache/previews
+mkdir -p logs
+```
+
+### 🌐 Bước 5: Cấu hình Web Server
+
+#### 5.1. Apache (XAMPP/WAMP/Laragon)
+
+**Cách 1: Sử dụng Virtual Host (khuyến nghị)**
+
+Mở file `httpd-vhosts.conf`:
+
+```apache
+<VirtualHost *:80>
+    ServerName creono.local
+    DocumentRoot "C:/xampp/htdocs/creono/public"
+    
+    <Directory "C:/xampp/htdocs/creono/public">
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+Thêm vào file `hosts` (`C:\Windows\System32\drivers\etc\hosts`):
+```
+127.0.0.1    creono.local
+```
+
+**Cách 2: Chạy trực tiếp**
+
+Truy cập: `http://localhost/creono/public`
+
+> ⚠️ **Lưu ý:** Document root phải trỏ vào thư mục `public/`, không phải thư mục gốc dự án.
+
+#### 5.2. PHP Built-in Server (nhanh nhất để test)
+
+```bash
+cd public
+php -S localhost:8000
+```
+
+Truy cập: `http://localhost:8000`
+
+> ⚠️ **Lưu ý:** PHP built-in server không xử lý `.htaccess`, cần điều chỉnh URL trong `config.php`:
+> ```php
+> define('URLROOT', 'http://localhost:8000');
+> ```
+
+### ✅ Bước 6: Kiểm tra và chạy
+
+1. Mở trình duyệt: `http://localhost/creono` (hoặc URL đã cấu hình)
+2. Trang chủ hiển thị → **Thành công!**
+3. Đăng nhập với tài khoản Admin mặc định (nếu có trong file SQL):
+   - Email: `admin@creono.vn`
+   - Password: `admin123`
+
+> 🔒 **Quan trọng:** Đổi mật khẩu Admin ngay sau lần đăng nhập đầu tiên!
+
+---
+
+## 🐛 Xử lý lỗi thường gặp
+
+| Lỗi | Nguyên nhân | Cách khắc phục |
+|---|---|---|
+| `Lỗi kết nối DB` | Sai thông tin DB trong `config.php` | Kiểm tra lại `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME` |
+| `404 Not Found` | Chưa bật `mod_rewrite` | Bật module rewrite trong Apache, kiểm tra `.htaccess` |
+| `CSRF token validation failed` | Session chưa khởi tạo hoặc token hết hạn | Kiểm tra `session_helper.php`, đảm bảo session được start |
+| `Permission denied` khi upload | Thư mục `uploads/` không có quyền ghi | `chmod -R 755 public/uploads` |
+| Email không gửi được | Sai cấu hình SMTP | Kiểm tra `email.php`, dùng App Password Gmail |
+| Watermark PDF lỗi | Thiếu thư viện FPDI/FPDF | Chạy `composer install` hoặc tải thủ công vào `libs/` |
+| Lỗi font tiếng Việt | Thiếu font TTF | Đảm bảo có font `arial.ttf` hoặc `DejaVuSans-Bold.ttf` |
+
+---
+
+## 🔧 Các file cấu hình cần tạo
+
+Dưới đây là danh sách các file `.example` cần **copy và xóa đuôi `.example`**:
+
+| File mẫu | File cần tạo | Mục đích |
+|---|---|---|
+| `config/config.php.example` | `config/config.php` | Cấu hình database, URL, môi trường |
+| `config/email.php.example` | `config/email.php` | Cấu hình SMTP gửi email |
+
+### Script tự động tạo file config
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item config\config.php.example config\config.php
+Copy-Item config\email.php.example config\email.php
+```
+
+**Linux/macOS:**
+```bash
+#!/bin/bash
+cp config/config.php.example config/config.php
+cp config/email.php.example config/email.php
+echo "✅ Đã tạo file config thành công!"
+```
+
+---
+
+## 📚 Tài liệu tham khảo
+
+- [PHPMailer Documentation](https://github.com/PHPMailer/PHPMailer)
+- [FPDF Documentation](http://www.fpdf.org/)
+- [FPDI Documentation](https://www.setasign.com/products/fpdi/)
+- [PDF.js](https://mozilla.github.io/pdf.js/) - Render PDF preview
+
+---
