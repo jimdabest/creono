@@ -26,7 +26,7 @@ class App {
 
         $url = $this->getUrl();
         $controllerPath = '../app/Controllers/';
-
+        http://localhost/creono/products/detail/1
         // Hỗ trợ Sub-controller (ví dụ: Admin/Stores.php)
         if (isset($url[0]) && is_dir($controllerPath . ucwords($url[0])) && isset($url[1]) && file_exists($controllerPath . ucwords($url[0]) . '/' . ucwords($url[1]) . '.php')) {
             $subFolder = ucwords($url[0]);

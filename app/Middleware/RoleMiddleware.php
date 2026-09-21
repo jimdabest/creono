@@ -6,7 +6,8 @@ class RoleMiddleware {
         AuthMiddleware::check(); // Phải đăng nhập trước
         $userRole = (int)($_SESSION['user_role'] ?? 0);
         
-        // Hỗ trợ kiểm tra quyền Admin: Nếu allowed_roles chứa [1] mà không chứa [2] (Seller),
+        // Hỗ trợ kiểm tra quyền Admin: 
+        // Nếu allowed_roles chứa [1] mà không chứa [2] (Seller),
         // cho phép cả Admin hệ thống (role = 3) và role = 1.
         $effectiveRoles = $allowed_roles;
         if (in_array(1, $allowed_roles, true) && !in_array(2, $allowed_roles, true)) {
